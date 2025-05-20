@@ -1,6 +1,6 @@
 "use client";
 
-import { load as loadYAML } from "js-yaml";
+import { load as loadYAML, dump as dumpYAML } from "js-yaml";
 import { useState, useEffect } from "react";
 import { ChevronRightIcon, ChevronDownIcon, PlusIcon, TrashIcon } from "@heroicons/react/outline";
 
@@ -21,8 +21,24 @@ interface GroupDirective extends BaseDirective {
     group: Directive[];
 }
 
-function GroupDirectiveComponent({ group }: { group: Directive[] }) {
+function GroupDirectiveComponent({ group, onChange }: { group: Directive[], onChange: (group: Directive[]) => void }) {
     const [isExpanded, setIsExpanded] = useState(true);
+
+    const handleDirectiveChange = (index: number, updatedDirective: Directive) => {
+        const updatedGroup = [...group];
+        updatedGroup[index] = updatedDirective;
+        onChange(updatedGroup);
+    };
+
+    const addDirective = () => {
+        // Default to an empty install directive as a simple starting point
+        onChange([...group, { install: "" }]);
+    };
+
+    const removeDirective = (index: number) => {
+        const updatedGroup = group.filter((_, i) => i !== index);
+        onChange(updatedGroup);
+    };
 
     return (
         <div className="bg-white rounded-md shadow-sm border border-[#e6f1d6] mb-4">
@@ -43,11 +59,23 @@ function GroupDirectiveComponent({ group }: { group: Directive[] }) {
             {isExpanded && (
                 <div className="p-4 border-t border-[#e6f1d6]">
                     {group.map((directive, index) => (
-                        <div key={index} className="mb-3 last:mb-0">
-                            <DirectiveComponent directive={directive} />
+                        <div key={index} className="mb-3 last:mb-0 relative">
+                            <DirectiveComponent
+                                directive={directive}
+                                onChange={(updated) => handleDirectiveChange(index, updated)}
+                            />
+                            <button
+                                className="absolute top-3 right-3 text-gray-400 hover:text-[#6aa329]"
+                                onClick={() => removeDirective(index)}
+                            >
+                                <TrashIcon className="h-5 w-5" />
+                            </button>
                         </div>
                     ))}
-                    <button className="mt-4 flex items-center text-sm text-[#4f7b38] hover:text-[#6aa329]">
+                    <button
+                        className="mt-4 flex items-center text-sm text-[#4f7b38] hover:text-[#6aa329]"
+                        onClick={addDirective}
+                    >
                         <PlusIcon className="h-4 w-4 mr-1" />
                         Add New Directive
                     </button>
@@ -63,30 +91,35 @@ interface EnvironmentDirective extends BaseDirective {
     };
 }
 
-function EnvironmentDirectiveComponent({ environment }: { environment: { [key: string]: string } }) {
+function EnvironmentDirectiveComponent({
+    environment,
+    onChange
+}: {
+    environment: { [key: string]: string },
+    onChange: (environment: { [key: string]: string }) => void
+}) {
     const [isExpanded, setIsExpanded] = useState(true);
-    const [envVars, setEnvVars] = useState(environment);
 
     const addEnvironmentVariable = () => {
-        setEnvVars({ ...envVars, "": "" });
+        onChange({ ...environment, "": "" });
     };
 
     const updateKey = (oldKey: string, newKey: string) => {
-        const updated = { ...envVars };
+        const updated = { ...environment };
         const value = updated[oldKey];
         delete updated[oldKey];
         updated[newKey] = value;
-        setEnvVars(updated);
+        onChange(updated);
     };
 
     const updateValue = (key: string, value: string) => {
-        setEnvVars({ ...envVars, [key]: value });
+        onChange({ ...environment, [key]: value });
     };
 
     const removeVariable = (key: string) => {
-        const updated = { ...envVars };
+        const updated = { ...environment };
         delete updated[key];
-        setEnvVars(updated);
+        onChange(updated);
     };
 
     return (
@@ -113,7 +146,7 @@ function EnvironmentDirectiveComponent({ environment }: { environment: { [key: s
                         <div className="col-span-1"></div>
                     </div>
 
-                    {Object.entries(envVars).map(([key, value], index) => (
+                    {Object.entries(environment).map(([key, value], index) => (
                         <div key={index} className="grid grid-cols-12 gap-2 mb-2">
                             <input
                                 className="col-span-5 px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
@@ -151,9 +184,14 @@ interface InstallDirective extends BaseDirective {
     install: string;
 }
 
-function InstallDirectiveComponent({ install }: { install: string }) {
+function InstallDirectiveComponent({
+    install,
+    onChange
+}: {
+    install: string,
+    onChange: (install: string) => void
+}) {
     const [isExpanded, setIsExpanded] = useState(true);
-    const [value, setValue] = useState(install);
 
     return (
         <div className="bg-white rounded-md shadow-sm border border-[#e6f1d6] mb-4">
@@ -175,8 +213,8 @@ function InstallDirectiveComponent({ install }: { install: string }) {
                 <div className="p-4 border-t border-[#e6f1d6]">
                     <textarea
                         className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329] min-h-[100px]"
-                        value={value}
-                        onChange={(e) => setValue(e.target.value)}
+                        value={install}
+                        onChange={(e) => onChange(e.target.value)}
                     />
                 </div>
             )}
@@ -188,9 +226,14 @@ interface WorkingDirectoryDirective extends BaseDirective {
     workdir: string;
 }
 
-function WorkingDirectoryDirectiveComponent({ workdir }: { workdir: string }) {
+function WorkingDirectoryDirectiveComponent({
+    workdir,
+    onChange
+}: {
+    workdir: string,
+    onChange: (workdir: string) => void
+}) {
     const [isExpanded, setIsExpanded] = useState(true);
-    const [value, setValue] = useState(workdir);
 
     return (
         <div className="bg-white rounded-md shadow-sm border border-[#e6f1d6] mb-4">
@@ -212,8 +255,8 @@ function WorkingDirectoryDirectiveComponent({ workdir }: { workdir: string }) {
                 <div className="p-4 border-t border-[#e6f1d6]">
                     <input
                         className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
-                        value={value}
-                        onChange={(e) => setValue(e.target.value)}
+                        value={workdir}
+                        onChange={(e) => onChange(e.target.value)}
                         placeholder="/path/to/directory"
                     />
                 </div>
@@ -226,22 +269,27 @@ interface RunCommandDirective extends BaseDirective {
     run: string[];
 }
 
-function RunCommandDirectiveComponent({ run }: { run: string[] }) {
+function RunCommandDirectiveComponent({
+    run,
+    onChange
+}: {
+    run: string[],
+    onChange: (run: string[]) => void
+}) {
     const [isExpanded, setIsExpanded] = useState(true);
-    const [commands, setCommands] = useState(run);
 
     const addCommand = () => {
-        setCommands([...commands, ""]);
+        onChange([...run, ""]);
     };
 
     const updateCommand = (index: number, value: string) => {
-        const updated = [...commands];
+        const updated = [...run];
         updated[index] = value;
-        setCommands(updated);
+        onChange(updated);
     };
 
     const removeCommand = (index: number) => {
-        setCommands(commands.filter((_, i) => i !== index));
+        onChange(run.filter((_, i) => i !== index));
     };
 
     return (
@@ -262,7 +310,7 @@ function RunCommandDirectiveComponent({ run }: { run: string[] }) {
 
             {isExpanded && (
                 <div className="p-4 border-t border-[#e6f1d6]">
-                    {commands.map((command, index) => (
+                    {run.map((command, index) => (
                         <div key={index} className="flex mb-2">
                             <input
                                 className="flex-grow px-3 py-2 border border-gray-200 rounded-l-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
@@ -294,19 +342,75 @@ function RunCommandDirectiveComponent({ run }: { run: string[] }) {
 
 type Variable = string | unknown;
 
-function VariableComponent({ variable }: { variable: Variable }) {
+function VariableComponent({ variable, onChange }: { variable: Variable, onChange?: (variable: Variable) => void }) {
     if (typeof variable === 'string') {
-        return <span className="text-[#0c0e0a]">{variable}</span>;
+        return (
+            <input
+                className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
+                value={variable}
+                onChange={(e) => onChange && onChange(e.target.value)}
+            />
+        );
     } else if (Array.isArray(variable)) {
         return (
-            <ul className="list-disc pl-5 space-y-1">
+            <div className="space-y-2">
                 {variable.map((item, index) => (
-                    <li key={index} className="text-[#0c0e0a]">{JSON.stringify(item)}</li>
+                    <div key={index} className="flex">
+                        <input
+                            className="flex-grow px-3 py-2 border border-gray-200 rounded-l-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
+                            value={JSON.stringify(item)}
+                            onChange={(e) => {
+                                if (onChange) {
+                                    try {
+                                        const updated = [...variable];
+                                        updated[index] = JSON.parse(e.target.value);
+                                        onChange(updated);
+                                    } catch (err) {
+                                        // Handle parse error
+                                    }
+                                }
+                            }}
+                        />
+                        {onChange && (
+                            <button
+                                className="px-3 py-2 bg-[#f0f7e7] border border-gray-200 border-l-0 rounded-r-md text-gray-400 hover:text-[#6aa329]"
+                                onClick={() => {
+                                    const updated = variable.filter((_, i) => i !== index);
+                                    onChange(updated);
+                                }}
+                            >
+                                <TrashIcon className="h-5 w-5" />
+                            </button>
+                        )}
+                    </div>
                 ))}
-            </ul>
+                {onChange && (
+                    <button
+                        className="mt-1 flex items-center text-sm text-[#4f7b38] hover:text-[#6aa329]"
+                        onClick={() => onChange([...variable, ""])}
+                    >
+                        <PlusIcon className="h-4 w-4 mr-1" />
+                        Add Item
+                    </button>
+                )}
+            </div>
         );
     } else {
-        return <pre className="bg-[#f0f7e7] p-2 rounded text-sm overflow-x-auto">{JSON.stringify(variable, null, 2)}</pre>;
+        return (
+            <textarea
+                className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329] min-h-[80px] font-mono text-sm"
+                value={JSON.stringify(variable, null, 2)}
+                onChange={(e) => {
+                    if (onChange) {
+                        try {
+                            onChange(JSON.parse(e.target.value));
+                        } catch (err) {
+                            // Handle parse error
+                        }
+                    }
+                }}
+            />
+        );
     }
 }
 
@@ -314,9 +418,32 @@ interface VariableDirective extends BaseDirective {
     variables: { [key: string]: Variable };
 }
 
-function VariableDirectiveComponent({ variables }: { variables: { [key: string]: Variable } }) {
+function VariableDirectiveComponent({
+    variables,
+    onChange
+}: {
+    variables: { [key: string]: Variable },
+    onChange: (variables: { [key: string]: Variable }) => void
+}) {
     const [isExpanded, setIsExpanded] = useState(true);
-    const [vars, setVars] = useState(variables);
+    const [newVarKey, setNewVarKey] = useState("");
+
+    const updateVariable = (key: string, value: Variable) => {
+        onChange({ ...variables, [key]: value });
+    };
+
+    const removeVariable = (key: string) => {
+        const updated = { ...variables };
+        delete updated[key];
+        onChange(updated);
+    };
+
+    const addVariable = () => {
+        if (newVarKey.trim()) {
+            onChange({ ...variables, [newVarKey]: "" });
+            setNewVarKey("");
+        }
+    };
 
     return (
         <div className="bg-white rounded-md shadow-sm border border-[#e6f1d6] mb-4">
@@ -336,19 +463,41 @@ function VariableDirectiveComponent({ variables }: { variables: { [key: string]:
 
             {isExpanded && (
                 <div className="p-4 border-t border-[#e6f1d6]">
-                    {Object.entries(vars).map(([key, value], index) => (
+                    {Object.entries(variables).map(([key, value], index) => (
                         <div key={index} className="mb-4 last:mb-0">
-                            <div className="mb-1 font-medium text-sm text-[#1e2a16]">{key}</div>
+                            <div className="flex justify-between mb-1">
+                                <span className="font-medium text-sm text-[#1e2a16]">{key}</span>
+                                <button
+                                    className="text-gray-400 hover:text-[#6aa329]"
+                                    onClick={() => removeVariable(key)}
+                                >
+                                    <TrashIcon className="h-4 w-4" />
+                                </button>
+                            </div>
                             <div className="pl-4 border-l-2 border-[#d3e7b6]">
-                                <VariableComponent variable={value} />
+                                <VariableComponent
+                                    variable={value}
+                                    onChange={(updated) => updateVariable(key, updated)}
+                                />
                             </div>
                         </div>
                     ))}
 
-                    <button className="mt-3 flex items-center text-sm text-[#4f7b38] hover:text-[#6aa329]">
-                        <PlusIcon className="h-4 w-4 mr-1" />
-                        Add Variable
-                    </button>
+                    <div className="mt-4 flex">
+                        <input
+                            className="flex-grow px-3 py-2 border border-gray-200 rounded-l-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
+                            placeholder="New variable name"
+                            value={newVarKey}
+                            onChange={(e) => setNewVarKey(e.target.value)}
+                            onKeyPress={(e) => e.key === 'Enter' && addVariable()}
+                        />
+                        <button
+                            className="px-4 py-2 bg-[#6aa329] text-white rounded-r-md hover:bg-[#4f7b38]"
+                            onClick={addVariable}
+                        >
+                            Add Variable
+                        </button>
+                    </div>
                 </div>
             )}
         </div>
@@ -365,8 +514,38 @@ interface TemplateDirective extends BaseDirective {
     template: Template;
 }
 
-function TemplateDirectiveComponent({ template }: { template: Template }) {
+function TemplateDirectiveComponent({
+    template,
+    onChange
+}: {
+    template: Template,
+    onChange: (template: Template) => void
+}) {
     const [isExpanded, setIsExpanded] = useState(true);
+    const [newParamKey, setNewParamKey] = useState("");
+
+    const updateName = (name: string) => {
+        onChange({ ...template, name });
+    };
+
+    const updateParam = (key: string, value: unknown) => {
+        onChange({ ...template, [key]: value });
+    };
+
+    const removeParam = (key: string) => {
+        if (key === 'name') return; // Don't allow removing the name
+
+        const updated = { ...template };
+        delete updated[key];
+        onChange(updated);
+    };
+
+    const addParam = () => {
+        if (newParamKey.trim() && newParamKey !== 'name') {
+            onChange({ ...template, [newParamKey]: "" });
+            setNewParamKey("");
+        }
+    };
 
     return (
         <div className="bg-white rounded-md shadow-sm border border-[#e6f1d6] mb-4">
@@ -391,6 +570,7 @@ function TemplateDirectiveComponent({ template }: { template: Template }) {
                         <input
                             className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
                             value={template.name}
+                            onChange={(e) => updateName(e.target.value)}
                         />
                     </div>
 
@@ -398,18 +578,40 @@ function TemplateDirectiveComponent({ template }: { template: Template }) {
                         if (key === 'name') return null;
                         return (
                             <div key={key} className="mb-4 last:mb-0">
-                                <label className="block mb-1 font-medium text-sm text-[#1e2a16]">{key}</label>
+                                <div className="flex justify-between mb-1">
+                                    <label className="block font-medium text-sm text-[#1e2a16]">{key}</label>
+                                    <button
+                                        className="text-gray-400 hover:text-[#6aa329]"
+                                        onClick={() => removeParam(key)}
+                                    >
+                                        <TrashIcon className="h-4 w-4" />
+                                    </button>
+                                </div>
                                 <div className="pl-4 border-l-2 border-[#d3e7b6]">
-                                    <VariableComponent variable={value} />
+                                    <VariableComponent
+                                        variable={value}
+                                        onChange={(updated) => updateParam(key, updated)}
+                                    />
                                 </div>
                             </div>
                         );
                     })}
 
-                    <button className="mt-3 flex items-center text-sm text-[#4f7b38] hover:text-[#6aa329]">
-                        <PlusIcon className="h-4 w-4 mr-1" />
-                        Add Parameter
-                    </button>
+                    <div className="mt-4 flex">
+                        <input
+                            className="flex-grow px-3 py-2 border border-gray-200 rounded-l-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
+                            placeholder="New parameter name"
+                            value={newParamKey}
+                            onChange={(e) => setNewParamKey(e.target.value)}
+                            onKeyPress={(e) => e.key === 'Enter' && addParam()}
+                        />
+                        <button
+                            className="px-4 py-2 bg-[#6aa329] text-white rounded-r-md hover:bg-[#4f7b38]"
+                            onClick={addParam}
+                        >
+                            Add Parameter
+                        </button>
+                    </div>
                 </div>
             )}
         </div>
@@ -425,47 +627,52 @@ interface DeployDirective extends BaseDirective {
     deploy: DeployInfo;
 }
 
-function DeployDirectiveComponent({ deploy }: { deploy: DeployInfo }) {
+function DeployDirectiveComponent({
+    deploy,
+    onChange
+}: {
+    deploy: DeployInfo,
+    onChange: (deploy: DeployInfo) => void
+}) {
     const [isExpanded, setIsExpanded] = useState(true);
-    const [deployData, setDeployData] = useState(deploy);
 
     const addPath = () => {
-        setDeployData({
-            ...deployData,
-            path: [...(deployData.path || []), ""]
+        onChange({
+            ...deploy,
+            path: [...(deploy.path || []), ""]
         });
     };
 
     const updatePath = (index: number, value: string) => {
-        const updated = [...(deployData.path || [])];
+        const updated = [...(deploy.path || [])];
         updated[index] = value;
-        setDeployData({ ...deployData, path: updated });
+        onChange({ ...deploy, path: updated });
     };
 
     const removePath = (index: number) => {
-        setDeployData({
-            ...deployData,
-            path: (deployData.path || []).filter((_, i) => i !== index)
+        onChange({
+            ...deploy,
+            path: (deploy.path || []).filter((_, i) => i !== index)
         });
     };
 
     const addBin = () => {
-        setDeployData({
-            ...deployData,
-            bins: [...(deployData.bins || []), ""]
+        onChange({
+            ...deploy,
+            bins: [...(deploy.bins || []), ""]
         });
     };
 
     const updateBin = (index: number, value: string) => {
-        const updated = [...(deployData.bins || [])];
+        const updated = [...(deploy.bins || [])];
         updated[index] = value;
-        setDeployData({ ...deployData, bins: updated });
+        onChange({ ...deploy, bins: updated });
     };
 
     const removeBin = (index: number) => {
-        setDeployData({
-            ...deployData,
-            bins: (deployData.bins || []).filter((_, i) => i !== index)
+        onChange({
+            ...deploy,
+            bins: (deploy.bins || []).filter((_, i) => i !== index)
         });
     };
 
@@ -499,7 +706,7 @@ function DeployDirectiveComponent({ deploy }: { deploy: DeployInfo }) {
                             </button>
                         </div>
 
-                        {(deployData.path || []).map((path, index) => (
+                        {(deploy.path || []).map((path, index) => (
                             <div key={index} className="flex mb-2">
                                 <input
                                     className="flex-grow px-3 py-2 border border-gray-200 rounded-l-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
@@ -529,7 +736,7 @@ function DeployDirectiveComponent({ deploy }: { deploy: DeployInfo }) {
                             </button>
                         </div>
 
-                        {(deployData.bins || []).map((bin, index) => (
+                        {(deploy.bins || []).map((bin, index) => (
                             <div key={index} className="flex mb-2">
                                 <input
                                     className="flex-grow px-3 py-2 border border-gray-200 rounded-l-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
@@ -556,9 +763,14 @@ interface UserDirective extends BaseDirective {
     user: string;
 }
 
-function UserDirectiveComponent({ user }: { user: string }) {
+function UserDirectiveComponent({
+    user,
+    onChange
+}: {
+    user: string,
+    onChange: (user: string) => void
+}) {
     const [isExpanded, setIsExpanded] = useState(true);
-    const [value, setValue] = useState(user);
 
     return (
         <div className="bg-white rounded-md shadow-sm border border-[#e6f1d6] mb-4">
@@ -580,8 +792,8 @@ function UserDirectiveComponent({ user }: { user: string }) {
                 <div className="p-4 border-t border-[#e6f1d6]">
                     <input
                         className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
-                        value={value}
-                        onChange={(e) => setValue(e.target.value)}
+                        value={user}
+                        onChange={(e) => onChange(e.target.value)}
                         placeholder="Username"
                     />
                 </div>
@@ -594,22 +806,27 @@ interface CopyDirective extends BaseDirective {
     copy: string[];
 }
 
-function CopyDirectiveComponent({ copy }: { copy: string[] }) {
+function CopyDirectiveComponent({
+    copy,
+    onChange
+}: {
+    copy: string[],
+    onChange: (copy: string[]) => void
+}) {
     const [isExpanded, setIsExpanded] = useState(true);
-    const [paths, setPaths] = useState(copy);
 
     const addPath = () => {
-        setPaths([...paths, ""]);
+        onChange([...copy, ""]);
     };
 
     const updatePath = (index: number, value: string) => {
-        const updated = [...paths];
+        const updated = [...copy];
         updated[index] = value;
-        setPaths(updated);
+        onChange(updated);
     };
 
     const removePath = (index: number) => {
-        setPaths(paths.filter((_, i) => i !== index));
+        onChange(copy.filter((_, i) => i !== index));
     };
 
     return (
@@ -630,7 +847,7 @@ function CopyDirectiveComponent({ copy }: { copy: string[] }) {
 
             {isExpanded && (
                 <div className="p-4 border-t border-[#e6f1d6]">
-                    {paths.map((path, index) => (
+                    {copy.map((path, index) => (
                         <div key={index} className="flex mb-2">
                             <input
                                 className="flex-grow px-3 py-2 border border-gray-200 rounded-l-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
@@ -669,16 +886,21 @@ interface FileDirective extends BaseDirective {
     file: FileInfo;
 }
 
-function FileDirectiveComponent({ file }: { file: FileInfo }) {
+function FileDirectiveComponent({
+    file,
+    onChange
+}: {
+    file: FileInfo,
+    onChange: (file: FileInfo) => void
+}) {
     const [isExpanded, setIsExpanded] = useState(true);
-    const [fileData, setFileData] = useState(file);
 
     const updateName = (value: string) => {
-        setFileData({ ...fileData, name: value });
+        onChange({ ...file, name: value });
     };
 
     const updateFilename = (value: string) => {
-        setFileData({ ...fileData, filename: value });
+        onChange({ ...file, filename: value });
     };
 
     return (
@@ -694,7 +916,7 @@ function FileDirectiveComponent({ file }: { file: FileInfo }) {
                         <ChevronRightIcon className="h-5 w-5" />
                     )}
                 </button>
-                <h2 className="text-[#0c0e0a] font-medium">File: {fileData.name}</h2>
+                <h2 className="text-[#0c0e0a] font-medium">File: {file.name}</h2>
             </div>
 
             {isExpanded && (
@@ -703,7 +925,7 @@ function FileDirectiveComponent({ file }: { file: FileInfo }) {
                         <label className="block mb-1 font-medium text-sm text-[#1e2a16]">Name</label>
                         <input
                             className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
-                            value={fileData.name}
+                            value={file.name}
                             onChange={(e) => updateName(e.target.value)}
                         />
                     </div>
@@ -712,7 +934,7 @@ function FileDirectiveComponent({ file }: { file: FileInfo }) {
                         <label className="block mb-1 font-medium text-sm text-[#1e2a16]">Filename</label>
                         <input
                             className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
-                            value={fileData.filename}
+                            value={file.filename}
                             onChange={(e) => updateFilename(e.target.value)}
                         />
                     </div>
@@ -738,13 +960,24 @@ interface TestDirective extends BaseDirective {
     test: TestInfo;
 }
 
-function TestDirectiveComponent({ test }: { test: TestInfo }) {
+function TestDirectiveComponent({
+    test,
+    onChange
+}: {
+    test: TestInfo,
+    onChange: (test: TestInfo) => void
+}) {
     const [isExpanded, setIsExpanded] = useState(true);
-    const [testData, setTestData] = useState(test);
     const isBuiltin = 'builtin' in test;
 
     const updateName = (value: string) => {
-        setTestData({ ...testData, name: value });
+        onChange({ ...test, name: value });
+    };
+
+    const updateScript = (value: string) => {
+        if (!isBuiltin) {
+            onChange({ ...test, script: value } as ScriptTest);
+        }
     };
 
     return (
@@ -761,7 +994,7 @@ function TestDirectiveComponent({ test }: { test: TestInfo }) {
                     )}
                 </button>
                 <h2 className="text-[#0c0e0a] font-medium">
-                    Test: {testData.name}
+                    Test: {test.name}
                     <span className="ml-2 text-xs font-normal bg-[#e6f1d6] px-2 py-0.5 rounded-full">
                         {isBuiltin ? 'Builtin' : 'Script'}
                     </span>
@@ -774,7 +1007,7 @@ function TestDirectiveComponent({ test }: { test: TestInfo }) {
                         <label className="block mb-1 font-medium text-sm text-[#1e2a16]">Test Name</label>
                         <input
                             className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
-                            value={testData.name}
+                            value={test.name}
                             onChange={(e) => updateName(e.target.value)}
                         />
                     </div>
@@ -785,13 +1018,13 @@ function TestDirectiveComponent({ test }: { test: TestInfo }) {
                         </label>
                         {isBuiltin ? (
                             <div className="px-3 py-2 border border-gray-200 bg-gray-50 rounded-md text-gray-500">
-                                {(testData as BuiltinTest).builtin}
+                                {(test as BuiltinTest).builtin}
                             </div>
                         ) : (
                             <textarea
                                 className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329] min-h-[120px]"
-                                value={(testData as ScriptTest).script}
-                                onChange={(e) => setTestData({ ...testData, script: e.target.value })}
+                                value={(test as ScriptTest).script}
+                                onChange={(e) => updateScript(e.target.value)}
                             />
                         )}
                     </div>
@@ -815,31 +1048,91 @@ type Directive =
     | FileDirective
     | TestDirective;
 
-function DirectiveComponent({ directive }: { directive: Directive }) {
+function DirectiveComponent({ directive, onChange }: { directive: Directive, onChange: (directive: Directive) => void }) {
     if ('group' in directive) {
-        return <GroupDirectiveComponent group={directive.group} />;
+        return (
+            <GroupDirectiveComponent
+                group={directive.group}
+                onChange={(group) => onChange({ ...directive, group })}
+            />
+        );
     } else if ('environment' in directive) {
-        return <EnvironmentDirectiveComponent environment={directive.environment} />;
+        return (
+            <EnvironmentDirectiveComponent
+                environment={directive.environment}
+                onChange={(environment) => onChange({ ...directive, environment })}
+            />
+        );
     } else if ('install' in directive) {
-        return <InstallDirectiveComponent install={directive.install} />;
+        return (
+            <InstallDirectiveComponent
+                install={directive.install}
+                onChange={(install) => onChange({ ...directive, install })}
+            />
+        );
     } else if ('workdir' in directive) {
-        return <WorkingDirectoryDirectiveComponent workdir={directive.workdir} />;
+        return (
+            <WorkingDirectoryDirectiveComponent
+                workdir={directive.workdir}
+                onChange={(workdir) => onChange({ ...directive, workdir })}
+            />
+        );
     } else if ('run' in directive) {
-        return <RunCommandDirectiveComponent run={directive.run} />;
+        return (
+            <RunCommandDirectiveComponent
+                run={directive.run}
+                onChange={(run) => onChange({ ...directive, run })}
+            />
+        );
     } else if ('variables' in directive) {
-        return <VariableDirectiveComponent variables={directive.variables} />;
+        return (
+            <VariableDirectiveComponent
+                variables={directive.variables}
+                onChange={(variables) => onChange({ ...directive, variables })}
+            />
+        );
     } else if ('template' in directive) {
-        return <TemplateDirectiveComponent template={directive.template} />;
+        return (
+            <TemplateDirectiveComponent
+                template={directive.template}
+                onChange={(template) => onChange({ ...directive, template })}
+            />
+        );
     } else if ('deploy' in directive) {
-        return <DeployDirectiveComponent deploy={directive.deploy} />;
+        return (
+            <DeployDirectiveComponent
+                deploy={directive.deploy}
+                onChange={(deploy) => onChange({ ...directive, deploy })}
+            />
+        );
     } else if ('user' in directive) {
-        return <UserDirectiveComponent user={directive.user} />;
+        return (
+            <UserDirectiveComponent
+                user={directive.user}
+                onChange={(user) => onChange({ ...directive, user })}
+            />
+        );
     } else if ('copy' in directive) {
-        return <CopyDirectiveComponent copy={directive.copy} />;
+        return (
+            <CopyDirectiveComponent
+                copy={directive.copy}
+                onChange={(copy) => onChange({ ...directive, copy })}
+            />
+        );
     } else if ('file' in directive) {
-        return <FileDirectiveComponent file={directive.file} />;
+        return (
+            <FileDirectiveComponent
+                file={directive.file}
+                onChange={(file) => onChange({ ...directive, file })}
+            />
+        );
     } else if ('test' in directive) {
-        return <TestDirectiveComponent test={directive.test} />;
+        return (
+            <TestDirectiveComponent
+                test={directive.test}
+                onChange={(test) => onChange({ ...directive, test })}
+            />
+        );
     } else {
         return (
             <div className="bg-white rounded-md shadow-sm border border-red-200 mb-4 p-4 text-red-500">
@@ -856,10 +1149,82 @@ interface NeuroDockerBuildRecipe {
     directives: Directive[];
 }
 
-function NeuroDockerBuildRecipeComponent({ recipe }: { recipe: NeuroDockerBuildRecipe }) {
-    const [baseImage, setBaseImage] = useState(recipe["base-image"]);
-    const [pkgManager, setPkgManager] = useState(recipe["pkg-manager"]);
-    const [directives, setDirectives] = useState(recipe.directives);
+function NeuroDockerBuildRecipeComponent({
+    recipe,
+    onChange
+}: {
+    recipe: NeuroDockerBuildRecipe,
+    onChange: (recipe: NeuroDockerBuildRecipe) => void
+}) {
+    const updateBaseImage = (value: string) => {
+        onChange({ ...recipe, "base-image": value });
+    };
+
+    const updatePkgManager = (value: string) => {
+        onChange({ ...recipe, "pkg-manager": value });
+    };
+
+    const updateDirective = (index: number, directive: Directive) => {
+        const updatedDirectives = [...recipe.directives];
+        updatedDirectives[index] = directive;
+        onChange({ ...recipe, directives: updatedDirectives });
+    };
+
+    const addDirective = (type: string) => {
+        let newDirective: Directive;
+
+        switch (type) {
+            case "group":
+                newDirective = { group: [] };
+                break;
+            case "environment":
+                newDirective = { environment: {} };
+                break;
+            case "install":
+                newDirective = { install: "" };
+                break;
+            case "workdir":
+                newDirective = { workdir: "" };
+                break;
+            case "run":
+                newDirective = { run: [""] };
+                break;
+            case "variables":
+                newDirective = { variables: {} };
+                break;
+            case "template":
+                newDirective = { template: { name: "new-template" } };
+                break;
+            case "deploy":
+                newDirective = { deploy: { path: [], bins: [] } };
+                break;
+            case "user":
+                newDirective = { user: "" };
+                break;
+            case "copy":
+                newDirective = { copy: [""] };
+                break;
+            case "file":
+                newDirective = { file: { name: "", filename: "" } };
+                break;
+            case "test":
+                newDirective = { test: { name: "", script: "" } };
+                break;
+            default:
+                return;
+        }
+
+        onChange({ ...recipe, directives: [...recipe.directives, newDirective] });
+    };
+
+    const removeDirective = (index: number) => {
+        onChange({
+            ...recipe,
+            directives: recipe.directives.filter((_, i) => i !== index)
+        });
+    };
+
+    const [directiveType, setDirectiveType] = useState("");
 
     return (
         <div className="bg-white rounded-lg shadow-md border border-[#d3e7b6]">
@@ -873,8 +1238,8 @@ function NeuroDockerBuildRecipeComponent({ recipe }: { recipe: NeuroDockerBuildR
                         <label className="block mb-2 font-medium text-[#1e2a16]">Base Image</label>
                         <input
                             className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
-                            value={baseImage}
-                            onChange={(e) => setBaseImage(e.target.value)}
+                            value={recipe["base-image"]}
+                            onChange={(e) => updateBaseImage(e.target.value)}
                             placeholder="e.g. ubuntu:22.04"
                         />
                     </div>
@@ -883,8 +1248,8 @@ function NeuroDockerBuildRecipeComponent({ recipe }: { recipe: NeuroDockerBuildR
                         <label className="block mb-2 font-medium text-[#1e2a16]">Package Manager</label>
                         <select
                             className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] bg-white focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
-                            value={pkgManager}
-                            onChange={(e) => setPkgManager(e.target.value)}
+                            value={recipe["pkg-manager"]}
+                            onChange={(e) => updatePkgManager(e.target.value)}
                         >
                             <option value="apt">apt</option>
                             <option value="yum">yum</option>
@@ -900,7 +1265,8 @@ function NeuroDockerBuildRecipeComponent({ recipe }: { recipe: NeuroDockerBuildR
                         <div className="flex">
                             <select
                                 className="px-3 py-2 border border-[#6aa329] rounded-l-md text-[#0c0e0a] bg-white focus:outline-none focus:ring-1 focus:ring-[#6aa329]"
-                                defaultValue=""
+                                value={directiveType}
+                                onChange={(e) => setDirectiveType(e.target.value)}
                             >
                                 <option value="" disabled>Add directive...</option>
                                 <option value="group">Group</option>
@@ -916,14 +1282,33 @@ function NeuroDockerBuildRecipeComponent({ recipe }: { recipe: NeuroDockerBuildR
                                 <option value="file">File</option>
                                 <option value="test">Test</option>
                             </select>
-                            <button className="px-4 py-2 bg-[#6aa329] text-white rounded-r-md hover:bg-[#4f7b38] focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:ring-offset-2">
+                            <button
+                                className="px-4 py-2 bg-[#6aa329] text-white rounded-r-md hover:bg-[#4f7b38] focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:ring-offset-2"
+                                onClick={() => {
+                                    if (directiveType) {
+                                        addDirective(directiveType);
+                                        setDirectiveType("");
+                                    }
+                                }}
+                            >
                                 Add
                             </button>
                         </div>
                     </div>
 
-                    {directives.map((directive, index) => (
-                        <DirectiveComponent key={index} directive={directive} />
+                    {recipe.directives.map((directive, index) => (
+                        <div key={index} className="relative">
+                            <DirectiveComponent
+                                directive={directive}
+                                onChange={(updated) => updateDirective(index, updated)}
+                            />
+                            <button
+                                className="absolute top-3 right-3 text-gray-400 hover:text-[#6aa329]"
+                                onClick={() => removeDirective(index)}
+                            >
+                                <TrashIcon className="h-5 w-5" />
+                            </button>
+                        </div>
                     ))}
                 </div>
             </div>
@@ -933,9 +1318,9 @@ function NeuroDockerBuildRecipeComponent({ recipe }: { recipe: NeuroDockerBuildR
 
 type BuildRecipe = NeuroDockerBuildRecipe;
 
-function BuildRecipeComponent({ recipe }: { recipe: BuildRecipe }) {
+function BuildRecipeComponent({ recipe, onChange }: { recipe: BuildRecipe, onChange: (recipe: BuildRecipe) => void }) {
     if (recipe.kind === "neurodocker") {
-        return <NeuroDockerBuildRecipeComponent recipe={recipe} />;
+        return <NeuroDockerBuildRecipeComponent recipe={recipe} onChange={onChange} />;
     } else {
         return (
             <div className="bg-white rounded-lg shadow-md border border-red-200 p-6 text-red-500">
@@ -967,12 +1352,57 @@ async function getDefaultYAML(): Promise<ContainerRecipe> {
     return loadYAML(text) as ContainerRecipe;
 }
 
-function ContainerHeader({ recipe }: { recipe: ContainerRecipe }) {
-    const [name, setName] = useState(recipe.name);
-    const [version, setVersion] = useState(recipe.version);
-    const [architectures, setArchitectures] = useState(recipe.architectures);
-    const [readme, setReadme] = useState(recipe.readme || "");
-    const [readmeUrl, setReadmeUrl] = useState(recipe.readme_url || "");
+function ContainerHeader({
+    recipe,
+    onChange
+}: {
+    recipe: ContainerRecipe,
+    onChange: (recipe: ContainerRecipe) => void
+}) {
+    const updateName = (name: string) => {
+        onChange({ ...recipe, name });
+    };
+
+    const updateVersion = (version: string) => {
+        onChange({ ...recipe, version });
+    };
+
+    const updateArchitectures = (architectures: Architecture[]) => {
+        onChange({ ...recipe, architectures });
+    };
+
+    const updateReadme = (readme: string) => {
+        onChange({ ...recipe, readme });
+    };
+
+    const updateReadmeUrl = (readme_url: string) => {
+        onChange({ ...recipe, readme_url });
+    };
+
+    const updateCopyright = (index: number, info: CopyrightInfo) => {
+        if (!recipe.copyright) return;
+
+        const updated = [...recipe.copyright];
+        updated[index] = info;
+        onChange({ ...recipe, copyright: updated });
+    };
+
+    const addCopyright = () => {
+        const newCopyright = { license: "", url: "" };
+        onChange({
+            ...recipe,
+            copyright: [...(recipe.copyright || []), newCopyright]
+        });
+    };
+
+    const removeCopyright = (index: number) => {
+        if (!recipe.copyright) return;
+
+        onChange({
+            ...recipe,
+            copyright: recipe.copyright.filter((_, i) => i !== index)
+        });
+    };
 
     return (
         <div className="bg-white rounded-lg shadow-md border border-[#d3e7b6] mb-6">
@@ -986,8 +1416,8 @@ function ContainerHeader({ recipe }: { recipe: ContainerRecipe }) {
                         <label className="block mb-2 font-medium text-[#1e2a16]">Name</label>
                         <input
                             className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
+                            value={recipe.name}
+                            onChange={(e) => updateName(e.target.value)}
                         />
                     </div>
 
@@ -995,8 +1425,8 @@ function ContainerHeader({ recipe }: { recipe: ContainerRecipe }) {
                         <label className="block mb-2 font-medium text-[#1e2a16]">Version</label>
                         <input
                             className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
-                            value={version}
-                            onChange={(e) => setVersion(e.target.value)}
+                            value={recipe.version}
+                            onChange={(e) => updateVersion(e.target.value)}
                         />
                     </div>
 
@@ -1007,12 +1437,12 @@ function ContainerHeader({ recipe }: { recipe: ContainerRecipe }) {
                                 <input
                                     type="checkbox"
                                     className="rounded border-gray-300 text-[#6aa329] focus:ring-[#6aa329]"
-                                    checked={architectures.includes("x86_64")}
+                                    checked={recipe.architectures.includes("x86_64")}
                                     onChange={(e) => {
                                         if (e.target.checked) {
-                                            setArchitectures([...architectures, "x86_64"]);
+                                            updateArchitectures([...recipe.architectures, "x86_64"]);
                                         } else {
-                                            setArchitectures(architectures.filter(arch => arch !== "x86_64"));
+                                            updateArchitectures(recipe.architectures.filter(arch => arch !== "x86_64"));
                                         }
                                     }}
                                 />
@@ -1023,12 +1453,12 @@ function ContainerHeader({ recipe }: { recipe: ContainerRecipe }) {
                                 <input
                                     type="checkbox"
                                     className="rounded border-gray-300 text-[#6aa329] focus:ring-[#6aa329]"
-                                    checked={architectures.includes("aarch64")}
+                                    checked={recipe.architectures.includes("aarch64")}
                                     onChange={(e) => {
                                         if (e.target.checked) {
-                                            setArchitectures([...architectures, "aarch64"]);
+                                            updateArchitectures([...recipe.architectures, "aarch64"]);
                                         } else {
-                                            setArchitectures(architectures.filter(arch => arch !== "aarch64"));
+                                            updateArchitectures(recipe.architectures.filter(arch => arch !== "aarch64"));
                                         }
                                     }}
                                 />
@@ -1041,8 +1471,8 @@ function ContainerHeader({ recipe }: { recipe: ContainerRecipe }) {
                         <label className="block mb-2 font-medium text-[#1e2a16]">Readme</label>
                         <input
                             className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
-                            value={readme}
-                            onChange={(e) => setReadme(e.target.value)}
+                            value={recipe.readme || ""}
+                            onChange={(e) => updateReadme(e.target.value)}
                             placeholder="Path to readme file"
                         />
                     </div>
@@ -1051,48 +1481,58 @@ function ContainerHeader({ recipe }: { recipe: ContainerRecipe }) {
                         <label className="block mb-2 font-medium text-[#1e2a16]">Readme URL</label>
                         <input
                             className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
-                            value={readmeUrl}
-                            onChange={(e) => setReadmeUrl(e.target.value)}
+                            value={recipe.readme_url || ""}
+                            onChange={(e) => updateReadmeUrl(e.target.value)}
                             placeholder="URL to readme file"
                         />
                     </div>
                 </div>
 
-                {recipe.copyright && (
-                    <div className="mt-6">
-                        <div className="flex justify-between items-center mb-3">
-                            <h3 className="font-medium text-[#1e2a16]">Copyright Information</h3>
-                            <button className="text-sm text-[#4f7b38] hover:text-[#6aa329] flex items-center">
-                                <PlusIcon className="h-4 w-4 mr-1" />
-                                Add License
+                <div className="mt-6">
+                    <div className="flex justify-between items-center mb-3">
+                        <h3 className="font-medium text-[#1e2a16]">Copyright Information</h3>
+                        <button
+                            className="text-sm text-[#4f7b38] hover:text-[#6aa329] flex items-center"
+                            onClick={addCopyright}
+                        >
+                            <PlusIcon className="h-4 w-4 mr-1" />
+                            Add License
+                        </button>
+                    </div>
+
+                    {(recipe.copyright || []).map((info, index) => (
+                        <div key={index} className="mb-4 last:mb-0 p-4 bg-[#f0f7e7] rounded-md relative">
+                            <button
+                                className="absolute top-3 right-3 text-gray-400 hover:text-[#6aa329]"
+                                onClick={() => removeCopyright(index)}
+                            >
+                                <TrashIcon className="h-5 w-5" />
                             </button>
-                        </div>
 
-                        {recipe.copyright.map((info, index) => (
-                            <div key={index} className="mb-4 last:mb-0 p-4 bg-[#f0f7e7] rounded-md">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block mb-1 text-sm font-medium text-[#1e2a16]">License</label>
-                                        <input
-                                            className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329] bg-white"
-                                            defaultValue={info.license}
-                                            placeholder="SPDX License Identifier"
-                                        />
-                                    </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block mb-1 text-sm font-medium text-[#1e2a16]">License</label>
+                                    <input
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329] bg-white"
+                                        value={info.license}
+                                        onChange={(e) => updateCopyright(index, { ...info, license: e.target.value })}
+                                        placeholder="SPDX License Identifier"
+                                    />
+                                </div>
 
-                                    <div>
-                                        <label className="block mb-1 text-sm font-medium text-[#1e2a16]">URL</label>
-                                        <input
-                                            className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329] bg-white"
-                                            defaultValue={info.url}
-                                            placeholder="License URL"
-                                        />
-                                    </div>
+                                <div>
+                                    <label className="block mb-1 text-sm font-medium text-[#1e2a16]">URL</label>
+                                    <input
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329] bg-white"
+                                        value={info.url}
+                                        onChange={(e) => updateCopyright(index, { ...info, url: e.target.value })}
+                                        placeholder="License URL"
+                                    />
                                 </div>
                             </div>
-                        ))}
-                    </div>
-                )}
+                        </div>
+                    ))}
+                </div>
             </div>
         </div>
     );
@@ -1139,55 +1579,21 @@ function WizardNavigation({
     );
 }
 
-function TestsComponent({ tests }: { tests: TestInfo[] }) {
-    return (
-        <div className="bg-white rounded-lg shadow-md border border-[#d3e7b6] mb-6">
-            <div className="p-4 bg-[#f0f7e7] rounded-t-lg">
-                <h2 className="text-xl font-semibold text-[#0c0e0a]">Tests</h2>
-            </div>
-
-            <div className="p-6">
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-medium text-[#1e2a16]">Test Definitions</h3>
-                    <div className="flex">
-                        <select
-                            className="px-3 py-2 border border-[#6aa329] rounded-l-md text-[#0c0e0a] bg-white focus:outline-none focus:ring-1 focus:ring-[#6aa329]"
-                            defaultValue=""
-                        >
-                            <option value="" disabled>Add test type...</option>
-                            <option value="builtin">Builtin Test</option>
-                            <option value="script">Script Test</option>
-                        </select>
-                        <button className="px-4 py-2 bg-[#6aa329] text-white rounded-r-md hover:bg-[#4f7b38] focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:ring-offset-2">
-                            Add
-                        </button>
-                    </div>
-                </div>
-
-                {tests.map((test, index) => (
-                    <div key={index}>
-                        <TestDirectiveComponent test={test} />
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-}
-
 export default function Home() {
     const [yamlData, setYamlData] = useState<ContainerRecipe | null>(null);
     const [loading, setLoading] = useState(true);
     const [currentStep, setCurrentStep] = useState(0);
     const [yamlText, setYamlText] = useState("");
 
-    const totalSteps = 4; // Basic Info, Build, Deploy, Tests
+    // Simplified to just 2 steps: Basic Info and Build Recipe
+    const totalSteps = 2;
 
     useEffect(() => {
         getDefaultYAML()
             .then((data) => {
                 console.log("YAML data:", data);
                 setYamlData(data);
-                setYamlText(JSON.stringify(data, null, 2));
+                setYamlText(dumpYAML(data));
                 setLoading(false);
             })
             .catch((error) => {
@@ -1195,6 +1601,17 @@ export default function Home() {
                 setLoading(false);
             });
     }, []);
+
+    // Update YAML text when yamlData changes
+    useEffect(() => {
+        if (yamlData) {
+            try {
+                setYamlText(dumpYAML(yamlData));
+            } catch (err) {
+                console.error("Error dumping YAML:", err);
+            }
+        }
+    }, [yamlData]);
 
     const nextStep = () => {
         if (currentStep < totalSteps - 1) {
@@ -1220,6 +1637,17 @@ export default function Home() {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+    };
+
+    // Update yamlData from YAML text
+    const updateFromYamlText = () => {
+        try {
+            const parsed = loadYAML(yamlText) as ContainerRecipe;
+            setYamlData(parsed);
+        } catch (err) {
+            console.error("Error parsing YAML:", err);
+            // Could add user feedback for invalid YAML
+        }
     };
 
     return (
@@ -1256,7 +1684,7 @@ export default function Home() {
                     <div>
                         {/* Wizard Steps */}
                         <div className="mb-8">
-                            <div className="grid grid-cols-4 gap-2">
+                            <div className="grid grid-cols-2 gap-2">
                                 <div
                                     className={`p-3 rounded-md text-center ${currentStep === 0
                                             ? "bg-[#6aa329] text-white"
@@ -1278,59 +1706,24 @@ export default function Home() {
                                     <div className="font-medium">Build Recipe</div>
                                     <div className="text-xs mt-1 opacity-80">Define build process</div>
                                 </div>
-
-                                <div
-                                    className={`p-3 rounded-md text-center ${currentStep === 2
-                                            ? "bg-[#6aa329] text-white"
-                                            : "bg-[#e6f1d6] text-[#1e2a16] hover:bg-[#d3e7b6] cursor-pointer"
-                                        }`}
-                                    onClick={() => setCurrentStep(2)}
-                                >
-                                    <div className="font-medium">Deployment</div>
-                                    <div className="text-xs mt-1 opacity-80">Path & binaries</div>
-                                </div>
-
-                                <div
-                                    className={`p-3 rounded-md text-center ${currentStep === 3
-                                            ? "bg-[#6aa329] text-white"
-                                            : "bg-[#e6f1d6] text-[#1e2a16] hover:bg-[#d3e7b6] cursor-pointer"
-                                        }`}
-                                    onClick={() => setCurrentStep(3)}
-                                >
-                                    <div className="font-medium">Tests</div>
-                                    <div className="text-xs mt-1 opacity-80">Validation tests</div>
-                                </div>
                             </div>
                         </div>
 
                         {/* Current Step Content */}
                         <div className="mb-6">
-                            {currentStep === 0 && <ContainerHeader recipe={yamlData} />}
-
-                            {currentStep === 1 && <BuildRecipeComponent recipe={yamlData.build} />}
-
-                            {currentStep === 2 && (
-                                <div className="bg-white rounded-lg shadow-md border border-[#d3e7b6] mb-6">
-                                    <div className="p-4 bg-[#f0f7e7] rounded-t-lg">
-                                        <h2 className="text-xl font-semibold text-[#0c0e0a]">Deployment Configuration</h2>
-                                    </div>
-
-                                    <div className="p-6">
-                                        {yamlData.deploy ? (
-                                            <DeployDirectiveComponent deploy={yamlData.deploy} />
-                                        ) : (
-                                            <div className="text-center py-6">
-                                                <p className="text-[#1e2a16] mb-4">No deployment configuration defined</p>
-                                                <button className="px-4 py-2 bg-[#6aa329] text-white rounded-md hover:bg-[#4f7b38]">
-                                                    Add Deployment Configuration
-                                                </button>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
+                            {currentStep === 0 && (
+                                <ContainerHeader
+                                    recipe={yamlData}
+                                    onChange={(updated) => setYamlData(updated)}
+                                />
                             )}
 
-                            {currentStep === 3 && <TestsComponent tests={yamlData.tests || []} />}
+                            {currentStep === 1 && (
+                                <BuildRecipeComponent
+                                    recipe={yamlData.build}
+                                    onChange={(updated) => setYamlData({ ...yamlData, build: updated })}
+                                />
+                            )}
                         </div>
 
                         {/* YAML Preview (for power users) */}
@@ -1348,7 +1741,16 @@ export default function Home() {
                                     className="w-full h-64 px-4 py-3 font-mono text-sm bg-[#1e2a16] text-white rounded-md focus:outline-none"
                                     value={yamlText}
                                     onChange={(e) => setYamlText(e.target.value)}
+                                    onBlur={updateFromYamlText}
                                 ></textarea>
+                                <div className="mt-3 text-right">
+                                    <button
+                                        className="bg-[#6aa329] text-white px-3 py-1 rounded-md text-sm hover:bg-[#4f7b38]"
+                                        onClick={updateFromYamlText}
+                                    >
+                                        Apply YAML Changes
+                                    </button>
+                                </div>
                             </div>
                         </div>
 

@@ -1,3 +1,4 @@
+import { BuildRecipe } from "./common";
 import NeuroDockerBuildRecipeComponent from "./neurodocker";
 
 export default function BuildRecipeComponent({ recipe, onChange }: { recipe: BuildRecipe, onChange: (recipe: BuildRecipe) => void }) {

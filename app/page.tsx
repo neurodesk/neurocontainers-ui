@@ -474,7 +474,28 @@ export default function Home() {
                             {/* drop region to upload a YAML file */}
                             <div
                                 className="border-2 border-dashed border-[#d3e7b6] rounded-md p-4 text-[#1e2a16] cursor-pointer"
-                                onClick={() => document.querySelector('input[type="file"]')?.click()}
+                                onClick={() => {
+                                    const input = document.createElement("input");
+                                    input.type = "file";
+                                    input.accept = ".yaml, .yml";
+                                    input.onchange = (e) => {
+                                        const file = (e.target as HTMLInputElement).files?.[0];
+                                        if (file) {
+                                            const reader = new FileReader();
+                                            reader.onload = (event) => {
+                                                const text = event.target?.result as string;
+                                                try {
+                                                    const parsed = loadYAML(text) as ContainerRecipe;
+                                                    setYamlData(parsed);
+                                                } catch (err) {
+                                                    console.error("Error parsing YAML:", err);
+                                                }
+                                            };
+                                            reader.readAsText(file);
+                                        }
+                                    };
+                                    input.click();
+                                }}
                                 onDragOver={(e) => e.preventDefault()}
                                 onDrop={(e) => {
                                     e.preventDefault();

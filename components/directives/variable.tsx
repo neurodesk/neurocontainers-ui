@@ -25,8 +25,9 @@ export function VariableComponent({ variable, onChange }: { variable: Variable, 
                                         const updated = [...variable];
                                         updated[index] = JSON.parse(e.target.value);
                                         onChange(updated);
-                                    } catch (err) {
+                                    } catch {
                                         // Handle parse error
+                                        console.error("Invalid JSON:", e.target.value);
                                     }
                                 }
                             }}
@@ -64,8 +65,9 @@ export function VariableComponent({ variable, onChange }: { variable: Variable, 
                     if (onChange) {
                         try {
                             onChange(JSON.parse(e.target.value));
-                        } catch (err) {
+                        } catch {
                             // Handle parse error
+                            console.error("Invalid JSON:", e.target.value);
                         }
                     }
                 }}

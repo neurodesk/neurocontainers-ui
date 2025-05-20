@@ -5,7 +5,7 @@ export default function CopyDirectiveComponent({
     copy,
     onChange
 }: {
-    copy: string[],
+    copy: string[] | string,
     onChange: (copy: string[]) => void
 }) {
     const [isExpanded, setIsExpanded] = useState(true);
@@ -20,8 +20,10 @@ export default function CopyDirectiveComponent({
         onChange(updated);
     };
 
+    const copyAsArray = Array.isArray(copy) ? copy : copy.split(" ");
+
     const removePath = (index: number) => {
-        onChange(copy.filter((_, i) => i !== index));
+        onChange(copyAsArray.filter((_, i) => i !== index));
     };
 
     return (
@@ -42,7 +44,7 @@ export default function CopyDirectiveComponent({
 
             {isExpanded && (
                 <div className="p-4 border-t border-[#e6f1d6]">
-                    {copy.map((path, index) => (
+                    {copyAsArray.map((path, index) => (
                         <div key={index} className="flex mb-2">
                             <input
                                 className="flex-grow px-3 py-2 border border-gray-200 rounded-l-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"

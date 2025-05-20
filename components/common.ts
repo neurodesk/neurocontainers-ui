@@ -63,7 +63,7 @@ export interface UserDirective extends BaseDirective {
 }
 
 export interface CopyDirective extends BaseDirective {
-    copy: string[];
+    copy: string[] | string;
 }
 
 export interface FileInfo {
@@ -91,6 +91,14 @@ export interface TestDirective extends BaseDirective {
     test: TestInfo;
 }
 
+export const IncludeMacros = ["macros/openrecon/neurodocker.yaml"] as const;
+
+export type IncludeMacro = typeof IncludeMacros[number];
+
+export interface IncludeDirective extends BaseDirective {
+    include: IncludeMacro;
+}
+
 export type Directive =
     | GroupDirective
     | EnvironmentDirective
@@ -103,7 +111,8 @@ export type Directive =
     | UserDirective
     | CopyDirective
     | FileDirective
-    | TestDirective;
+    | TestDirective
+    | IncludeDirective;
 
 export interface NeuroDockerBuildRecipe {
     kind: "neurodocker";
@@ -124,5 +133,5 @@ export interface ContainerRecipe {
     build: BuildRecipe;
     files?: FileInfo[];
     deploy?: DeployInfo;
-    tests: TestInfo[];
+    tests?: TestInfo[];
 }

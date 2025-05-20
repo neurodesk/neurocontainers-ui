@@ -1,9 +1,16 @@
-import { ChevronDownIcon, ChevronRightIcon, TrashIcon, PlusIcon } from "@heroicons/react/outline";
+import { ChevronDownIcon, ChevronRightIcon, TrashIcon } from "@heroicons/react/outline";
 import { useState } from "react";
 import { Directive } from "@/components/common";
 import DirectiveComponent from "./factory";
+import AddDirectiveButton from "@/components/add";
 
-export default function GroupDirectiveComponent({ group, onChange }: { group: Directive[], onChange: (group: Directive[]) => void }) {
+export default function GroupDirectiveComponent({
+    group,
+    onChange,
+}: {
+    group: Directive[];
+    onChange: (group: Directive[]) => void;
+}) {
     const [isExpanded, setIsExpanded] = useState(true);
 
     const handleDirectiveChange = (index: number, updatedDirective: Directive) => {
@@ -12,9 +19,8 @@ export default function GroupDirectiveComponent({ group, onChange }: { group: Di
         onChange(updatedGroup);
     };
 
-    const addDirective = () => {
-        // Default to an empty install directive as a simple starting point
-        onChange([...group, { install: "" }]);
+    const addDirective = (directive: Directive) => {
+        onChange([...group, directive]);
     };
 
     const removeDirective = (index: number) => {
@@ -54,13 +60,9 @@ export default function GroupDirectiveComponent({ group, onChange }: { group: Di
                             </button>
                         </div>
                     ))}
-                    <button
-                        className="mt-4 flex items-center text-sm text-[#4f7b38] hover:text-[#6aa329]"
-                        onClick={addDirective}
-                    >
-                        <PlusIcon className="h-4 w-4 mr-1" />
-                        Add New Directive
-                    </button>
+                    <div className="mt-4">
+                        <AddDirectiveButton onAddDirective={addDirective} />
+                    </div>
                 </div>
             )}
         </div>

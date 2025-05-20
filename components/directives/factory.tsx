@@ -12,8 +12,12 @@ import UserDirectiveComponent from "./user";
 import VariableDirectiveComponent from "./variable";
 import WorkingDirectoryDirectiveComponent from "./workdir";
 import TestDirectiveComponent from "./test";
+import IncludeDirectiveComponent from "./include";
 
-export default function DirectiveComponent({ directive, onChange }: { directive: Directive, onChange: (directive: Directive) => void }) {
+export default function DirectiveComponent({ directive, onChange }: {
+    directive: Directive;
+    onChange: (directive: Directive) => void;
+}) {
     if ('group' in directive) {
         return (
             <GroupDirectiveComponent
@@ -98,6 +102,11 @@ export default function DirectiveComponent({ directive, onChange }: { directive:
                 onChange={(test) => onChange({ ...directive, test })}
             />
         );
+    } else if ('include' in directive) {
+        return <IncludeDirectiveComponent
+            include={directive.include}
+            onChange={(include) => onChange({ ...directive, include })}
+        />;
     } else {
         return (
             <div className="bg-white rounded-md shadow-sm border border-red-200 mb-4 p-4 text-red-500">

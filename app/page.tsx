@@ -11,6 +11,8 @@ enum WizardStep {
     BuildRecipe = 1
 }
 
+const TOTAL_STEPS = 2;
+
 async function getDefaultYAML(): Promise<ContainerRecipe> {
     const res = await fetch("/qsmxt.yaml");
     if (!res.ok) {
@@ -18,6 +20,22 @@ async function getDefaultYAML(): Promise<ContainerRecipe> {
     }
     const text = await res.text();
     return loadYAML(text) as ContainerRecipe;
+}
+
+function getNewContainerYAML(): ContainerRecipe {
+    return {
+        name: "new-container",
+        version: "1.0.0",
+        architectures: ["x86_64", "aarch64"],
+        readme: "",
+        readme_url: "",
+        build: {
+            kind: "neurodocker",
+            "base-image": "ubuntu:24.04",
+            "pkg-manager": "apt",
+            directives: []
+        }
+    }
 }
 
 function ContainerHeader({
@@ -241,7 +259,7 @@ function WizardNavigation({
                     }`}
                 onClick={onNext}
             >
-                {currentStep < totalSteps - 1 ? "Next" : "Finish"}
+                {currentStep < totalSteps - 1 ? "Next" : "Download YAML"}
             </button>
         </div>
     );
@@ -252,9 +270,6 @@ export default function Home() {
     const [loading, setLoading] = useState(true);
     const [currentStep, setCurrentStep] = useState(WizardStep.BasicInfo);
     const [yamlText, setYamlText] = useState("");
-
-    // Simplified to just 2 steps: Basic Info and Build Recipe
-    const totalSteps = 2;
 
     useEffect(() => {
         getDefaultYAML()
@@ -282,8 +297,19 @@ export default function Home() {
     }, [yamlData]);
 
     const nextStep = () => {
-        if (currentStep < totalSteps - 1) {
+        if (currentStep < TOTAL_STEPS - 1) {
             setCurrentStep(currentStep + 1);
+        } else {
+            // Download YAML file
+            const blob = new Blob([yamlText], { type: "text/yaml" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `${yamlData?.name}-${yamlData?.version}.yaml`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
     };
 
@@ -424,7 +450,7 @@ export default function Home() {
 
                         <WizardNavigation
                             currentStep={currentStep}
-                            totalSteps={totalSteps}
+                            totalSteps={TOTAL_STEPS}
                             onNext={nextStep}
                             onPrevious={previousStep}
                         />
@@ -436,16 +462,68 @@ export default function Home() {
                             Create a new container definition or upload an existing YAML file
                         </p>
                         <div className="flex flex-col sm:flex-row justify-center gap-4">
-                            <button className="px-6 py-3 bg-[#6aa329] text-white rounded-md hover:bg-[#4f7b38]">
+                            <button
+                                className="px-6 py-3 bg-[#6aa329] text-white rounded-md hover:bg-[#4f7b38]"
+                                onClick={() => {
+                                    setYamlData(getNewContainerYAML());
+                                    setCurrentStep(WizardStep.BasicInfo);
+                                }}
+                            >
                                 Create New Container
                             </button>
-                            <button className="px-6 py-3 bg-[#e6f1d6] text-[#4f7b38] rounded-md hover:bg-[#d3e7b6]">
-                                Upload YAML File
-                            </button>
+                            {/* drop region to upload a YAML file */}
+                            <div
+                                className="border-2 border-dashed border-[#d3e7b6] rounded-md p-4 text-[#1e2a16] cursor-pointer"
+                                onClick={() => document.querySelector('input[type="file"]')?.click()}
+                                onDragOver={(e) => e.preventDefault()}
+                                onDrop={(e) => {
+                                    e.preventDefault();
+                                    const file = e.dataTransfer.files[0];
+                                    if (file) {
+                                        const reader = new FileReader();
+                                        reader.onload = (event) => {
+                                            const text = event.target?.result as string;
+                                            try {
+                                                const parsed = loadYAML(text) as ContainerRecipe;
+                                                setYamlData(parsed);
+                                            } catch (err) {
+                                                console.error("Error parsing YAML:", err);
+                                            }
+                                        };
+                                        reader.readAsText(file);
+                                    }
+                                }}
+                            >
+                                <p className="mb-2">Drag and drop a YAML file here</p>
+                                <p className="text-sm">or click to upload</p>
+                                <input
+                                    type="file"
+                                    accept=".yaml, .yml"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) {
+                                            const reader = new FileReader();
+                                            reader.onload = (event) => {
+                                                const text = event.target?.result as string;
+                                                try {
+                                                    const parsed = loadYAML(text) as ContainerRecipe;
+                                                    setYamlData(parsed);
+                                                } catch (err) {
+                                                    console.error("Error parsing YAML:", err);
+                                                }
+                                            };
+                                            reader.readAsText(file);
+                                        }
+                                    }}
+                                />
+                                <p className="text-xs text-[#4f7b38] mt-2">Supported formats: .yaml, .yml</p>
+                            </div>
                         </div>
                     </div>
-                )}
-            </main>
-        </div>
+                )
+                }
+            </main >
+        </div >
     );
 }

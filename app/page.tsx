@@ -1,8 +1,13 @@
 "use client";
 
 import { load as loadYAML, dump as dumpYAML } from "js-yaml";
-import { useState, useEffect } from "react";
-import { ChevronDownIcon, PlusIcon, TrashIcon } from "@heroicons/react/outline";
+import { useState, useEffect, useRef } from "react";
+import {
+    ChevronDownIcon,
+    PlusIcon,
+    TrashIcon,
+    ExclamationIcon
+} from "@heroicons/react/outline";
 import { ContainerRecipe, Architecture, CopyrightInfo } from "@/components/common";
 import BuildRecipeComponent from "@/components/recipe";
 
@@ -10,6 +15,8 @@ enum WizardStep {
     BasicInfo = 0,
     BuildRecipe = 1
 }
+
+const NEUROCONTAINERS_REPO = "https://github.com/neurodesk/neurocontainers";
 
 const TOTAL_STEPS = 2;
 
@@ -265,11 +272,111 @@ function WizardNavigation({
     );
 }
 
+// GitHub modal component
+function GitHubModal({ isOpen, onClose, yamlData, yamlText }: {
+    isOpen: boolean;
+    onClose: () => void;
+    yamlData: ContainerRecipe | null;
+    yamlText: string;
+}) {
+    const modalRef = useRef(null);
+    const [clipboardContent, setClipboardContent] = useState("");
+    const [isCopied, setIsCopied] = useState(false);
+
+    const yamlSize = new Blob([yamlText]).size;
+    const isYamlTooLarge = yamlSize > 6 * 1024; // 6KB threshold
+
+    useEffect(() => {
+        if (isYamlTooLarge && yamlData) {
+            setClipboardContent(yamlText);
+        }
+    }, [isYamlTooLarge, yamlText, yamlData]);
+
+    const copyToClipboard = () => {
+        navigator.clipboard.writeText(clipboardContent).then(() => {
+            setIsCopied(true);
+            setTimeout(() => setIsCopied(false), 2000);
+        });
+    };
+
+    const handleExportToGitHub = () => {
+        if (!yamlData) return;
+
+        const targetUrl = new URL(`${NEUROCONTAINERS_REPO}/new/main/recipes/${yamlData.name}`);
+        targetUrl.searchParams.append("filename", `build.yaml`);
+
+        // If YAML is too large, don't include it in the URL
+        if (!isYamlTooLarge) {
+            targetUrl.searchParams.append("value", yamlText);
+        }
+
+        window.open(targetUrl.toString(), '_blank', 'noopener,noreferrer');
+        onClose();
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div ref={modalRef} className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+                <h3 className="text-xl font-semibold text-[#0c0e0a] mb-4">Export to GitHub</h3>
+
+                <div className="mb-4 p-4 bg-[#f0f7e7] rounded-md flex items-start">
+                    <ExclamationIcon className="h-6 w-6 text-[#6aa329] mr-3 flex-shrink-0 mt-0.5" />
+                    <div>
+                        <p className="text-[#1e2a16] mb-2">
+                            You&apos;ll need to be logged into GitHub to complete this action.
+                        </p>
+                        {isYamlTooLarge ? (
+                            <p className="text-[#1e2a16] text-sm">
+                                Your YAML content is too large to include in the URL. You&apos;ll need to copy it to your clipboard and paste it into GitHub after clicking the link.
+                            </p>
+                        ) : (
+                            <p className="text-[#1e2a16] text-sm">
+                                This will open a new GitHub page with your container recipe pre-filled.
+                            </p>
+                        )}
+                    </div>
+                </div>
+
+                {isYamlTooLarge && (
+                    <div className="mb-4">
+                        <button
+                            className={`w-full py-2 px-4 rounded-md ${isCopied
+                                ? 'bg-[#4f7b38] text-white'
+                                : 'bg-[#e6f1d6] text-[#4f7b38] hover:bg-[#d3e7b6]'}`}
+                            onClick={copyToClipboard}
+                        >
+                            {isCopied ? 'Copied!' : 'Copy YAML to Clipboard'}
+                        </button>
+                    </div>
+                )}
+
+                <div className="flex justify-end space-x-3">
+                    <button
+                        className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                        onClick={onClose}
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        className="px-4 py-2 bg-[#6aa329] text-white rounded-md hover:bg-[#4f7b38]"
+                        onClick={handleExportToGitHub}
+                    >
+                        Continue to GitHub
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export default function Home() {
     const [yamlData, setYamlData] = useState<ContainerRecipe | null>(null);
     const [loading, setLoading] = useState(true);
     const [currentStep, setCurrentStep] = useState(WizardStep.BasicInfo);
     const [yamlText, setYamlText] = useState("");
+    const [isGitHubModalOpen, setIsGitHubModalOpen] = useState(false);
 
     useEffect(() => {
         getDefaultYAML()
@@ -364,6 +471,17 @@ export default function Home() {
                             disabled={!yamlData}
                         >
                             Export YAML
+                        </button>
+                        <button
+                            className="bg-[#1e2a16] hover:bg-[#161c10] px-4 py-2 rounded-md text-sm flex items-center"
+                            onClick={() => setIsGitHubModalOpen(true)}
+                            disabled={!yamlData}
+                            title="Export to GitHub"
+                        >
+                            <svg className="h-5 w-5 mr-1" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
+                            </svg>
+                            Open Pull Request
                         </button>
                     </div>
                 </div>
@@ -542,9 +660,16 @@ export default function Home() {
                             </div>
                         </div>
                     </div>
-                )
-                }
-            </main >
-        </div >
+                )}
+            </main>
+
+            {/* GitHub Export Modal */}
+            <GitHubModal
+                isOpen={isGitHubModalOpen}
+                onClose={() => setIsGitHubModalOpen(false)}
+                yamlData={yamlData}
+                yamlText={yamlText}
+            />
+        </div>
     );
 }

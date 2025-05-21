@@ -4,12 +4,11 @@ import { load as loadYAML, dump as dumpYAML } from "js-yaml";
 import { useState, useEffect, useRef } from "react";
 import {
     ChevronDownIcon,
-    PlusIcon,
-    TrashIcon,
     ExclamationIcon
 } from "@heroicons/react/outline";
-import { ContainerRecipe, Architecture, CopyrightInfo } from "@/components/common";
+import { ContainerRecipe } from "@/components/common";
 import BuildRecipeComponent from "@/components/recipe";
+import ContainerMetadata from "@/components/metadata";
 
 enum WizardStep {
     BasicInfo = 0,
@@ -45,191 +44,7 @@ function getNewContainerYAML(): ContainerRecipe {
     }
 }
 
-function ContainerHeader({
-    recipe,
-    onChange
-}: {
-    recipe: ContainerRecipe,
-    onChange: (recipe: ContainerRecipe) => void
-}) {
-    const updateName = (name: string) => {
-        onChange({ ...recipe, name });
-    };
 
-    const updateVersion = (version: string) => {
-        onChange({ ...recipe, version });
-    };
-
-    const updateArchitectures = (architectures: Architecture[]) => {
-        onChange({ ...recipe, architectures });
-    };
-
-    const updateReadme = (readme: string) => {
-        onChange({ ...recipe, readme });
-    };
-
-    const updateReadmeUrl = (readme_url: string) => {
-        onChange({ ...recipe, readme_url });
-    };
-
-    const updateCopyright = (index: number, info: CopyrightInfo) => {
-        if (!recipe.copyright) return;
-
-        const updated = [...recipe.copyright];
-        updated[index] = info;
-        onChange({ ...recipe, copyright: updated });
-    };
-
-    const addCopyright = () => {
-        const newCopyright = { license: "", url: "" };
-        onChange({
-            ...recipe,
-            copyright: [...(recipe.copyright || []), newCopyright]
-        });
-    };
-
-    const removeCopyright = (index: number) => {
-        if (!recipe.copyright) return;
-
-        onChange({
-            ...recipe,
-            copyright: recipe.copyright.filter((_, i) => i !== index)
-        });
-    };
-
-    return (
-        <div className="bg-white rounded-lg shadow-md border border-[#d3e7b6] mb-6">
-            <div className="p-4 bg-[#f0f7e7] rounded-t-lg">
-                <h2 className="text-xl font-semibold text-[#0c0e0a]">Container Definition</h2>
-            </div>
-
-            <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label className="block mb-2 font-medium text-[#1e2a16]">Name</label>
-                        <input
-                            className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
-                            value={recipe.name}
-                            onChange={(e) => updateName(e.target.value)}
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block mb-2 font-medium text-[#1e2a16]">Version</label>
-                        <input
-                            className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
-                            value={recipe.version}
-                            onChange={(e) => updateVersion(e.target.value)}
-                        />
-                    </div>
-
-                    <div className="md:col-span-2">
-                        <label className="block mb-2 font-medium text-[#1e2a16]">Architectures</label>
-                        <div className="flex flex-wrap gap-3">
-                            <label className="inline-flex items-center">
-                                <input
-                                    type="checkbox"
-                                    className="rounded border-gray-300 text-[#6aa329] focus:ring-[#6aa329]"
-                                    checked={recipe.architectures.includes("x86_64")}
-                                    onChange={(e) => {
-                                        if (e.target.checked) {
-                                            updateArchitectures([...recipe.architectures, "x86_64"]);
-                                        } else {
-                                            updateArchitectures(recipe.architectures.filter(arch => arch !== "x86_64"));
-                                        }
-                                    }}
-                                />
-                                <span className="ml-2 text-[#0c0e0a]">x86_64</span>
-                            </label>
-
-                            <label className="inline-flex items-center">
-                                <input
-                                    type="checkbox"
-                                    className="rounded border-gray-300 text-[#6aa329] focus:ring-[#6aa329]"
-                                    checked={recipe.architectures.includes("aarch64")}
-                                    onChange={(e) => {
-                                        if (e.target.checked) {
-                                            updateArchitectures([...recipe.architectures, "aarch64"]);
-                                        } else {
-                                            updateArchitectures(recipe.architectures.filter(arch => arch !== "aarch64"));
-                                        }
-                                    }}
-                                />
-                                <span className="ml-2 text-[#0c0e0a]">aarch64</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className="block mb-2 font-medium text-[#1e2a16]">Readme</label>
-                        <input
-                            className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
-                            value={recipe.readme || ""}
-                            onChange={(e) => updateReadme(e.target.value)}
-                            placeholder="Path to readme file"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block mb-2 font-medium text-[#1e2a16]">Readme URL</label>
-                        <input
-                            className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
-                            value={recipe.readme_url || ""}
-                            onChange={(e) => updateReadmeUrl(e.target.value)}
-                            placeholder="URL to readme file"
-                        />
-                    </div>
-                </div>
-
-                <div className="mt-6">
-                    <div className="flex justify-between items-center mb-3">
-                        <h3 className="font-medium text-[#1e2a16]">Copyright Information</h3>
-                        <button
-                            className="text-sm text-[#4f7b38] hover:text-[#6aa329] flex items-center"
-                            onClick={addCopyright}
-                        >
-                            <PlusIcon className="h-4 w-4 mr-1" />
-                            Add License
-                        </button>
-                    </div>
-
-                    {(recipe.copyright || []).map((info, index) => (
-                        <div key={index} className="mb-4 last:mb-0 p-4 bg-[#f0f7e7] rounded-md relative">
-                            <button
-                                className="absolute top-3 right-3 text-gray-400 hover:text-[#6aa329]"
-                                onClick={() => removeCopyright(index)}
-                            >
-                                <TrashIcon className="h-5 w-5" />
-                            </button>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block mb-1 text-sm font-medium text-[#1e2a16]">License</label>
-                                    <input
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329] bg-white"
-                                        value={info.license}
-                                        onChange={(e) => updateCopyright(index, { ...info, license: e.target.value })}
-                                        placeholder="SPDX License Identifier"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block mb-1 text-sm font-medium text-[#1e2a16]">URL</label>
-                                    <input
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329] bg-white"
-                                        value={info.url}
-                                        onChange={(e) => updateCopyright(index, { ...info, url: e.target.value })}
-                                        placeholder="License URL"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </div>
-    );
-}
 
 function WizardNavigation({
     currentStep,
@@ -524,7 +339,7 @@ export default function Home() {
                         {/* Current Step Content */}
                         <div className="mb-6">
                             {currentStep === WizardStep.BasicInfo && (
-                                <ContainerHeader
+                                <ContainerMetadata
                                     recipe={yamlData}
                                     onChange={(updated) => setYamlData(updated)}
                                 />

@@ -68,7 +68,8 @@ export interface CopyDirective extends BaseDirective {
 
 export interface FileInfo {
     name: string;
-    filename: string;
+    filename?: string;
+    contents?: string;
 }
 
 export interface FileDirective extends BaseDirective {

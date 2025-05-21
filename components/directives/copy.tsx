@@ -47,7 +47,7 @@ export default function CopyDirectiveComponent({
                     {copyAsArray.map((path, index) => (
                         <div key={index} className="flex mb-2">
                             <input
-                                className="flex-grow px-3 py-2 border border-gray-200 rounded-l-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
+                                className="font-mono flex-grow px-3 py-2 border border-gray-200 rounded-l-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
                                 value={path}
                                 onChange={(e) => updatePath(index, e.target.value)}
                                 placeholder="source:destination"

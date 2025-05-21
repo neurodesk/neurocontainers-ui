@@ -59,12 +59,12 @@ export default function EnvironmentDirectiveComponent({
                     {Object.entries(environment).map(([key, value], index) => (
                         <div key={index} className="grid grid-cols-12 gap-2 mb-2">
                             <input
-                                className="col-span-5 px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
+                                className="font-mono col-span-5 px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
                                 value={key}
                                 onChange={(e) => updateKey(key, e.target.value)}
                             />
                             <input
-                                className="col-span-6 px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
+                                className="font-mono col-span-6 px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
                                 value={value}
                                 onChange={(e) => updateValue(key, e.target.value)}
                             />

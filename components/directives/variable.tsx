@@ -6,7 +6,7 @@ export function VariableComponent({ variable, onChange }: { variable: Variable, 
     if (typeof variable === 'string') {
         return (
             <input
-                className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
+                className="font-mono w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
                 value={variable}
                 onChange={(e) => onChange && onChange(e.target.value)}
             />
@@ -17,7 +17,7 @@ export function VariableComponent({ variable, onChange }: { variable: Variable, 
                 {variable.map((item, index) => (
                     <div key={index} className="flex">
                         <input
-                            className="flex-grow px-3 py-2 border border-gray-200 rounded-l-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
+                            className="font-mono flex-grow px-3 py-2 border border-gray-200 rounded-l-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
                             value={JSON.stringify(item)}
                             onChange={(e) => {
                                 if (onChange) {

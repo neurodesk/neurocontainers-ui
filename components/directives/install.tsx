@@ -72,7 +72,7 @@ export default function InstallDirectiveComponent({
                                     key={index}
                                     className="flex items-center bg-[#f0f7e7] px-3 py-1 rounded-md border border-[#e6f1d6]"
                                 >
-                                    <span className="text-[#0c0e0a] mr-2">{pkg}</span>
+                                    <span className="font-mono text-[#0c0e0a] mr-2">{pkg}</span>
                                     <button
                                         onClick={() => removePackage(index)}
                                         className="text-[#4f7b38] hover:text-[#3a5c29]"
@@ -87,7 +87,7 @@ export default function InstallDirectiveComponent({
                         <div className="flex">
                             <input
                                 type="text"
-                                className="flex-grow px-3 py-2 border border-gray-200 rounded-l-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
+                                className="font-mono flex-grow px-3 py-2 border border-gray-200 rounded-l-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
                                 placeholder="Add a package..."
                                 value={newPackage}
                                 onChange={(e) => setNewPackage(e.target.value)}

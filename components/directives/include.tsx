@@ -30,7 +30,7 @@ export default function IncludeDirectiveComponent({
             {isExpanded && (
                 <div className="p-4 border-t border-[#e6f1d6]">
                     <select
-                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329] font-mono"
                         value={include}
                         onChange={(e) => onChange(e.target.value as IncludeMacro)}
                     >

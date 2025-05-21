@@ -95,7 +95,7 @@ export default function DeployDirectiveComponent({
                                     key={index}
                                     className="flex items-center bg-[#f0f7e7] px-3 py-1 rounded-md border border-[#e6f1d6]"
                                 >
-                                    <span className="text-[#0c0e0a] mr-2">{path}</span>
+                                    <span className="font-mono text-[#0c0e0a] mr-2">{path}</span>
                                     <button
                                         onClick={() => removePath(index)}
                                         className="text-[#4f7b38] hover:text-[#3a5c29]"
@@ -115,7 +115,7 @@ export default function DeployDirectiveComponent({
                         <div className="flex">
                             <input
                                 type="text"
-                                className="flex-grow px-3 py-2 border border-gray-200 rounded-l-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
+                                className="font-mono flex-grow px-3 py-2 border border-gray-200 rounded-l-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
                                 placeholder="Add a path..."
                                 value={newPath}
                                 onChange={(e) => setNewPath(e.target.value)}
@@ -142,7 +142,7 @@ export default function DeployDirectiveComponent({
                                     key={index}
                                     className="flex items-center bg-[#f0f7e7] px-3 py-1 rounded-md border border-[#e6f1d6]"
                                 >
-                                    <span className="text-[#0c0e0a] mr-2">{bin}</span>
+                                    <span className="font-mono text-[#0c0e0a] mr-2">{bin}</span>
                                     <button
                                         onClick={() => removeBin(index)}
                                         className="text-[#4f7b38] hover:text-[#3a5c29]"
@@ -162,7 +162,7 @@ export default function DeployDirectiveComponent({
                         <div className="flex">
                             <input
                                 type="text"
-                                className="flex-grow px-3 py-2 border border-gray-200 rounded-l-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
+                                className="font-mono flex-grow px-3 py-2 border border-gray-200 rounded-l-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
                                 placeholder="Add a binary..."
                                 value={newBin}
                                 onChange={(e) => setNewBin(e.target.value)}

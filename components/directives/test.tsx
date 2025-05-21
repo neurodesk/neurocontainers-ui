@@ -64,7 +64,7 @@ export default function TestDirectiveComponent({
                             </div>
                         ) : (
                             <textarea
-                                className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329] min-h-[120px]"
+                                className="font-mono w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329] min-h-[120px]"
                                 value={(test as ScriptTest).script}
                                 onChange={(e) => updateScript(e.target.value)}
                             />

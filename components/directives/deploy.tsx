@@ -1,54 +1,69 @@
-import { ChevronDownIcon, ChevronRightIcon, PlusIcon, TrashIcon } from "@heroicons/react/outline";
+import {
+    ChevronDownIcon,
+    ChevronRightIcon,
+    PlusIcon,
+    XIcon,
+} from "@heroicons/react/outline";
 import { useState } from "react";
 import { DeployInfo } from "@/components/common";
 
 export default function DeployDirectiveComponent({
     deploy,
-    onChange
+    onChange,
 }: {
-    deploy: DeployInfo,
-    onChange: (deploy: DeployInfo) => void
+    deploy: DeployInfo;
+    onChange: (deploy: DeployInfo) => void;
 }) {
     const [isExpanded, setIsExpanded] = useState(true);
+    const [newPath, setNewPath] = useState("");
+    const [newBin, setNewBin] = useState("");
 
     const addPath = () => {
-        onChange({
-            ...deploy,
-            path: [...(deploy.path || []), ""]
-        });
-    };
-
-    const updatePath = (index: number, value: string) => {
-        const updated = [...(deploy.path || [])];
-        updated[index] = value;
-        onChange({ ...deploy, path: updated });
+        if (newPath.trim() !== "") {
+            onChange({
+                ...deploy,
+                path: [...(deploy.path || []), newPath.trim()],
+            });
+            setNewPath("");
+        }
     };
 
     const removePath = (index: number) => {
         onChange({
             ...deploy,
-            path: (deploy.path || []).filter((_, i) => i !== index)
+            path: (deploy.path || []).filter((_, i) => i !== index),
         });
     };
 
     const addBin = () => {
-        onChange({
-            ...deploy,
-            bins: [...(deploy.bins || []), ""]
-        });
-    };
-
-    const updateBin = (index: number, value: string) => {
-        const updated = [...(deploy.bins || [])];
-        updated[index] = value;
-        onChange({ ...deploy, bins: updated });
+        if (newBin.trim() !== "") {
+            onChange({
+                ...deploy,
+                bins: [...(deploy.bins || []), newBin.trim()],
+            });
+            setNewBin("");
+        }
     };
 
     const removeBin = (index: number) => {
         onChange({
             ...deploy,
-            bins: (deploy.bins || []).filter((_, i) => i !== index)
+            bins: (deploy.bins || []).filter((_, i) => i !== index),
         });
+    };
+
+    const handlePathKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            addPath();
+        }
+    };
+
+    const handleBinKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            addBin();
+        }
     };
 
     return (
@@ -72,61 +87,95 @@ export default function DeployDirectiveComponent({
                     <div className="mb-6">
                         <div className="flex justify-between items-center mb-2">
                             <h3 className="font-medium text-sm text-[#1e2a16]">Paths</h3>
-                            <button
-                                className="text-sm text-[#4f7b38] hover:text-[#6aa329] flex items-center"
-                                onClick={addPath}
-                            >
-                                <PlusIcon className="h-4 w-4 mr-1" />
-                                Add Path
-                            </button>
                         </div>
 
-                        {(deploy.path || []).map((path, index) => (
-                            <div key={index} className="flex mb-2">
-                                <input
-                                    className="flex-grow px-3 py-2 border border-gray-200 rounded-l-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
-                                    value={path}
-                                    onChange={(e) => updatePath(index, e.target.value)}
-                                    placeholder="/path/to/deploy"
-                                />
-                                <button
-                                    className="px-3 py-2 bg-[#f0f7e7] border border-gray-200 border-l-0 rounded-r-md text-gray-400 hover:text-[#6aa329]"
-                                    onClick={() => removePath(index)}
+                        <div className="flex flex-wrap gap-2 mb-3">
+                            {(deploy.path || []).map((path, index) => (
+                                <div
+                                    key={index}
+                                    className="flex items-center bg-[#f0f7e7] px-3 py-1 rounded-md border border-[#e6f1d6]"
                                 >
-                                    <TrashIcon className="h-5 w-5" />
-                                </button>
-                            </div>
-                        ))}
+                                    <span className="text-[#0c0e0a] mr-2">{path}</span>
+                                    <button
+                                        onClick={() => removePath(index)}
+                                        className="text-[#4f7b38] hover:text-[#3a5c29]"
+                                        aria-label={`Remove ${path}`}
+                                    >
+                                        <XIcon className="h-4 w-4" />
+                                    </button>
+                                </div>
+                            ))}
+                            {(deploy.path || []).length === 0 && (
+                                <div className="text-sm text-gray-500 italic">
+                                    No paths added yet
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex">
+                            <input
+                                type="text"
+                                className="flex-grow px-3 py-2 border border-gray-200 rounded-l-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
+                                placeholder="Add a path..."
+                                value={newPath}
+                                onChange={(e) => setNewPath(e.target.value)}
+                                onKeyDown={handlePathKeyDown}
+                            />
+                            <button
+                                onClick={addPath}
+                                className="bg-[#6aa329] hover:bg-[#4f7b38] text-white px-3 py-2 rounded-r-md flex items-center"
+                                disabled={newPath.trim() === ""}
+                            >
+                                <PlusIcon className="h-5 w-5" />
+                            </button>
+                        </div>
                     </div>
 
                     <div>
                         <div className="flex justify-between items-center mb-2">
                             <h3 className="font-medium text-sm text-[#1e2a16]">Binaries</h3>
-                            <button
-                                className="text-sm text-[#4f7b38] hover:text-[#6aa329] flex items-center"
-                                onClick={addBin}
-                            >
-                                <PlusIcon className="h-4 w-4 mr-1" />
-                                Add Binary
-                            </button>
                         </div>
 
-                        {(deploy.bins || []).map((bin, index) => (
-                            <div key={index} className="flex mb-2">
-                                <input
-                                    className="flex-grow px-3 py-2 border border-gray-200 rounded-l-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
-                                    value={bin}
-                                    onChange={(e) => updateBin(index, e.target.value)}
-                                    placeholder="binary-name"
-                                />
-                                <button
-                                    className="px-3 py-2 bg-[#f0f7e7] border border-gray-200 border-l-0 rounded-r-md text-gray-400 hover:text-[#6aa329]"
-                                    onClick={() => removeBin(index)}
+                        <div className="flex flex-wrap gap-2 mb-3">
+                            {(deploy.bins || []).map((bin, index) => (
+                                <div
+                                    key={index}
+                                    className="flex items-center bg-[#f0f7e7] px-3 py-1 rounded-md border border-[#e6f1d6]"
                                 >
-                                    <TrashIcon className="h-5 w-5" />
-                                </button>
-                            </div>
-                        ))}
+                                    <span className="text-[#0c0e0a] mr-2">{bin}</span>
+                                    <button
+                                        onClick={() => removeBin(index)}
+                                        className="text-[#4f7b38] hover:text-[#3a5c29]"
+                                        aria-label={`Remove ${bin}`}
+                                    >
+                                        <XIcon className="h-4 w-4" />
+                                    </button>
+                                </div>
+                            ))}
+                            {(deploy.bins || []).length === 0 && (
+                                <div className="text-sm text-gray-500 italic">
+                                    No binaries added yet
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex">
+                            <input
+                                type="text"
+                                className="flex-grow px-3 py-2 border border-gray-200 rounded-l-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
+                                placeholder="Add a binary..."
+                                value={newBin}
+                                onChange={(e) => setNewBin(e.target.value)}
+                                onKeyDown={handleBinKeyDown}
+                            />
+                            <button
+                                onClick={addBin}
+                                className="bg-[#6aa329] hover:bg-[#4f7b38] text-white px-3 py-2 rounded-r-md flex items-center"
+                                disabled={newBin.trim() === ""}
+                            >
+                                <PlusIcon className="h-5 w-5" />
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

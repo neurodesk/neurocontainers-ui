@@ -41,10 +41,8 @@ function getNewContainerYAML(): ContainerRecipe {
             "pkg-manager": "apt",
             directives: []
         }
-    }
+    };
 }
-
-
 
 function WizardNavigation({
     currentStep,
@@ -58,9 +56,9 @@ function WizardNavigation({
     onPrevious: () => void;
 }) {
     return (
-        <div className="flex justify-between items-center mt-8 pt-6 border-t border-[#e6f1d6]">
+        <div className="flex justify-between items-center py-4 px-4 sm:px-6 border-t border-[#e6f1d6] bg-white">
             <button
-                className={`px-4 py-2 rounded-md ${currentStep > 0
+                className={`px-3 py-2 sm:px-4 sm:py-2 rounded-md text-sm ${currentStep > 0
                     ? "bg-[#e6f1d6] text-[#4f7b38] hover:bg-[#d3e7b6]"
                     : "bg-gray-100 text-gray-400 cursor-not-allowed"
                     }`}
@@ -70,12 +68,12 @@ function WizardNavigation({
                 Previous
             </button>
 
-            <div className="text-sm text-[#1e2a16]">
+            <div className="text-xs sm:text-sm text-[#1e2a16]">
                 Step {currentStep + 1} of {totalSteps}
             </div>
 
             <button
-                className={`px-4 py-2 rounded-md ${currentStep < totalSteps - 1
+                className={`px-3 py-2 sm:px-4 sm:py-2 rounded-md text-sm ${currentStep < totalSteps - 1
                     ? "bg-[#6aa329] text-white hover:bg-[#4f7b38]"
                     : "bg-[#4f7b38] text-white"
                     }`}
@@ -88,7 +86,12 @@ function WizardNavigation({
 }
 
 // GitHub modal component
-function GitHubModal({ isOpen, onClose, yamlData, yamlText }: {
+function GitHubModal({
+    isOpen,
+    onClose,
+    yamlData,
+    yamlText
+}: {
     isOpen: boolean;
     onClose: () => void;
     yamlData: ContainerRecipe | null;
@@ -117,7 +120,9 @@ function GitHubModal({ isOpen, onClose, yamlData, yamlText }: {
     const handleExportToGitHub = () => {
         if (!yamlData) return;
 
-        const targetUrl = new URL(`${NEUROCONTAINERS_REPO}/new/main/recipes/${yamlData.name}`);
+        const targetUrl = new URL(
+            `${NEUROCONTAINERS_REPO}/new/main/recipes/${yamlData.name}`
+        );
         targetUrl.searchParams.append("filename", `build.yaml`);
 
         // If YAML is too large, don't include it in the URL
@@ -125,16 +130,21 @@ function GitHubModal({ isOpen, onClose, yamlData, yamlText }: {
             targetUrl.searchParams.append("value", yamlText);
         }
 
-        window.open(targetUrl.toString(), '_blank', 'noopener,noreferrer');
+        window.open(targetUrl.toString(), "_blank", "noopener,noreferrer");
         onClose();
     };
 
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div ref={modalRef} className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-                <h3 className="text-xl font-semibold text-[#0c0e0a] mb-4">Export to GitHub</h3>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div
+                ref={modalRef}
+                className="bg-white rounded-lg shadow-xl max-w-md w-full p-4 sm:p-6"
+            >
+                <h3 className="text-xl font-semibold text-[#0c0e0a] mb-4">
+                    Export to GitHub
+                </h3>
 
                 <div className="mb-4 p-4 bg-[#f0f7e7] rounded-md flex items-start">
                     <ExclamationIcon className="h-6 w-6 text-[#6aa329] mr-3 flex-shrink-0 mt-0.5" />
@@ -144,11 +154,14 @@ function GitHubModal({ isOpen, onClose, yamlData, yamlText }: {
                         </p>
                         {isYamlTooLarge ? (
                             <p className="text-[#1e2a16] text-sm">
-                                Your YAML content is too large to include in the URL. You&apos;ll need to copy it to your clipboard and paste it into GitHub after clicking the link.
+                                Your YAML content is too large to include in the URL. You&apos;ll
+                                need to copy it to your clipboard and paste it into GitHub after
+                                clicking the link.
                             </p>
                         ) : (
                             <p className="text-[#1e2a16] text-sm">
-                                This will open a new GitHub page with your container recipe pre-filled.
+                                This will open a new GitHub page with your container recipe
+                                pre-filled.
                             </p>
                         )}
                     </div>
@@ -158,11 +171,12 @@ function GitHubModal({ isOpen, onClose, yamlData, yamlText }: {
                     <div className="mb-4">
                         <button
                             className={`w-full py-2 px-4 rounded-md ${isCopied
-                                ? 'bg-[#4f7b38] text-white'
-                                : 'bg-[#e6f1d6] text-[#4f7b38] hover:bg-[#d3e7b6]'}`}
+                                ? "bg-[#4f7b38] text-white"
+                                : "bg-[#e6f1d6] text-[#4f7b38] hover:bg-[#d3e7b6]"
+                                }`}
                             onClick={copyToClipboard}
                         >
-                            {isCopied ? 'Copied!' : 'Copy YAML to Clipboard'}
+                            {isCopied ? "Copied!" : "Copy YAML to Clipboard"}
                         </button>
                     </div>
                 )}
@@ -221,6 +235,8 @@ export default function Home() {
     const nextStep = () => {
         if (currentStep < TOTAL_STEPS - 1) {
             setCurrentStep(currentStep + 1);
+            // Scroll to top when changing steps
+            window.scrollTo(0, 0);
         } else {
             // Download YAML file
             const blob = new Blob([yamlText], { type: "text/yaml" });
@@ -238,6 +254,8 @@ export default function Home() {
     const previousStep = () => {
         if (currentStep > 0) {
             setCurrentStep(currentStep - 1);
+            // Scroll to top when changing steps
+            window.scrollTo(0, 0);
         }
     };
 
@@ -267,71 +285,93 @@ export default function Home() {
     };
 
     return (
-        <div className="min-h-screen bg-[#f0f7e7]">
-            {/* Header */}
-            <header className="bg-[#0c0e0a] text-white py-4 px-6 shadow-md">
+        <div className="min-h-screen bg-[#f0f7e7] flex flex-col">
+            {/* Fixed Header */}
+            <header className="bg-[#0c0e0a] text-white py-3 px-4 sm:py-4 sm:px-6 shadow-md fixed top-0 left-0 right-0 z-10">
                 <div className="max-w-7xl mx-auto flex justify-between items-center">
-                    <h1 className="text-2xl font-bold">Neurocontainers Builder</h1>
+                    <h1 className="text-lg sm:text-2xl font-bold truncate">
+                        Neurocontainers Builder
+                    </h1>
 
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-2 sm:space-x-4">
                         <button
-                            className="bg-[#1e2a16] hover:bg-[#161c10] px-4 py-2 rounded-md text-sm"
+                            className="bg-[#1e2a16] hover:bg-[#161c10] px-2 py-1 sm:px-4 sm:py-2 rounded-md text-xs sm:text-sm"
                             onClick={() => setYamlData(null)}
                         >
-                            New Container
+                            New
                         </button>
                         <button
-                            className="bg-[#4f7b38] hover:bg-[#6aa329] px-4 py-2 rounded-md text-sm"
+                            className="bg-[#4f7b38] hover:bg-[#6aa329] px-2 py-1 sm:px-4 sm:py-2 rounded-md text-xs sm:text-sm"
                             onClick={exportYAML}
                             disabled={!yamlData}
                         >
-                            Export YAML
+                            Export
                         </button>
                         <button
-                            className="bg-[#1e2a16] hover:bg-[#161c10] px-4 py-2 rounded-md text-sm flex items-center"
+                            className="bg-[#1e2a16] hover:bg-[#161c10] px-2 py-1 sm:px-4 sm:py-2 rounded-md text-xs sm:text-sm flex items-center"
                             onClick={() => setIsGitHubModalOpen(true)}
                             disabled={!yamlData}
                             title="Export to GitHub"
                         >
-                            <svg className="h-5 w-5 mr-1" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
+                            <svg
+                                className="h-4 w-4 sm:h-5 sm:w-5 sm:mr-1"
+                                fill="currentColor"
+                                viewBox="0 0 24 24"
+                                aria-hidden="true"
+                            >
+                                <path
+                                    fillRule="evenodd"
+                                    d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                                    clipRule="evenodd"
+                                />
                             </svg>
-                            Open Pull Request
+                            <span className="hidden sm:inline">Publish</span>
                         </button>
                     </div>
                 </div>
             </header>
 
-            <main className="max-w-7xl mx-auto py-8 px-6">
+            {/* Main content with padding for fixed header and footer */}
+            <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 pt-20 pb-20">
                 {loading ? (
-                    <div className="bg-white rounded-lg shadow-md p-10 text-center">
-                        <div className="animate-pulse text-[#4f7b38] text-xl">Loading...</div>
+                    <div className="bg-white rounded-lg shadow-md p-6 sm:p-10 text-center mt-4">
+                        <div className="animate-pulse text-[#4f7b38] text-xl">
+                            Loading...
+                        </div>
                     </div>
                 ) : yamlData ? (
-                    <div>
+                    <div className="mt-4">
                         {/* Wizard Steps */}
-                        <div className="mb-8">
+                        <div className="mb-6">
                             <div className="grid grid-cols-2 gap-2">
                                 <div
-                                    className={`p-3 rounded-md text-center ${currentStep === 0
+                                    className={`p-2 sm:p-3 rounded-md text-center ${currentStep === 0
                                         ? "bg-[#6aa329] text-white"
                                         : "bg-[#e6f1d6] text-[#1e2a16] hover:bg-[#d3e7b6] cursor-pointer"
                                         }`}
                                     onClick={() => setCurrentStep(0)}
                                 >
-                                    <div className="font-medium">Basic Info</div>
-                                    <div className="text-xs mt-1 opacity-80">Container metadata</div>
+                                    <div className="font-medium text-sm sm:text-base">
+                                        Basic Info
+                                    </div>
+                                    <div className="text-xs mt-1 opacity-80 hidden sm:block">
+                                        Container metadata
+                                    </div>
                                 </div>
 
                                 <div
-                                    className={`p-3 rounded-md text-center ${currentStep === 1
+                                    className={`p-2 sm:p-3 rounded-md text-center ${currentStep === 1
                                         ? "bg-[#6aa329] text-white"
                                         : "bg-[#e6f1d6] text-[#1e2a16] hover:bg-[#d3e7b6] cursor-pointer"
                                         }`}
                                     onClick={() => setCurrentStep(1)}
                                 >
-                                    <div className="font-medium">Build Recipe</div>
-                                    <div className="text-xs mt-1 opacity-80">Define build process</div>
+                                    <div className="font-medium text-sm sm:text-base">
+                                        Build Recipe
+                                    </div>
+                                    <div className="text-xs mt-1 opacity-80 hidden sm:block">
+                                        Define build process
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -348,7 +388,9 @@ export default function Home() {
                             {currentStep === WizardStep.BuildRecipe && (
                                 <BuildRecipeComponent
                                     recipe={yamlData.build}
-                                    onChange={(updated) => setYamlData({ ...yamlData, build: updated })}
+                                    onChange={(updated) =>
+                                        setYamlData({ ...yamlData, build: updated })
+                                    }
                                 />
                             )}
                         </div>
@@ -356,16 +398,22 @@ export default function Home() {
                         {/* YAML Preview (for power users) */}
                         <div className="bg-white rounded-lg shadow-md border border-[#d3e7b6] mb-6">
                             <div
-                                className="p-4 bg-[#f0f7e7] rounded-t-lg flex justify-between items-center cursor-pointer"
-                                onClick={() => document.getElementById('yaml-preview')?.classList.toggle('hidden')}
+                                className="p-3 sm:p-4 bg-[#f0f7e7] rounded-t-lg flex justify-between items-center cursor-pointer"
+                                onClick={() =>
+                                    document
+                                        .getElementById("yaml-preview")
+                                        ?.classList.toggle("hidden")
+                                }
                             >
-                                <h2 className="font-semibold text-[#0c0e0a]">YAML Preview</h2>
+                                <h2 className="font-semibold text-[#0c0e0a] text-sm sm:text-base">
+                                    YAML Preview
+                                </h2>
                                 <ChevronDownIcon className="h-5 w-5 text-[#4f7b38]" />
                             </div>
 
-                            <div id="yaml-preview" className="hidden p-6">
+                            <div id="yaml-preview" className="hidden p-4 sm:p-6">
                                 <textarea
-                                    className="w-full h-64 px-4 py-3 font-mono text-sm bg-[#1e2a16] text-white rounded-md focus:outline-none"
+                                    className="w-full h-48 sm:h-64 px-3 py-2 sm:px-4 sm:py-3 font-mono text-xs sm:text-sm bg-[#1e2a16] text-white rounded-md focus:outline-none"
                                     value={yamlText}
                                     onChange={(e) => setYamlText(e.target.value)}
                                     onBlur={updateFromYamlText}
@@ -380,17 +428,12 @@ export default function Home() {
                                 </div>
                             </div>
                         </div>
-
-                        <WizardNavigation
-                            currentStep={currentStep}
-                            totalSteps={TOTAL_STEPS}
-                            onNext={nextStep}
-                            onPrevious={previousStep}
-                        />
                     </div>
                 ) : (
-                    <div className="bg-white rounded-lg shadow-md p-10 text-center">
-                        <h2 className="text-xl font-semibold text-[#0c0e0a] mb-4">Start Building a Container</h2>
+                    <div className="bg-white rounded-lg shadow-md p-6 sm:p-10 text-center mt-4">
+                        <h2 className="text-lg sm:text-xl font-semibold text-[#0c0e0a] mb-4">
+                            Start Building a Container
+                        </h2>
                         <p className="text-[#1e2a16] mb-6">
                             Create a new container definition or upload an existing YAML file
                         </p>
@@ -471,12 +514,28 @@ export default function Home() {
                                         }
                                     }}
                                 />
-                                <p className="text-xs text-[#4f7b38] mt-2">Supported formats: .yaml, .yml</p>
+                                <p className="text-xs text-[#4f7b38] mt-2">
+                                    Supported formats: .yaml, .yml
+                                </p>
                             </div>
                         </div>
                     </div>
                 )}
             </main>
+
+            {/* Fixed Footer Navigation */}
+            {yamlData && (
+                <div className="fixed bg-white bottom-0 left-0 right-0 shadow-[0_-2px_10px_rgba(0,0,0,0.1)] z-10">
+                    <div className="max-w-7xl mx-auto">
+                        <WizardNavigation
+                            currentStep={currentStep}
+                            totalSteps={TOTAL_STEPS}
+                            onNext={nextStep}
+                            onPrevious={previousStep}
+                        />
+                    </div>
+                </div>
+            )}
 
             {/* GitHub Export Modal */}
             <GitHubModal

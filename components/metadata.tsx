@@ -1,7 +1,123 @@
-import { PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
+import {
+    PlusIcon,
+    TrashIcon,
+    InformationCircleIcon,
+    DocumentTextIcon,
+    LinkIcon,
+    ExclamationTriangleIcon,
+    ChevronDownIcon,
+    MagnifyingGlassIcon,
+} from "@heroicons/react/24/outline";
 import { ContainerRecipe, Architecture, CopyrightInfo } from "@/components/common";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
+
+// SPDX License list (common ones - you can expand this)
+const SPDX_LICENSES = [
+    { id: "MIT", name: "MIT License", url: "https://opensource.org/licenses/MIT" },
+    { id: "Apache-2.0", name: "Apache License 2.0", url: "https://opensource.org/licenses/Apache-2.0" },
+    { id: "GPL-3.0", name: "GNU General Public License v3.0", url: "https://opensource.org/licenses/GPL-3.0" },
+    { id: "GPL-2.0", name: "GNU General Public License v2.0", url: "https://opensource.org/licenses/GPL-2.0" },
+    { id: "BSD-3-Clause", name: "BSD 3-Clause License", url: "https://opensource.org/licenses/BSD-3-Clause" },
+    { id: "BSD-2-Clause", name: "BSD 2-Clause License", url: "https://opensource.org/licenses/BSD-2-Clause" },
+    { id: "LGPL-3.0", name: "GNU Lesser General Public License v3.0", url: "https://opensource.org/licenses/LGPL-3.0" },
+    { id: "LGPL-2.1", name: "GNU Lesser General Public License v2.1", url: "https://opensource.org/licenses/LGPL-2.1" },
+    { id: "ISC", name: "ISC License", url: "https://opensource.org/licenses/ISC" },
+    { id: "MPL-2.0", name: "Mozilla Public License 2.0", url: "https://opensource.org/licenses/MPL-2.0" },
+    { id: "CC0-1.0", name: "Creative Commons Zero v1.0 Universal", url: "https://creativecommons.org/publicdomain/zero/1.0/" },
+    { id: "Unlicense", name: "The Unlicense", url: "https://unlicense.org/" },
+    { id: "AGPL-3.0", name: "GNU Affero General Public License v3.0", url: "https://opensource.org/licenses/AGPL-3.0" },
+];
+
+interface LicenseDropdownProps {
+    value: string;
+    onChange: (license: string, url: string) => void;
+    placeholder?: string;
+}
+
+function LicenseDropdown({ value, onChange, placeholder }: LicenseDropdownProps) {
+    const [isOpen, setIsOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    const filteredLicenses = SPDX_LICENSES.filter(
+        (license) =>
+            license.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            license.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+                setSearchTerm("");
+            }
+        }
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const handleSelect = (license: typeof SPDX_LICENSES[0]) => {
+        onChange(license.id, license.url);
+        setIsOpen(false);
+        setSearchTerm("");
+    };
+
+    const selectedLicense = SPDX_LICENSES.find(l => l.id === value);
+
+    return (
+        <div className="relative" ref={dropdownRef}>
+            <button
+                type="button"
+                className="w-full px-3 py-2 border border-gray-200 rounded-md text-left text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329] bg-white flex items-center justify-between"
+                onClick={() => setIsOpen(!isOpen)}
+            >
+                <span className={value ? "text-[#0c0e0a]" : "text-gray-400"}>
+                    {selectedLicense ? `${selectedLicense.id} - ${selectedLicense.name}` : (placeholder || "Select a license")}
+                </span>
+                <ChevronDownIcon className={`h-4 w-4 text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+            </button>
+
+            {isOpen && (
+                <div className="absolute z-10 w-full bottom-full mb-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-hidden">
+                    <div className="p-2 border-b border-gray-100">
+                        <div className="relative">
+                            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <input
+                                type="text"
+                                className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
+                                placeholder="Search licenses..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                onClick={(e) => e.stopPropagation()}
+                            />
+                        </div>
+                    </div>
+                    <div className="max-h-48 overflow-y-auto">
+                        {filteredLicenses.length > 0 ? (
+                            filteredLicenses.map((license) => (
+                                <button
+                                    key={license.id}
+                                    type="button"
+                                    className="w-full px-3 py-2 text-left hover:bg-[#f0f7e7] focus:bg-[#f0f7e7] focus:outline-none text-sm"
+                                    onClick={() => handleSelect(license)}
+                                >
+                                    <div className="font-medium text-[#0c0e0a]">{license.id}</div>
+                                    <div className="text-xs text-gray-500 truncate">{license.name}</div>
+                                </button>
+                            ))
+                        ) : (
+                            <div className="px-3 py-2 text-sm text-gray-500">
+                                No licenses found matching &quot;{searchTerm}&quot;
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
 
 export default function ContainerMetadata({
     recipe,
@@ -12,7 +128,19 @@ export default function ContainerMetadata({
 }) {
     const [readmeContent, setReadmeContent] = useState(recipe.readme || "");
     const [showPreview, setShowPreview] = useState(false);
-    const inputType = recipe.readme !== undefined ? "content" : recipe.readme_url !== undefined ? "url" : "content";
+    const [showArchitectureHelp, setShowArchitectureHelp] = useState(false);
+    const [showReadmeHelp, setShowReadmeHelp] = useState(false);
+    const [showCopyrightHelp, setShowCopyrightHelp] = useState(false);
+    const [deleteConfirmIndex, setDeleteConfirmIndex] = useState<number | null>(null);
+    const [showInputTypeWarning, setShowInputTypeWarning] = useState(false);
+    const [pendingInputType, setPendingInputType] = useState<"content" | "url" | null>(null);
+
+    const inputType =
+        recipe.readme !== undefined
+            ? "content"
+            : recipe.readme_url !== undefined
+                ? "url"
+                : "content";
 
     useEffect(() => {
         // Update local state when recipe changes externally
@@ -63,119 +191,338 @@ export default function ContainerMetadata({
             ...recipe,
             copyright: recipe.copyright.filter((_, i) => i !== index),
         });
+        setDeleteConfirmIndex(null);
+    };
+
+    const handleDeleteClick = (index: number) => {
+        setDeleteConfirmIndex(index);
+    };
+
+    const cancelDelete = () => {
+        setDeleteConfirmIndex(null);
     };
 
     const toggleInputType = (type: "content" | "url") => {
         if (type === inputType) return;
 
+        // Check if there's content that would be lost
+        const hasContent = (inputType === "content" && readmeContent.trim()) ||
+            (inputType === "url" && recipe.readme_url?.trim());
+
+        if (hasContent) {
+            setPendingInputType(type);
+            setShowInputTypeWarning(true);
+            return;
+        }
+
+        // No content to lose, switch immediately
+        performInputTypeSwitch(type);
+    };
+
+    const performInputTypeSwitch = (type: "content" | "url") => {
         if (type === "content") {
-            onChange({ ...recipe, readme: readmeContent, readme_url: undefined });
+            onChange({
+                ...recipe,
+                readme: readmeContent,
+                readme_url: undefined,
+            });
         } else {
-            onChange({ ...recipe, readme: undefined, readme_url: recipe.readme_url || "" });
+            onChange({
+                ...recipe,
+                readme: undefined,
+                readme_url: recipe.readme_url || "",
+            });
         }
     };
 
+    const confirmInputTypeSwitch = () => {
+        if (pendingInputType) {
+            performInputTypeSwitch(pendingInputType);
+        }
+        setShowInputTypeWarning(false);
+        setPendingInputType(null);
+    };
+
+    const cancelInputTypeSwitch = () => {
+        setShowInputTypeWarning(false);
+        setPendingInputType(null);
+    };
+
+    const handleArchitectureToggle = (arch: Architecture, checked: boolean) => {
+        if (checked) {
+            updateArchitectures([...recipe.architectures, arch]);
+        } else {
+            updateArchitectures(
+                recipe.architectures.filter((a) => a !== arch)
+            );
+        }
+    };
+
+    const handleLicenseChange = (index: number, license: string, url: string) => {
+        if (!recipe.copyright) return;
+        updateCopyright(index, { license, url });
+    };
+
     return (
-        <div className="bg-white rounded-lg shadow-md border border-[#d3e7b6] mb-6">
-            <div className="p-4 bg-[#f0f7e7] rounded-t-lg">
-                <h2 className="text-xl font-semibold text-[#0c0e0a]">
-                    Container Definition
-                </h2>
-            </div>
+        <>
+            <div className="bg-white rounded-lg shadow-md border border-[#d3e7b6] mb-6">
+                <div className="p-4 bg-[#f0f7e7] rounded-t-lg">
+                    <h2 className="text-xl font-semibold text-[#0c0e0a]">
+                        Container Definition
+                    </h2>
+                    <p className="text-sm text-[#1e2a16] mt-1">
+                        Define basic container metadata, documentation, and
+                        licensing information
+                    </p>
+                </div>
 
-            <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label className="block mb-2 font-medium text-[#1e2a16]">
-                            Name
-                        </label>
-                        <input
-                            className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
-                            value={recipe.name}
-                            onChange={(e) => updateName(e.target.value)}
-                        />
+                <div className="p-4 sm:p-6">
+                    {/* Basic Information Section */}
+                    <div className="mb-8">
+                        <h3 className="text-lg font-medium text-[#0c0e0a] mb-4">
+                            Basic Information
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                            <div>
+                                <label className="block mb-2 font-medium text-[#1e2a16]">
+                                    Container Name
+                                </label>
+                                <input
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
+                                    value={recipe.name}
+                                    onChange={(e) => updateName(e.target.value)}
+                                    placeholder="e.g., my-neuroimaging-container"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">
+                                    A unique identifier for your container
+                                </p>
+                            </div>
+
+                            <div>
+                                <label className="block mb-2 font-medium text-[#1e2a16]">
+                                    Version
+                                </label>
+                                <input
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
+                                    value={recipe.version}
+                                    onChange={(e) =>
+                                        updateVersion(e.target.value)
+                                    }
+                                    placeholder="e.g., 1.0.0"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Semantic version number (recommended)
+                                </p>
+                            </div>
+                        </div>
                     </div>
 
-                    <div>
-                        <label className="block mb-2 font-medium text-[#1e2a16]">
-                            Version
-                        </label>
-                        <input
-                            className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
-                            value={recipe.version}
-                            onChange={(e) => updateVersion(e.target.value)}
-                        />
-                    </div>
+                    {/* Architecture Section */}
+                    <div className="mb-8">
+                        <div className="flex items-center gap-2 mb-4">
+                            <h3 className="text-lg font-medium text-[#0c0e0a]">
+                                Target Architectures
+                            </h3>
+                            <div className="relative">
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setShowArchitectureHelp(!showArchitectureHelp);
+                                    }}
+                                    className="text-[#4f7b38] hover:text-[#6aa329] p-1"
+                                    title="Show documentation"
+                                >
+                                    <InformationCircleIcon className="h-4 w-4" />
+                                </button>
+                                {showArchitectureHelp && (
+                                    <>
+                                        <div
+                                            className="fixed inset-0 z-10"
+                                            onClick={() => setShowArchitectureHelp(false)}
+                                        />
+                                        <div className="absolute left-0 top-8 w-80 bg-white border border-gray-200 rounded-md shadow-lg p-4 z-20">
+                                            <h4 className="font-semibold text-[#0c0e0a] mb-2">
+                                                Target Architectures
+                                            </h4>
+                                            <div className="text-sm text-gray-600 space-y-2">
+                                                <p>
+                                                    Choose the processor architectures your container should support:
+                                                </p>
+                                                <div className="space-y-2">
+                                                    <div>
+                                                        <strong>x86_64 (Intel/AMD):</strong> Most common architecture
+                                                        <ul className="list-disc list-inside ml-4 mt-1 text-xs">
+                                                            <li>Desktop computers, most laptops</li>
+                                                            <li>Most cloud instances (AWS EC2, Google Cloud, Azure)</li>
+                                                            <li>Traditional servers and workstations</li>
+                                                        </ul>
+                                                    </div>
+                                                    <div>
+                                                        <strong>aarch64 (ARM 64-bit):</strong> Growing in popularity
+                                                        <ul className="list-disc list-inside ml-4 mt-1 text-xs">
+                                                            <li>Apple Silicon Macs (M1, M2, M3)</li>
+                                                            <li>AWS Graviton instances</li>
+                                                            <li>Raspberry Pi 4+ and other ARM devices</li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                                <p className="text-xs">
+                                                    💡 <strong>Tip:</strong> Select both for maximum compatibility, or just x86_64 if you&apos;re unsure.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        </div>
 
-                    <div className="md:col-span-2">
-                        <label className="block mb-2 font-medium text-[#1e2a16]">
-                            Architectures
-                        </label>
-                        <div className="flex flex-wrap gap-3">
-                            <label className="inline-flex items-center">
+                        <div className="flex flex-wrap gap-4">
+                            <label className="inline-flex items-center p-4 bg-gray-50 rounded-lg border-2 hover:bg-gray-100 hover:border-[#d3e7b6] transition-all cursor-pointer">
                                 <input
                                     type="checkbox"
                                     className="rounded border-gray-300 text-[#6aa329] focus:ring-[#6aa329]"
                                     checked={recipe.architectures.includes("x86_64")}
-                                    onChange={(e) => {
-                                        if (e.target.checked) {
-                                            updateArchitectures([...recipe.architectures, "x86_64"]);
-                                        } else {
-                                            updateArchitectures(
-                                                recipe.architectures.filter(
-                                                    (arch) => arch !== "x86_64"
-                                                )
-                                            );
-                                        }
-                                    }}
+                                    onChange={(e) =>
+                                        handleArchitectureToggle(
+                                            "x86_64",
+                                            e.target.checked
+                                        )
+                                    }
                                 />
-                                <span className="ml-2 text-[#0c0e0a]">x86_64</span>
+                                <div className="ml-3">
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-medium text-[#0c0e0a]">
+                                            x86_64
+                                        </span>
+                                        <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                                            Most Common
+                                        </span>
+                                    </div>
+                                    <p className="text-sm text-gray-600 mt-1">
+                                        Intel/AMD processors
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                        Desktop, laptop, most cloud servers
+                                    </p>
+                                </div>
                             </label>
 
-                            <label className="inline-flex items-center">
+                            <label className="inline-flex items-center p-4 bg-gray-50 rounded-lg border-2 hover:bg-gray-100 hover:border-[#d3e7b6] transition-all cursor-pointer">
                                 <input
                                     type="checkbox"
                                     className="rounded border-gray-300 text-[#6aa329] focus:ring-[#6aa329]"
                                     checked={recipe.architectures.includes("aarch64")}
-                                    onChange={(e) => {
-                                        if (e.target.checked) {
-                                            updateArchitectures([...recipe.architectures, "aarch64"]);
-                                        } else {
-                                            updateArchitectures(
-                                                recipe.architectures.filter(
-                                                    (arch) => arch !== "aarch64"
-                                                )
-                                            );
-                                        }
-                                    }}
+                                    onChange={(e) =>
+                                        handleArchitectureToggle(
+                                            "aarch64",
+                                            e.target.checked
+                                        )
+                                    }
                                 />
-                                <span className="ml-2 text-[#0c0e0a]">aarch64</span>
+                                <div className="ml-3">
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-medium text-[#0c0e0a]">
+                                            aarch64
+                                        </span>
+                                        <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
+                                            Growing
+                                        </span>
+                                    </div>
+                                    <p className="text-sm text-gray-600 mt-1">
+                                        ARM 64-bit processors
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                        Apple Silicon, AWS Graviton, Raspberry Pi
+                                    </p>
+                                </div>
                             </label>
                         </div>
+
+                        {recipe.architectures.length === 0 && (
+                            <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-md text-sm text-yellow-800">
+                                <p className="font-medium">
+                                    No architectures selected
+                                </p>
+                                <p>
+                                    Please select at least one target
+                                    architecture for your container.
+                                </p>
+                            </div>
+                        )}
                     </div>
 
-                    <div className="md:col-span-2">
+                    {/* Documentation Section */}
+                    <div className="mb-8">
+                        <div className="flex items-center gap-2 mb-4">
+                            <h3 className="text-lg font-medium text-[#0c0e0a]">
+                                Documentation
+                            </h3>
+                            <div className="relative">
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setShowReadmeHelp(!showReadmeHelp);
+                                    }}
+                                    className="text-[#4f7b38] hover:text-[#6aa329] p-1"
+                                    title="Show documentation"
+                                >
+                                    <InformationCircleIcon className="h-4 w-4" />
+                                </button>
+                                {showReadmeHelp && (
+                                    <>
+                                        <div
+                                            className="fixed inset-0 z-10"
+                                            onClick={() => setShowReadmeHelp(false)}
+                                        />
+                                        <div className="absolute left-0 top-8 w-80 bg-white border border-gray-200 rounded-md shadow-lg p-4 z-20">
+                                            <h4 className="font-semibold text-[#0c0e0a] mb-2">
+                                                Documentation
+                                            </h4>
+                                            <div className="text-sm text-gray-600 space-y-2">
+                                                <p>
+                                                    Provide documentation for your container users:
+                                                </p>
+                                                <div>
+                                                    <strong>Options:</strong>
+                                                    <ul className="list-disc list-inside mt-1 space-y-1">
+                                                        <li><strong>Enter Content:</strong> Write documentation directly using Markdown syntax</li>
+                                                        <li><strong>Provide URL:</strong> Link to external documentation (e.g., GitHub README)</li>
+                                                    </ul>
+                                                </div>
+                                                <p>
+                                                    Good documentation helps users understand how to use your container effectively.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+
                         <div className="mb-4">
-                            <label className="block font-medium text-[#1e2a16] mb-2">Readme</label>
-                            <div className="inline-flex p-1 bg-gray-100 rounded-md mb-4">
+                            <div className="inline-flex p-1 bg-gray-100 rounded-md">
                                 <button
                                     type="button"
                                     onClick={() => toggleInputType("content")}
-                                    className={`px-4 py-2 text-sm rounded-md transition-colors ${inputType === "content"
+                                    className={`px-4 py-2 text-sm rounded-md transition-colors flex items-center gap-2 ${inputType === "content"
                                         ? "bg-white shadow-sm text-[#4f7b38] font-medium"
                                         : "text-gray-600 hover:text-[#4f7b38]"
                                         }`}
                                 >
+                                    <DocumentTextIcon className="h-4 w-4" />
                                     Enter Content
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => toggleInputType("url")}
-                                    className={`px-4 py-2 text-sm rounded-md transition-colors ${inputType === "url"
+                                    className={`px-4 py-2 text-sm rounded-md transition-colors flex items-center gap-2 ${inputType === "url"
                                         ? "bg-white shadow-sm text-[#4f7b38] font-medium"
                                         : "text-gray-600 hover:text-[#4f7b38]"
                                         }`}
                                 >
+                                    <LinkIcon className="h-4 w-4" />
                                     Provide URL
                                 </button>
                             </div>
@@ -183,14 +530,18 @@ export default function ContainerMetadata({
 
                         {inputType === "content" ? (
                             <div className="border border-gray-200 rounded-lg overflow-hidden">
-                                <div className="flex justify-between items-center px-4 py-2 bg-gray-50 border-b">
-                                    <div className="text-sm font-medium text-gray-600">
-                                        {showPreview ? "Preview" : "Markdown Editor"}
+                                <div className="flex justify-between items-center px-4 py-3 bg-gray-50 border-b">
+                                    <div className="text-sm font-medium text-gray-700">
+                                        {showPreview
+                                            ? "Markdown Preview"
+                                            : "Markdown Editor"}
                                     </div>
                                     <button
                                         type="button"
-                                        className="text-sm px-3 py-1 rounded-md bg-[#f0f7e7] text-[#4f7b38] hover:bg-[#e5f0d5] transition-colors"
-                                        onClick={() => setShowPreview(!showPreview)}
+                                        className="text-sm px-3 py-1.5 rounded-md bg-[#f0f7e7] text-[#4f7b38] hover:bg-[#e5f0d5] transition-colors font-medium"
+                                        onClick={() =>
+                                            setShowPreview(!showPreview)
+                                        }
                                     >
                                         {showPreview ? "Edit" : "Preview"}
                                     </button>
@@ -199,10 +550,16 @@ export default function ContainerMetadata({
                                 {showPreview ? (
                                     <div className="p-4 min-h-[250px] max-h-[500px] overflow-y-auto prose prose-sm max-w-none">
                                         {readmeContent ? (
-                                            <ReactMarkdown>{readmeContent}</ReactMarkdown>
+                                            <ReactMarkdown>
+                                                {readmeContent}
+                                            </ReactMarkdown>
                                         ) : (
-                                            <div className="text-gray-400 italic">
-                                                Preview will appear here
+                                            <div className="text-gray-400 italic text-center py-8">
+                                                <DocumentTextIcon className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                                                <p>
+                                                    Preview will appear here when
+                                                    you add content
+                                                </p>
                                             </div>
                                         )}
                                     </div>
@@ -210,8 +567,10 @@ export default function ContainerMetadata({
                                     <textarea
                                         className="w-full px-4 py-3 text-[#0c0e0a] focus:outline-none focus:ring-0 border-0 min-h-[250px] resize-y"
                                         value={readmeContent}
-                                        onChange={(e) => updateReadme(e.target.value)}
-                                        placeholder="# Your readme content in Markdown format"
+                                        onChange={(e) =>
+                                            updateReadme(e.target.value)
+                                        }
+                                        placeholder="Write your container documentation here using Markdown..."
                                     />
                                 )}
                             </div>
@@ -220,79 +579,231 @@ export default function ContainerMetadata({
                                 <input
                                     className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
                                     value={recipe.readme_url || ""}
-                                    onChange={(e) => updateReadmeUrl(e.target.value)}
-                                    placeholder="URL to readme file"
+                                    onChange={(e) =>
+                                        updateReadmeUrl(e.target.value)
+                                    }
+                                    placeholder="https://raw.githubusercontent.com/user/repo/main/README.md"
                                 />
                                 <p className="mt-2 text-sm text-gray-500">
-                                    Enter a URL to an external readme file (e.g., GitHub raw file URL)
+                                    Enter a URL to an external documentation file.
+                                    GitHub raw file URLs work well for this
+                                    purpose.
                                 </p>
                             </div>
                         )}
                     </div>
-                </div>
 
-                <div className="mt-6">
-                    <div className="flex justify-between items-center mb-3">
-                        <h3 className="font-medium text-[#1e2a16]">
-                            Copyright Information
-                        </h3>
-                        <button
-                            className="text-sm text-[#4f7b38] hover:text-[#6aa329] flex items-center"
-                            onClick={addCopyright}
-                        >
-                            <PlusIcon className="h-4 w-4 mr-1" />
-                            Add License
-                        </button>
-                    </div>
-
-                    {(recipe.copyright || []).map((info, index) => (
-                        <div
-                            key={index}
-                            className="mb-4 last:mb-0 p-4 bg-[#f0f7e7] rounded-md relative"
-                        >
-                            <button
-                                className="absolute top-3 right-3 text-gray-400 hover:text-[#6aa329]"
-                                onClick={() => removeCopyright(index)}
-                            >
-                                <TrashIcon className="h-5 w-5" />
-                            </button>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block mb-1 text-sm font-medium text-[#1e2a16]">
-                                        License
-                                    </label>
-                                    <input
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329] bg-white"
-                                        value={info.license}
-                                        onChange={(e) =>
-                                            updateCopyright(index, {
-                                                ...info,
-                                                license: e.target.value,
-                                            })
-                                        }
-                                        placeholder="SPDX License Identifier"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block mb-1 text-sm font-medium text-[#1e2a16]">
-                                        URL
-                                    </label>
-                                    <input
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329] bg-white"
-                                        value={info.url}
-                                        onChange={(e) =>
-                                            updateCopyright(index, { ...info, url: e.target.value })
-                                        }
-                                        placeholder="License URL"
-                                    />
+                    {/* Copyright Section */}
+                    <div>
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                                <h3 className="text-lg font-medium text-[#0c0e0a]">
+                                    License Information
+                                </h3>
+                                <div className="relative">
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setShowCopyrightHelp(!showCopyrightHelp);
+                                        }}
+                                        className="text-[#4f7b38] hover:text-[#6aa329] p-1"
+                                        title="Show documentation"
+                                    >
+                                        <InformationCircleIcon className="h-4 w-4" />
+                                    </button>
+                                    {showCopyrightHelp && (
+                                        <>
+                                            <div
+                                                className="fixed inset-0 z-10"
+                                                onClick={() => setShowCopyrightHelp(false)}
+                                            />
+                                            <div className="absolute left-0 top-8 w-80 bg-white border border-gray-200 rounded-md shadow-lg p-4 z-20">
+                                                <h4 className="font-semibold text-[#0c0e0a] mb-2">
+                                                    License Information
+                                                </h4>
+                                                <div className="text-sm text-gray-600 space-y-2">
+                                                    <p>
+                                                        Specify licenses for your container and any included software:
+                                                    </p>
+                                                    <div>
+                                                        <strong>Fields:</strong>
+                                                        <ul className="list-disc list-inside mt-1 space-y-1">
+                                                            <li><strong>License:</strong> Use SPDX identifiers (e.g., MIT, Apache-2.0, GPL-3.0)</li>
+                                                            <li><strong>URL:</strong> Link to the full license text</li>
+                                                        </ul>
+                                                    </div>
+                                                    <p>
+                                                        This is important for legal compliance and distribution.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                             </div>
+                            <button
+                                className="text-sm text-[#4f7b38] hover:text-[#6aa329] flex items-center gap-2 px-3 py-2 rounded-md hover:bg-[#f0f7e7] transition-colors"
+                                onClick={addCopyright}
+                            >
+                                <PlusIcon className="h-4 w-4" />
+                                Add License
+                            </button>
                         </div>
-                    ))}
+
+                        {(recipe.copyright || []).length === 0 ? (
+                            <div className="text-center py-6 text-gray-500 border-2 border-dashed border-gray-200 rounded-lg">
+                                <p className="mb-2">No licenses specified</p>
+                                <p className="text-sm">
+                                    Click &quot;Add License&quot; to specify
+                                    licensing information
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {(recipe.copyright || []).map((info, index) => (
+                                    <div
+                                        key={index}
+                                        className="p-4 bg-[#f0f7e7] rounded-md border border-[#e6f1d6] relative"
+                                    >
+                                        <button
+                                            className="absolute top-3 right-3 text-red-400 hover:text-red-600 hover:bg-red-50 p-1 rounded transition-colors"
+                                            onClick={() =>
+                                                handleDeleteClick(index)
+                                            }
+                                            title="Delete license"
+                                        >
+                                            <TrashIcon className="h-4 w-4" />
+                                        </button>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pr-8">
+                                            <div>
+                                                <label className="block mb-2 text-sm font-medium text-[#1e2a16]">
+                                                    License Identifier
+                                                </label>
+                                                <LicenseDropdown
+                                                    value={info.license}
+                                                    onChange={(license, url) =>
+                                                        handleLicenseChange(index, license, url)
+                                                    }
+                                                    placeholder="Select or search for a license"
+                                                />
+                                                <p className="text-xs text-gray-500 mt-1">
+                                                    SPDX license identifiers are preferred
+                                                </p>
+                                            </div>
+
+                                            <div>
+                                                <label className="block mb-2 text-sm font-medium text-[#1e2a16]">
+                                                    License URL
+                                                </label>
+                                                <input
+                                                    className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329] bg-white"
+                                                    value={info.url}
+                                                    onChange={(e) =>
+                                                        updateCopyright(index, {
+                                                            ...info,
+                                                            url: e.target.value,
+                                                        })
+                                                    }
+                                                    placeholder="https://opensource.org/licenses/MIT"
+                                                />
+                                                <p className="text-xs text-gray-500 mt-1">
+                                                    Link to the full license text
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
-        </div>
+
+            {/* Input Type Switch Warning Modal */}
+            {showInputTypeWarning && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+                        <div className="p-6">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="flex-shrink-0 w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                                    <ExclamationTriangleIcon className="h-6 w-6 text-yellow-600" />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-medium text-gray-900">
+                                        Switch Documentation Input?
+                                    </h3>
+                                </div>
+                            </div>
+                            <p className="text-gray-700 mb-6">
+                                You have existing documentation content. Switching to{" "}
+                                {pendingInputType === "content" ? "content entry" : "URL input"}{" "}
+                                will clear your current{" "}
+                                {inputType === "content" ? "written content" : "URL"}.
+                                This action cannot be undone.
+                            </p>
+                            <div className="flex gap-3 justify-end">
+                                <button
+                                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                                    onClick={cancelInputTypeSwitch}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    className="px-4 py-2 text-sm font-medium text-white bg-yellow-600 hover:bg-yellow-700 rounded-md transition-colors"
+                                    onClick={confirmInputTypeSwitch}
+                                >
+                                    Switch Anyway
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {deleteConfirmIndex !== null && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+                        <div className="p-6">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                                    <TrashIcon className="h-6 w-6 text-red-600" />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-medium text-gray-900">
+                                        Delete License
+                                    </h3>
+                                    <p className="text-sm text-gray-500">
+                                        License #{deleteConfirmIndex + 1}
+                                    </p>
+                                </div>
+                            </div>
+                            <p className="text-gray-700 mb-6">
+                                Are you sure you want to delete this license
+                                information? This action cannot be undone.
+                            </p>
+                            <div className="flex gap-3 justify-end">
+                                <button
+                                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                                    onClick={cancelDelete}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
+                                    onClick={() =>
+                                        removeCopyright(deleteConfirmIndex)
+                                    }
+                                >
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </>
     );
 }

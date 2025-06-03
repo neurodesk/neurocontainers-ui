@@ -1,4 +1,4 @@
-import { ChevronDownIcon, ChevronRightIcon, TrashIcon } from "@heroicons/react/outline";
+import { ChevronDownIcon, ChevronRightIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import { Directive } from "@/components/common";
 import DirectiveComponent from "./factory";

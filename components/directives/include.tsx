@@ -1,4 +1,4 @@
-import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/outline";
+import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import { IncludeMacro, IncludeMacros } from "@/components/common";
 

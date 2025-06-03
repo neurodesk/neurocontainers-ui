@@ -1,4 +1,4 @@
-import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/outline";
+import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { useState, useEffect } from "react";
 import { FileInfo } from "@/components/common";
 
@@ -81,8 +81,8 @@ export default function FileDirectiveComponent({
                                 type="button"
                                 onClick={() => toggleInputType("content")}
                                 className={`px-4 py-2 text-sm rounded-md transition-colors ${inputType === "content"
-                                        ? "bg-white shadow-sm text-[#4f7b38] font-medium"
-                                        : "text-gray-600 hover:text-[#4f7b38]"
+                                    ? "bg-white shadow-sm text-[#4f7b38] font-medium"
+                                    : "text-gray-600 hover:text-[#4f7b38]"
                                     }`}
                             >
                                 Enter Content
@@ -91,8 +91,8 @@ export default function FileDirectiveComponent({
                                 type="button"
                                 onClick={() => toggleInputType("filename")}
                                 className={`px-4 py-2 text-sm rounded-md transition-colors ${inputType === "filename"
-                                        ? "bg-white shadow-sm text-[#4f7b38] font-medium"
-                                        : "text-gray-600 hover:text-[#4f7b38]"
+                                    ? "bg-white shadow-sm text-[#4f7b38] font-medium"
+                                    : "text-gray-600 hover:text-[#4f7b38]"
                                     }`}
                             >
                                 Provide Filename

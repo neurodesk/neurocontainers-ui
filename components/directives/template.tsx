@@ -1,4 +1,4 @@
-import { ChevronDownIcon, ChevronRightIcon, TrashIcon } from "@heroicons/react/outline";
+import { ChevronDownIcon, ChevronRightIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import { Template } from "@/components/common";
 import { VariableComponent } from "@/components/directives/variable";
@@ -57,7 +57,7 @@ export default function TemplateDirectiveComponent({
                     <div className="mb-4">
                         <label className="block mb-1 font-medium text-sm text-[#1e2a16]">Template Name</label>
                         <input
-                            className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
+                            className="font-mono w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
                             value={template.name}
                             onChange={(e) => updateName(e.target.value)}
                         />

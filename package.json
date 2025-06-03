@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@heroicons/react": "v1",
+    "@heroicons/react": "^2.2.0",
     "js-yaml": "^4.1.0",
     "next": "15.3.2",
     "react": "^19.0.0",

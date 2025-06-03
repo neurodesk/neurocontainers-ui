@@ -2,8 +2,8 @@ import {
     ChevronDownIcon,
     ChevronRightIcon,
     PlusIcon,
-    XIcon,
-} from "@heroicons/react/outline";
+    XCircleIcon,
+} from "@heroicons/react/24/outline";
 import { useState } from "react";
 import { DeployInfo } from "@/components/common";
 
@@ -101,7 +101,7 @@ export default function DeployDirectiveComponent({
                                         className="text-[#4f7b38] hover:text-[#3a5c29]"
                                         aria-label={`Remove ${path}`}
                                     >
-                                        <XIcon className="h-4 w-4" />
+                                        <XCircleIcon className="h-4 w-4" />
                                     </button>
                                 </div>
                             ))}
@@ -148,7 +148,7 @@ export default function DeployDirectiveComponent({
                                         className="text-[#4f7b38] hover:text-[#3a5c29]"
                                         aria-label={`Remove ${bin}`}
                                     >
-                                        <XIcon className="h-4 w-4" />
+                                        <XCircleIcon className="h-4 w-4" />
                                     </button>
                                 </div>
                             ))}

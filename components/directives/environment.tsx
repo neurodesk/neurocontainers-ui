@@ -1,4 +1,4 @@
-import { ChevronDownIcon, ChevronRightIcon, TrashIcon, PlusIcon } from "@heroicons/react/outline";
+import { ChevronDownIcon, ChevronRightIcon, TrashIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
 
 export default function EnvironmentDirectiveComponent({

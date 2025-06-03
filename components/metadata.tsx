@@ -1,4 +1,4 @@
-import { PlusIcon, TrashIcon } from "@heroicons/react/outline";
+import { PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { ContainerRecipe, Architecture, CopyrightInfo } from "@/components/common";
 import { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";

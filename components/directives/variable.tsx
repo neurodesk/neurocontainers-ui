@@ -1,4 +1,4 @@
-import { TrashIcon, PlusIcon, ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/outline";
+import { TrashIcon, PlusIcon, ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import { Variable } from "@/components/common";
 

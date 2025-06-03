@@ -4,8 +4,8 @@ import { load as loadYAML, dump as dumpYAML } from "js-yaml";
 import { useState, useEffect, useRef } from "react";
 import {
     ChevronDownIcon,
-    ExclamationIcon
-} from "@heroicons/react/outline";
+    ExclamationCircleIcon
+} from "@heroicons/react/24/outline";
 import { ContainerRecipe } from "@/components/common";
 import BuildRecipeComponent from "@/components/recipe";
 import ContainerMetadata from "@/components/metadata";
@@ -147,7 +147,7 @@ function GitHubModal({
                 </h3>
 
                 <div className="mb-4 p-4 bg-[#f0f7e7] rounded-md flex items-start">
-                    <ExclamationIcon className="h-6 w-6 text-[#6aa329] mr-3 flex-shrink-0 mt-0.5" />
+                    <ExclamationCircleIcon className="h-6 w-6 text-[#6aa329] mr-3 flex-shrink-0 mt-0.5" />
                     <div>
                         <p className="text-[#1e2a16] mb-2">
                             You&apos;ll need to be logged into GitHub to complete this action.

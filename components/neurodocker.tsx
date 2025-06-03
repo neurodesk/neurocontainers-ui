@@ -3,7 +3,7 @@ import {
     InformationCircleIcon,
     ChevronUpIcon,
     ChevronDownIcon,
-} from "@heroicons/react/outline";
+} from "@heroicons/react/24/outline";
 import { NeuroDockerBuildRecipe, Directive } from "@/components/common";
 import DirectiveComponent from "@/components/directives/factory";
 import AddDirectiveButton from "@/components/add";

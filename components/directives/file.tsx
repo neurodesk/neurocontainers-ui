@@ -14,7 +14,7 @@ export default function FileDirectiveComponent({
     onChange: (file: FileInfo) => void;
 }) {
     const [isExpanded, setIsExpanded] = useState(true);
-    const [isDocExpanded, setIsDocExpanded] = useState(false);
+    const [showDocumentation, setShowDocumentation] = useState(false);
     const [fileContent, setFileContent] = useState(file.contents || "");
 
     // Determine input type based on file properties
@@ -103,42 +103,56 @@ export default function FileDirectiveComponent({
                         <ChevronRightIcon className="h-5 w-5" />
                     )}
                 </button>
-                <h2 className="text-[#0c0e0a] font-medium flex-1">
+                <h2 className="text-[#0c0e0a] font-medium flex-grow">
                     File: <span className="font-mono">{file.name}</span>
                 </h2>
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        setIsDocExpanded(!isDocExpanded);
-                    }}
-                    className="ml-2 text-[#4f7b38] hover:text-[#6aa329] transition-colors"
-                    title="Show documentation"
-                >
-                    <QuestionMarkCircleIcon className="h-5 w-5" />
-                </button>
-            </div>
-
-            {isDocExpanded && (
-                <div className="px-4 py-3 bg-blue-50 border-t border-[#e6f1d6] text-sm">
-                    <h3 className="font-medium text-blue-900 mb-2">File Options</h3>
-                    <div className="space-y-2 text-blue-800">
-                        <div>
-                            <strong>Enter Content:</strong> Directly input the file content
-                            into a text area. Use this when you want to provide the exact
-                            content inline.
-                        </div>
-                        <div>
-                            <strong>Provide Filename:</strong> Reference an existing file by
-                            its path. The system will read the file from the specified
-                            location.
-                        </div>
-                        <div>
-                            <strong>Provide URL:</strong> Reference a file by its URL. The
-                            system will fetch the content from the specified web address.
-                        </div>
-                    </div>
+                <div className="relative">
+                    <button
+                        className="text-[#4f7b38] hover:text-[#6aa329] p-1"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setShowDocumentation(!showDocumentation);
+                        }}
+                        title="Show documentation"
+                    >
+                        <QuestionMarkCircleIcon className="h-5 w-5" />
+                    </button>
+                    {showDocumentation && (
+                        <>
+                            <div
+                                className="fixed inset-0 z-10"
+                                onClick={() => setShowDocumentation(false)}
+                            />
+                            <div className="absolute right-0 top-8 w-80 bg-white border border-gray-200 rounded-md shadow-lg p-4 z-20">
+                                <h3 className="font-semibold text-[#0c0e0a] mb-2">
+                                    File Directive
+                                </h3>
+                                <div className="text-sm text-gray-600 space-y-2">
+                                    <p>
+                                        The File directive allows you to include files in your container build process.
+                                    </p>
+                                    <div>
+                                        <strong>File Source Options:</strong>
+                                        <ul className="list-disc list-inside mt-1 space-y-1">
+                                            <li><strong>Enter Content:</strong> Directly input the file content inline</li>
+                                            <li><strong>Provide Filename:</strong> Reference an existing file by path</li>
+                                            <li><strong>Provide URL:</strong> Fetch content from a web address</li>
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <strong>Examples:</strong>
+                                        <div className="bg-gray-100 p-2 rounded text-xs mt-1 space-y-1">
+                                            <div><strong>Content:</strong> Direct text input</div>
+                                            <div><strong>Filename:</strong> ./config/app.conf</div>
+                                            <div><strong>URL:</strong> https://example.com/config.json</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </div>
-            )}
+            </div>
 
             {isExpanded && (
                 <div className="p-4 border-t border-[#e6f1d6]">

@@ -70,6 +70,7 @@ export interface FileInfo {
     name: string;
     filename?: string;
     contents?: string;
+    url?: string;
 }
 
 export interface FileDirective extends BaseDirective {

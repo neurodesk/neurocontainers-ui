@@ -18,7 +18,7 @@ export default function FileDirectiveComponent({
     const [fileContent, setFileContent] = useState(file.contents || "");
 
     // Determine input type based on file properties
-    const getInputType = () => {
+    const getInputType: () => "content" | "url" | "filename" = () => {
         if (file.contents !== undefined) return "content";
         if (file.url !== undefined) return "url";
         return "filename";
@@ -162,8 +162,8 @@ export default function FileDirectiveComponent({
                                 type="button"
                                 onClick={() => toggleInputType("content")}
                                 className={`px-4 py-2 text-sm rounded-md transition-colors ${inputType === "content"
-                                        ? "bg-white shadow-sm text-[#4f7b38] font-medium"
-                                        : "text-gray-600 hover:text-[#4f7b38]"
+                                    ? "bg-white shadow-sm text-[#4f7b38] font-medium"
+                                    : "text-gray-600 hover:text-[#4f7b38]"
                                     }`}
                             >
                                 Enter Content
@@ -172,8 +172,8 @@ export default function FileDirectiveComponent({
                                 type="button"
                                 onClick={() => toggleInputType("filename")}
                                 className={`px-4 py-2 text-sm rounded-md transition-colors ${inputType === "filename"
-                                        ? "bg-white shadow-sm text-[#4f7b38] font-medium"
-                                        : "text-gray-600 hover:text-[#4f7b38]"
+                                    ? "bg-white shadow-sm text-[#4f7b38] font-medium"
+                                    : "text-gray-600 hover:text-[#4f7b38]"
                                     }`}
                             >
                                 Provide Filename
@@ -182,8 +182,8 @@ export default function FileDirectiveComponent({
                                 type="button"
                                 onClick={() => toggleInputType("url")}
                                 className={`px-4 py-2 text-sm rounded-md transition-colors ${inputType === "url"
-                                        ? "bg-white shadow-sm text-[#4f7b38] font-medium"
-                                        : "text-gray-600 hover:text-[#4f7b38]"
+                                    ? "bg-white shadow-sm text-[#4f7b38] font-medium"
+                                    : "text-gray-600 hover:text-[#4f7b38]"
                                     }`}
                             >
                                 Provide URL

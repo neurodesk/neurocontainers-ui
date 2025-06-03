@@ -3,11 +3,12 @@ import {
     InformationCircleIcon,
     ChevronUpIcon,
     ChevronDownIcon,
+    Bars3Icon,
 } from "@heroicons/react/24/outline";
 import { NeuroDockerBuildRecipe, Directive } from "@/components/common";
 import DirectiveComponent from "@/components/directives/factory";
 import AddDirectiveButton from "@/components/add";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 const UBUNTU_VERSIONS = [
     { value: "ubuntu:24.04", label: "Ubuntu 24.04 LTS (Noble Numbat)" },
@@ -37,6 +38,12 @@ export default function NeuroDockerBuildRecipeComponent({
     const [baseImageSource, setBaseImageSource] =
         useState<BaseImageSource>("ubuntu");
     const [customBaseImage, setCustomBaseImage] = useState("");
+    const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+    const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+    // Refs for scroll behavior
+    const lastDirectiveRef = useRef<HTMLDivElement>(null);
+    const directivesLength = useRef(recipe.directives.length);
 
     // Determine initial base image source based on current recipe
     useState(() => {
@@ -51,6 +58,22 @@ export default function NeuroDockerBuildRecipeComponent({
             setCustomBaseImage(recipe["base-image"]);
         }
     });
+
+    // Scroll to newly added directive
+    useEffect(() => {
+        if (
+            recipe.directives.length > directivesLength.current &&
+            lastDirectiveRef.current
+        ) {
+            setTimeout(() => {
+                lastDirectiveRef.current?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "nearest",
+                });
+            }, 100);
+        }
+        directivesLength.current = recipe.directives.length;
+    }, [recipe.directives.length]);
 
     const updateBaseImage = (value: string) => {
         onChange({ ...recipe, "base-image": value });
@@ -88,6 +111,52 @@ export default function NeuroDockerBuildRecipeComponent({
         ];
 
         onChange({ ...recipe, directives: updatedDirectives });
+    };
+
+    // Drag and drop handlers
+    const handleDragStart = (e: React.DragEvent, index: number) => {
+        setDraggedIndex(index);
+        e.dataTransfer.effectAllowed = "move";
+    };
+
+    const handleDragOver = (e: React.DragEvent, index: number) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+        setDragOverIndex(index);
+    };
+
+    const handleDragLeave = () => {
+        setDragOverIndex(null);
+    };
+
+    const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+        e.preventDefault();
+
+        if (draggedIndex === null || draggedIndex === dropIndex) {
+            setDraggedIndex(null);
+            setDragOverIndex(null);
+            return;
+        }
+
+        const updatedDirectives = [...recipe.directives];
+        const draggedItem = updatedDirectives[draggedIndex];
+
+        // Remove the dragged item
+        updatedDirectives.splice(draggedIndex, 1);
+
+        // Insert at the new position
+        const insertIndex =
+            draggedIndex < dropIndex ? dropIndex - 1 : dropIndex;
+        updatedDirectives.splice(insertIndex, 0, draggedItem);
+
+        onChange({ ...recipe, directives: updatedDirectives });
+        setDraggedIndex(null);
+        setDragOverIndex(null);
+    };
+
+    const handleDragEnd = () => {
+        setDraggedIndex(null);
+        setDragOverIndex(null);
     };
 
     const handleBaseImageSourceChange = (source: BaseImageSource) => {
@@ -357,8 +426,8 @@ export default function NeuroDockerBuildRecipeComponent({
                             Directives define the software and configurations to
                             install in your container. They are executed in
                             order, so dependencies should be placed before the
-                            software that requires them. Use the arrow buttons
-                            to reorder directives.
+                            software that requires them. Use drag and drop or
+                            the arrow buttons to reorder directives.
                         </p>
                     </div>
 
@@ -366,8 +435,8 @@ export default function NeuroDockerBuildRecipeComponent({
                         <div className="text-center py-8 text-gray-500 border-2 border-dashed border-gray-200 rounded-lg">
                             <p className="mb-2">No directives added yet</p>
                             <p className="text-sm">
-                                Click &quot;Add Directive&quot; to start building your
-                                container
+                                Click &quot;Add Directive&quot; to start
+                                building your container
                             </p>
                         </div>
                     ) : (
@@ -375,19 +444,46 @@ export default function NeuroDockerBuildRecipeComponent({
                             {recipe.directives.map((directive, index) => (
                                 <div
                                     key={`directive-${index}`}
-                                    className="flex flex-col sm:flex-row gap-3"
+                                    ref={
+                                        index === recipe.directives.length - 1
+                                            ? lastDirectiveRef
+                                            : null
+                                    }
+                                    className={`flex flex-col sm:flex-row gap-3 transition-all duration-200 ${draggedIndex === index
+                                            ? "opacity-50"
+                                            : ""
+                                        } ${dragOverIndex === index
+                                            ? "border-t-2 border-[#6aa329] pt-2"
+                                            : ""
+                                        }`}
+                                    draggable
+                                    onDragStart={(e) =>
+                                        handleDragStart(e, index)
+                                    }
+                                    onDragOver={(e) => handleDragOver(e, index)}
+                                    onDragLeave={handleDragLeave}
+                                    onDrop={(e) => handleDrop(e, index)}
+                                    onDragEnd={handleDragEnd}
                                 >
                                     {/* Mobile: Horizontal Controls */}
                                     <div className="flex sm:hidden items-center justify-between bg-gray-50 p-2 rounded-md border">
                                         <div className="flex items-center gap-2">
+                                            <button
+                                                className="text-gray-400 hover:text-[#6aa329] cursor-grab active:cursor-grabbing"
+                                                onMouseDown={(e) =>
+                                                    e.stopPropagation()
+                                                }
+                                            >
+                                                <Bars3Icon className="h-4 w-4" />
+                                            </button>
                                             <span className="text-xs font-medium text-gray-600">
                                                 Step {index + 1}
                                             </span>
                                             <div className="flex gap-1">
                                                 <button
                                                     className={`p-1.5 rounded ${index === 0
-                                                        ? "text-gray-300 cursor-not-allowed"
-                                                        : "text-gray-600 hover:text-[#6aa329] hover:bg-white"
+                                                            ? "text-gray-300 cursor-not-allowed"
+                                                            : "text-gray-600 hover:text-[#6aa329] hover:bg-white"
                                                         } transition-colors`}
                                                     onClick={() =>
                                                         moveDirective(
@@ -402,11 +498,11 @@ export default function NeuroDockerBuildRecipeComponent({
                                                 </button>
                                                 <button
                                                     className={`p-1.5 rounded ${index ===
-                                                        recipe.directives
-                                                            .length -
-                                                        1
-                                                        ? "text-gray-300 cursor-not-allowed"
-                                                        : "text-gray-600 hover:text-[#6aa329] hover:bg-white"
+                                                            recipe.directives
+                                                                .length -
+                                                            1
+                                                            ? "text-gray-300 cursor-not-allowed"
+                                                            : "text-gray-600 hover:text-[#6aa329] hover:bg-white"
                                                         } transition-colors`}
                                                     onClick={() =>
                                                         moveDirective(
@@ -441,9 +537,18 @@ export default function NeuroDockerBuildRecipeComponent({
                                     <div className="hidden sm:flex flex-col items-center pt-3 flex-shrink-0">
                                         <div className="flex flex-col bg-white border border-gray-300 rounded-md shadow-sm">
                                             <button
+                                                className="p-2 border-b border-gray-200 text-gray-400 hover:text-[#6aa329] cursor-grab active:cursor-grabbing transition-colors"
+                                                onMouseDown={(e) =>
+                                                    e.stopPropagation()
+                                                }
+                                                title="Drag to reorder"
+                                            >
+                                                <Bars3Icon className="h-5 w-5" />
+                                            </button>
+                                            <button
                                                 className={`p-2 border-b border-gray-200 ${index === 0
-                                                    ? "text-gray-300 cursor-not-allowed"
-                                                    : "text-gray-600 hover:text-[#6aa329] hover:bg-[#f0f7e7]"
+                                                        ? "text-gray-300 cursor-not-allowed"
+                                                        : "text-gray-600 hover:text-[#6aa329] hover:bg-[#f0f7e7]"
                                                     } transition-colors`}
                                                 onClick={() =>
                                                     moveDirective(index, "up")
@@ -455,9 +560,9 @@ export default function NeuroDockerBuildRecipeComponent({
                                             </button>
                                             <button
                                                 className={`p-2 ${index ===
-                                                    recipe.directives.length - 1
-                                                    ? "text-gray-300 cursor-not-allowed"
-                                                    : "text-gray-600 hover:text-[#6aa329] hover:bg-[#f0f7e7]"
+                                                        recipe.directives.length - 1
+                                                        ? "text-gray-300 cursor-not-allowed"
+                                                        : "text-gray-600 hover:text-[#6aa329] hover:bg-[#f0f7e7]"
                                                     } transition-colors`}
                                                 onClick={() =>
                                                     moveDirective(index, "down")

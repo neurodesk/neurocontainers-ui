@@ -40,10 +40,13 @@ export default function NeuroDockerBuildRecipeComponent({
     const [customBaseImage, setCustomBaseImage] = useState("");
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
     const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+    const [deleteConfirmIndex, setDeleteConfirmIndex] = useState<number | null>(
+        null
+    );
 
-    // Refs for scroll behavior
+    // Refs for scroll behavior - only for user-added directives
     const lastDirectiveRef = useRef<HTMLDivElement>(null);
-    const directivesLength = useRef(recipe.directives.length);
+    const shouldScrollToNew = useRef(false);
 
     // Determine initial base image source based on current recipe
     useState(() => {
@@ -59,20 +62,23 @@ export default function NeuroDockerBuildRecipeComponent({
         }
     });
 
-    // Scroll to newly added directive
+    // Scroll to newly added directive only when explicitly added by user
     useEffect(() => {
-        if (
-            recipe.directives.length > directivesLength.current &&
+        console.log(
+            "Directives length changed, checking scroll behavior",
+            recipe.directives.length,
+            shouldScrollToNew.current,
             lastDirectiveRef.current
-        ) {
+        );
+        if (shouldScrollToNew.current && lastDirectiveRef.current) {
             setTimeout(() => {
                 lastDirectiveRef.current?.scrollIntoView({
                     behavior: "smooth",
                     block: "nearest",
                 });
             }, 100);
+            shouldScrollToNew.current = false;
         }
-        directivesLength.current = recipe.directives.length;
     }, [recipe.directives.length]);
 
     const updateBaseImage = (value: string) => {
@@ -90,6 +96,8 @@ export default function NeuroDockerBuildRecipeComponent({
     };
 
     const addDirective = (directive: Directive) => {
+        // Set flag to trigger scroll for user-added directive
+        shouldScrollToNew.current = true;
         onChange({ ...recipe, directives: [...recipe.directives, directive] });
     };
 
@@ -98,6 +106,15 @@ export default function NeuroDockerBuildRecipeComponent({
             ...recipe,
             directives: recipe.directives.filter((_, i) => i !== index),
         });
+        setDeleteConfirmIndex(null);
+    };
+
+    const handleDeleteClick = (index: number) => {
+        setDeleteConfirmIndex(index);
+    };
+
+    const cancelDelete = () => {
+        setDeleteConfirmIndex(null);
     };
 
     const moveDirective = (index: number, direction: "up" | "down") => {
@@ -450,8 +467,8 @@ export default function NeuroDockerBuildRecipeComponent({
                                             : null
                                     }
                                     className={`flex flex-col sm:flex-row gap-3 transition-all duration-200 ${draggedIndex === index
-                                            ? "opacity-50"
-                                            : ""
+                                        ? "opacity-50"
+                                        : ""
                                         } ${dragOverIndex === index
                                             ? "border-t-2 border-[#6aa329] pt-2"
                                             : ""
@@ -482,8 +499,8 @@ export default function NeuroDockerBuildRecipeComponent({
                                             <div className="flex gap-1">
                                                 <button
                                                     className={`p-1.5 rounded ${index === 0
-                                                            ? "text-gray-300 cursor-not-allowed"
-                                                            : "text-gray-600 hover:text-[#6aa329] hover:bg-white"
+                                                        ? "text-gray-300 cursor-not-allowed"
+                                                        : "text-gray-600 hover:text-[#6aa329] hover:bg-white"
                                                         } transition-colors`}
                                                     onClick={() =>
                                                         moveDirective(
@@ -498,11 +515,11 @@ export default function NeuroDockerBuildRecipeComponent({
                                                 </button>
                                                 <button
                                                     className={`p-1.5 rounded ${index ===
-                                                            recipe.directives
-                                                                .length -
-                                                            1
-                                                            ? "text-gray-300 cursor-not-allowed"
-                                                            : "text-gray-600 hover:text-[#6aa329] hover:bg-white"
+                                                        recipe.directives
+                                                            .length -
+                                                        1
+                                                        ? "text-gray-300 cursor-not-allowed"
+                                                        : "text-gray-600 hover:text-[#6aa329] hover:bg-white"
                                                         } transition-colors`}
                                                     onClick={() =>
                                                         moveDirective(
@@ -520,17 +537,17 @@ export default function NeuroDockerBuildRecipeComponent({
                                                 >
                                                     <ChevronDownIcon className="h-4 w-4" />
                                                 </button>
+                                                <button
+                                                    className="text-red-400 hover:text-red-600 transition-colors p-1.5 rounded hover:bg-white"
+                                                    onClick={() =>
+                                                        handleDeleteClick(index)
+                                                    }
+                                                    title="Delete directive"
+                                                >
+                                                    <TrashIcon className="h-4 w-4" />
+                                                </button>
                                             </div>
                                         </div>
-                                        <button
-                                            className="text-gray-400 hover:text-red-500 transition-colors p-1.5 rounded hover:bg-white"
-                                            onClick={() =>
-                                                removeDirective(index)
-                                            }
-                                            title="Remove directive"
-                                        >
-                                            <TrashIcon className="h-4 w-4" />
-                                        </button>
                                     </div>
 
                                     {/* Desktop: Vertical Controls */}
@@ -547,8 +564,8 @@ export default function NeuroDockerBuildRecipeComponent({
                                             </button>
                                             <button
                                                 className={`p-2 border-b border-gray-200 ${index === 0
-                                                        ? "text-gray-300 cursor-not-allowed"
-                                                        : "text-gray-600 hover:text-[#6aa329] hover:bg-[#f0f7e7]"
+                                                    ? "text-gray-300 cursor-not-allowed"
+                                                    : "text-gray-600 hover:text-[#6aa329] hover:bg-[#f0f7e7]"
                                                     } transition-colors`}
                                                 onClick={() =>
                                                     moveDirective(index, "up")
@@ -559,10 +576,10 @@ export default function NeuroDockerBuildRecipeComponent({
                                                 <ChevronUpIcon className="h-5 w-5" />
                                             </button>
                                             <button
-                                                className={`p-2 ${index ===
-                                                        recipe.directives.length - 1
-                                                        ? "text-gray-300 cursor-not-allowed"
-                                                        : "text-gray-600 hover:text-[#6aa329] hover:bg-[#f0f7e7]"
+                                                className={`p-2 border-b border-gray-200 ${index ===
+                                                    recipe.directives.length - 1
+                                                    ? "text-gray-300 cursor-not-allowed"
+                                                    : "text-gray-600 hover:text-[#6aa329] hover:bg-[#f0f7e7]"
                                                     } transition-colors`}
                                                 onClick={() =>
                                                     moveDirective(index, "down")
@@ -575,6 +592,15 @@ export default function NeuroDockerBuildRecipeComponent({
                                             >
                                                 <ChevronDownIcon className="h-5 w-5" />
                                             </button>
+                                            <button
+                                                className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                                                onClick={() =>
+                                                    handleDeleteClick(index)
+                                                }
+                                                title="Delete directive"
+                                            >
+                                                <TrashIcon className="h-5 w-5" />
+                                            </button>
                                         </div>
                                         <div className="mt-2 text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">
                                             {index + 1}
@@ -582,23 +608,13 @@ export default function NeuroDockerBuildRecipeComponent({
                                     </div>
 
                                     {/* Directive Content */}
-                                    <div className="flex-1 min-w-0 relative">
+                                    <div className="flex-1 min-w-0">
                                         <DirectiveComponent
                                             directive={directive}
                                             onChange={(updated) =>
                                                 updateDirective(index, updated)
                                             }
                                         />
-                                        {/* Desktop: Trash button overlay */}
-                                        <button
-                                            className="hidden sm:block absolute top-3 right-3 text-gray-400 hover:text-red-500 transition-colors p-1 rounded hover:bg-white z-10"
-                                            onClick={() =>
-                                                removeDirective(index)
-                                            }
-                                            title="Remove directive"
-                                        >
-                                            <TrashIcon className="h-5 w-5" />
-                                        </button>
                                     </div>
                                 </div>
                             ))}
@@ -606,6 +622,49 @@ export default function NeuroDockerBuildRecipeComponent({
                     )}
                 </div>
             </div>
+
+            {/* Delete Confirmation Modal */}
+            {deleteConfirmIndex !== null && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+                        <div className="p-6">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                                    <TrashIcon className="h-6 w-6 text-red-600" />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-medium text-gray-900">
+                                        Delete Directive
+                                    </h3>
+                                    <p className="text-sm text-gray-500">
+                                        Step {deleteConfirmIndex + 1}
+                                    </p>
+                                </div>
+                            </div>
+                            <p className="text-gray-700 mb-6">
+                                Are you sure you want to delete this directive?
+                                This action cannot be undone.
+                            </p>
+                            <div className="flex gap-3 justify-end">
+                                <button
+                                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                                    onClick={cancelDelete}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
+                                    onClick={() =>
+                                        removeDirective(deleteConfirmIndex)
+                                    }
+                                >
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

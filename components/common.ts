@@ -95,7 +95,7 @@ export interface TestDirective extends BaseDirective {
 
 export const IncludeMacros = ["macros/openrecon/neurodocker.yaml"] as const;
 
-export type IncludeMacro = typeof IncludeMacros[number];
+export type IncludeMacro = (typeof IncludeMacros)[number];
 
 export interface IncludeDirective extends BaseDirective {
     include: IncludeMacro;
@@ -136,4 +136,81 @@ export interface ContainerRecipe {
     files?: FileInfo[];
     deploy?: DeployInfo;
     tests?: TestInfo[];
+}
+
+export function migrateLegacyRecipe(
+    recipe: ContainerRecipe
+): ContainerRecipe {
+    const directives: Directive[] = [];
+
+    // Migrate files to file directives
+    if (recipe.files?.length) {
+        directives.push(
+            ...recipe.files.map(
+                (file): FileDirective => ({
+                    file,
+                })
+            )
+        );
+    }
+
+    // Migrate deploy to deploy directive
+    if (recipe.deploy) {
+        directives.push({
+            deploy: recipe.deploy,
+        });
+    }
+
+    // Migrate tests to test directives
+    if (recipe.tests?.length) {
+        directives.push(
+            ...recipe.tests.map(
+                (test): TestDirective => ({
+                    test,
+                })
+            )
+        );
+    }
+
+    const ret = {
+        ...recipe,
+        build: {
+            ...recipe.build,
+            directives: [...directives, ...recipe.build.directives],
+        },
+    };
+    delete ret.files;
+    delete ret.deploy;
+    delete ret.tests;
+    return ret;
+}
+
+export async function mergeAdditionalFilesIntoRecipe(recipe: ContainerRecipe, fetchFile: (filename: string) => Promise<string>): Promise<ContainerRecipe> {
+    // Look for file directives in the recipe. Make sure to handle group directives.
+    // For each file directive if they have a filename then download it and replace the filename with the contents.
+    const processDirective = async (directive: Directive): Promise<Directive> => {
+        if ('file' in directive) {
+            const file = directive.file;
+            if (file.filename) {
+                try {
+                    file.contents = await fetchFile(file.filename);
+                    delete file.filename; // Remove filename after fetching
+                } catch (error) {
+                    console.error(`Failed to fetch file ${file.filename}:`, error);
+                }
+            }
+        } else if ('group' in directive) {
+            directive.group = await Promise.all(directive.group.map(processDirective));
+        }
+        return directive;
+    }
+
+    const directives = await Promise.all(recipe.build.directives.map(processDirective));
+    return {
+        ...recipe,
+        build: {
+            ...recipe.build,
+            directives: directives,
+        },
+    };
 }

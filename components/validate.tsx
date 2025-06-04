@@ -38,9 +38,6 @@ export default function ContainerValidator({
         architecture: "x86_64",
         ignoreArchitecture: false,
         maxParallelJobs: 4,
-        recreateOutputDir: true,
-        checkOnly: false,
-        autouild: false,
     });
 
     const dockerfileRef = useRef<HTMLPreElement>(null);
@@ -78,8 +75,6 @@ export default function ContainerValidator({
             setBuilderError(
                 error instanceof Error ? error.message : "Failed to load builder"
             );
-            // Reset attempt flag on error to allow retry
-            builderLoadAttempted.current = false;
         } finally {
             setBuilderLoading(false);
             isLoadingBuilder.current = false;
@@ -325,22 +320,6 @@ export default function ContainerValidator({
                                 />
                                 <span className="text-sm text-gray-700">
                                     Ignore Architecture Constraints
-                                </span>
-                            </label>
-                            <label className="flex items-center">
-                                <input
-                                    type="checkbox"
-                                    className="mr-2 text-[#6aa329] focus:ring-[#6aa329]"
-                                    checked={buildOptions.recreateOutputDir}
-                                    onChange={(e) =>
-                                        setBuildOptions({
-                                            ...buildOptions,
-                                            recreateOutputDir: e.target.checked,
-                                        })
-                                    }
-                                />
-                                <span className="text-sm text-gray-700">
-                                    Recreate Output Directory
                                 </span>
                             </label>
                         </div>

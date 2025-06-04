@@ -17,7 +17,9 @@ export default function InstallDirectiveComponent({
         if (typeof install === "string") {
             setPackages(install.split(/\s+/).filter((pkg) => pkg.trim() !== ""));
         } else if (Array.isArray(install)) {
-            setPackages(install.filter((pkg) => pkg.trim() !== ""));
+            // each array element can contain multiple packages
+            const allPackages = install.flatMap((pkg) => pkg.split(/\s+/).filter((p) => p.trim() !== ""));
+            setPackages(allPackages);
         } else {
             setPackages([]);
         }

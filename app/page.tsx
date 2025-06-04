@@ -8,7 +8,7 @@ import {
     DocumentTextIcon,
     ExclamationCircleIcon
 } from "@heroicons/react/24/outline";
-import { ContainerRecipe } from "@/components/common";
+import { ContainerRecipe, migrateLegacyRecipe } from "@/components/common";
 import BuildRecipeComponent from "@/components/recipe";
 import ContainerMetadata from "@/components/metadata";
 import ValidateRecipeComponent from "@/components/validate";
@@ -577,7 +577,8 @@ export default function Home() {
                                             reader.onload = (event) => {
                                                 const text = event.target?.result as string;
                                                 try {
-                                                    const parsed = loadYAML(text) as ContainerRecipe;
+                                                    let parsed = loadYAML(text) as ContainerRecipe;
+                                                    parsed = migrateLegacyRecipe(parsed);
                                                     setYamlData(parsed);
                                                 } catch (err) {
                                                     console.error("Error parsing YAML:", err);
@@ -597,7 +598,8 @@ export default function Home() {
                                         reader.onload = (event) => {
                                             const text = event.target?.result as string;
                                             try {
-                                                const parsed = loadYAML(text) as ContainerRecipe;
+                                                let parsed = loadYAML(text) as ContainerRecipe;
+                                                parsed = migrateLegacyRecipe(parsed);
                                                 setYamlData(parsed);
                                             } catch (err) {
                                                 console.error("Error parsing YAML:", err);

@@ -5,11 +5,14 @@ const REPO_URL = "https://raw.githubusercontent.com/NeuroDesk/neurocontainers";
 
 const MAIN_REF = "heads/main";
 
-const BUILDER_PATH = "builder/build.py";
-const LICENSES_PATH = "builder/licenses.json";
+const REQUIRED_FILES = [
+    "builder/build.py",
+    "builder/licenses.json",
+];
 
-const BUILDER_URL = `${REPO_URL}/refs/${MAIN_REF}/${BUILDER_PATH}`;
-const LICENSES_URL = `${REPO_URL}/refs/${MAIN_REF}/${LICENSES_PATH}`;
+const REPO_FILES = [
+    "macros/openrecon/neurodocker.yaml",
+]
 
 function bytesToString(bytes: Uint8Array, encoding: string): string {
     if (encoding === "utf-8") {
@@ -26,9 +29,6 @@ export interface BuildOptions {
     ignoreArchitecture?: boolean;
     maxParallelJobs?: number;
     options?: Record<string, string>;
-    recreateOutputDir?: boolean;
-    checkOnly?: boolean;
-    autouild?: boolean;
 }
 
 export interface BuildResult {
@@ -102,11 +102,11 @@ export class Builder {
                 outputDirectory,
                 options.architecture || "x86_64",
                 options.ignoreArchitecture || false,
-                options.autouild || false,
+                false, // autouild
                 options.maxParallelJobs || 4,
                 options.options ? Object.entries(options.options).map(([k, v]) => `${k}=${v}`) : null,
-                options.recreateOutputDir || false,
-                true
+                true, // recreate_output_dir
+                true // check_only
             );
 
             if (!result) return null;
@@ -267,6 +267,46 @@ export class NeuroDockerBuilder {
     }
 }
 
+const LOADER_SCRIPT = `
+import micropip
+from pyodide.http import pyfetch
+import os
+
+# Install neurodocker
+await micropip.install("neurodocker")
+
+# Create necessary directories
+os.makedirs("/repo", exist_ok=True)
+os.makedirs("/recipe", exist_ok=True)
+os.makedirs("/tmp", exist_ok=True)
+
+base = "${REPO_URL}/${MAIN_REF}/"
+
+# Download required files
+for url in ${JSON.stringify(REQUIRED_FILES)}:
+    response = await pyfetch(base + url)
+    if response.ok:
+        content = await response.bytes()
+        print(f"Downloading to {url}")
+        os.makedirs(os.path.dirname(url), exist_ok=True)
+        with open(url, "wb") as f:
+            f.write(content)
+    else:
+        raise Exception(f"Failed to download {url}")
+
+# Download Repo files
+for url in ${JSON.stringify(REPO_FILES)}:
+    response = await pyfetch(base + url)
+    if response.ok:
+        content = await response.bytes()
+        print(f"Downloading to {url}")
+        os.makedirs("/repo/" + os.path.dirname(url), exist_ok=True)
+        with open("/repo/" + url, "wb") as f:
+            f.write(content)
+    else:
+        raise Exception(f"Failed to download {url}")
+`
+
 export async function loadBuilder(pyodide: PyodideInterface): Promise<Builder> {
     try {
         // Ensure Micropip and basics are available
@@ -275,37 +315,10 @@ export async function loadBuilder(pyodide: PyodideInterface): Promise<Builder> {
         await pyodide.loadPackage("jinja2");
 
         // Install requirements and download builder files
-        await pyodide.runPythonAsync(`
-      import micropip
-      from pyodide.http import pyfetch
-      import os
-
-      # Install neurodocker
-      await micropip.install("neurodocker")
-      
-      # Download builder script
-      response = await pyfetch("${BUILDER_URL}")
-      builder_content = await response.text()
-      
-      # Download licenses file
-      licenses_response = await pyfetch("${LICENSES_URL}")
-      licenses_content = await licenses_response.text()
-      
-      # Create necessary directories
-      os.makedirs("/repo", exist_ok=True)
-      os.makedirs("/recipe", exist_ok=True)
-      os.makedirs("/tmp", exist_ok=True)
-      
-      # Write files
-      with open("builder.py", "w") as f:
-          f.write(builder_content)
-      
-      with open("licenses.json", "w") as f:
-          f.write(licenses_content)
-    `);
+        await pyodide.runPythonAsync(LOADER_SCRIPT);
 
         // Import the builder module
-        const pyBuilder = pyodide.pyimport("builder");
+        const pyBuilder = pyodide.pyimport("builder.build");
 
         return new Builder(pyodide, pyBuilder);
     } catch (error) {

@@ -22,7 +22,7 @@ export interface EnvironmentDirective extends BaseDirective {
 }
 
 export interface InstallDirective extends BaseDirective {
-    install: string;
+    install: string | string[];
 }
 
 export interface WorkingDirectoryDirective extends BaseDirective {

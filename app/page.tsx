@@ -3,13 +3,16 @@
 import { load as loadYAML, dump as dumpYAML } from "js-yaml";
 import { useState, useEffect, useRef } from "react";
 import {
+    ArrowUpTrayIcon,
     ChevronDownIcon,
+    DocumentTextIcon,
     ExclamationCircleIcon
 } from "@heroicons/react/24/outline";
 import { ContainerRecipe } from "@/components/common";
 import BuildRecipeComponent from "@/components/recipe";
 import ContainerMetadata from "@/components/metadata";
 import ValidateRecipeComponent from "@/components/validate";
+import RecipesList from "@/components/recipes";
 
 enum WizardStep {
     BasicInfo = 0,
@@ -237,6 +240,13 @@ export default function Home() {
     const [currentStep, setCurrentStep] = useState(WizardStep.BasicInfo);
     const [yamlText, setYamlText] = useState("");
     const [isGitHubModalOpen, setIsGitHubModalOpen] = useState(false);
+    const [isRecipesModalOpen, setIsRecipesModalOpen] = useState(false);
+
+    const handleLoadRecipeFromList = (recipe: ContainerRecipe) => {
+        setYamlData(recipe);
+        setCurrentStep(WizardStep.BasicInfo);
+        setIsRecipesModalOpen(false);
+    };
 
     useEffect(() => {
         getDefaultYAML()
@@ -523,21 +533,39 @@ export default function Home() {
                             Start Building a Container
                         </h2>
                         <p className="text-[#1e2a16] mb-6">
-                            Create a new container definition or upload an existing YAML file
+                            Create a new container definition, browse existing recipes, or upload a YAML file
                         </p>
-                        <div className="flex flex-col sm:flex-row justify-center gap-4">
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                             <button
-                                className="px-6 py-3 bg-[#6aa329] text-white rounded-md hover:bg-[#4f7b38]"
+                                className="p-6 border-2 border-[#d3e7b6] rounded-lg hover:border-[#6aa329] hover:bg-[#f9fdf5] transition-colors"
                                 onClick={() => {
                                     setYamlData(getNewContainerYAML());
                                     setCurrentStep(WizardStep.BasicInfo);
                                 }}
                             >
-                                Create New Container
+                                <div className="text-[#6aa329] mb-2">
+                                    <svg className="h-8 w-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                    </svg>
+                                </div>
+                                <h3 className="font-semibold text-[#0c0e0a] mb-1">Create New</h3>
+                                <p className="text-sm text-[#4f7b38]">Start from scratch</p>
                             </button>
-                            {/* drop region to upload a YAML file */}
+
+                            <button
+                                className="p-6 border-2 border-[#d3e7b6] rounded-lg hover:border-[#6aa329] hover:bg-[#f9fdf5] transition-colors"
+                                onClick={() => setIsRecipesModalOpen(true)}
+                            >
+                                <div className="text-[#6aa329] mb-2">
+                                    <DocumentTextIcon className="h-8 w-8 mx-auto" />
+                                </div>
+                                <h3 className="font-semibold text-[#0c0e0a] mb-1">Browse Recipes</h3>
+                                <p className="text-sm text-[#4f7b38]">Load existing recipe</p>
+                            </button>
+
                             <div
-                                className="border-2 border-dashed border-[#d3e7b6] rounded-md p-4 text-[#1e2a16] cursor-pointer"
+                                className="p-6 border-2 border-dashed border-[#d3e7b6] rounded-lg hover:border-[#6aa329] hover:bg-[#f9fdf5] transition-colors cursor-pointer"
                                 onClick={() => {
                                     const input = document.createElement("input");
                                     input.type = "file";
@@ -579,32 +607,11 @@ export default function Home() {
                                     }
                                 }}
                             >
-                                <p className="mb-2">Drag and drop a YAML file here</p>
-                                <p className="text-sm">or click to upload</p>
-                                <input
-                                    type="file"
-                                    accept=".yaml, .yml"
-                                    className="hidden"
-                                    onChange={(e) => {
-                                        const file = e.target.files?.[0];
-                                        if (file) {
-                                            const reader = new FileReader();
-                                            reader.onload = (event) => {
-                                                const text = event.target?.result as string;
-                                                try {
-                                                    const parsed = loadYAML(text) as ContainerRecipe;
-                                                    setYamlData(parsed);
-                                                } catch (err) {
-                                                    console.error("Error parsing YAML:", err);
-                                                }
-                                            };
-                                            reader.readAsText(file);
-                                        }
-                                    }}
-                                />
-                                <p className="text-xs text-[#4f7b38] mt-2">
-                                    Supported formats: .yaml, .yml
-                                </p>
+                                <div className="text-[#6aa329] mb-2">
+                                    <ArrowUpTrayIcon className="h-8 w-8 mx-auto" />
+                                </div>
+                                <h3 className="font-semibold text-[#0c0e0a] mb-1">Upload YAML</h3>
+                                <p className="text-sm text-[#4f7b38]">Drag & drop or click</p>
                             </div>
                         </div>
                     </div>
@@ -633,6 +640,19 @@ export default function Home() {
                 yamlData={yamlData}
                 yamlText={yamlText}
             />
+
+            {/* Recipes Modal */}
+            {isRecipesModalOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <RecipesList
+                        owner="NeuroDesk"
+                        repo="NeuroContainers"
+                        showAsModal={true}
+                        onLoadRecipe={handleLoadRecipeFromList}
+                        onClose={() => setIsRecipesModalOpen(false)}
+                    />
+                </div>
+            )}
         </div>
     );
 }

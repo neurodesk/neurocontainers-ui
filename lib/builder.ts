@@ -87,6 +87,11 @@ export class Builder {
         options: BuildOptions = {}
     ): Promise<BuildResult | null> {
         try {
+            // HACK: fix for readme_url being optional
+            if (Object.hasOwn(recipeDescription, "readme_url") && recipeDescription.readme_url?.length || 0 === 0) {
+                delete recipeDescription.readme_url;
+            }
+
             // convert the recipeDescription into a real python object
             const recipeDescriptionPy = this.pyodide.toPy(recipeDescription);
 

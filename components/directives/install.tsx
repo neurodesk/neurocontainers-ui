@@ -5,7 +5,7 @@ export default function InstallDirectiveComponent({
     install,
     onChange,
 }: {
-    install: string;
+    install: string | string[];
     onChange: (install: string) => void;
 }) {
     const [isExpanded, setIsExpanded] = useState(true);
@@ -14,8 +14,10 @@ export default function InstallDirectiveComponent({
 
     // Parse the install string into individual packages when component mounts or install changes
     useEffect(() => {
-        if (install) {
+        if (typeof install === "string") {
             setPackages(install.split(/\s+/).filter((pkg) => pkg.trim() !== ""));
+        } else if (Array.isArray(install)) {
+            setPackages(install.filter((pkg) => pkg.trim() !== ""));
         } else {
             setPackages([]);
         }

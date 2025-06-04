@@ -7,6 +7,7 @@ import {
     ExclamationTriangleIcon,
     ChevronDownIcon,
     MagnifyingGlassIcon,
+    PencilIcon,
 } from "@heroicons/react/24/outline";
 import { ContainerRecipe, Architecture, CopyrightInfo } from "@/components/common";
 import { useState, useEffect, useRef } from "react";
@@ -32,10 +33,11 @@ const SPDX_LICENSES = [
 interface LicenseDropdownProps {
     value: string;
     onChange: (license: string, url: string) => void;
+    onCustomLicense: () => void;
     placeholder?: string;
 }
 
-function LicenseDropdown({ value, onChange, placeholder }: LicenseDropdownProps) {
+function LicenseDropdown({ value, onChange, onCustomLicense, placeholder }: LicenseDropdownProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -64,7 +66,14 @@ function LicenseDropdown({ value, onChange, placeholder }: LicenseDropdownProps)
         setSearchTerm("");
     };
 
+    const handleCustomLicense = () => {
+        onCustomLicense();
+        setIsOpen(false);
+        setSearchTerm("");
+    };
+
     const selectedLicense = SPDX_LICENSES.find(l => l.id === value);
+    const isCustomLicense = !selectedLicense && value;
 
     return (
         <div className="relative" ref={dropdownRef}>
@@ -74,7 +83,16 @@ function LicenseDropdown({ value, onChange, placeholder }: LicenseDropdownProps)
                 onClick={() => setIsOpen(!isOpen)}
             >
                 <span className={value ? "text-[#0c0e0a]" : "text-gray-400"}>
-                    {selectedLicense ? `${selectedLicense.id} - ${selectedLicense.name}` : (placeholder || "Select a license")}
+                    {selectedLicense ? (
+                        `${selectedLicense.id} - ${selectedLicense.name}`
+                    ) : isCustomLicense ? (
+                        <span className="flex items-center gap-2">
+                            <PencilIcon className="h-4 w-4 text-[#6aa329]" />
+                            {value} (Custom)
+                        </span>
+                    ) : (
+                        placeholder || "Select a license"
+                    )}
                 </span>
                 <ChevronDownIcon className={`h-4 w-4 text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
             </button>
@@ -95,6 +113,20 @@ function LicenseDropdown({ value, onChange, placeholder }: LicenseDropdownProps)
                         </div>
                     </div>
                     <div className="max-h-48 overflow-y-auto">
+                        {/* Custom License Option */}
+                        <button
+                            type="button"
+                            className="w-full px-3 py-3 text-left hover:bg-[#f0f7e7] focus:bg-[#f0f7e7] focus:outline-none text-sm border-b border-gray-100 flex items-center gap-2"
+                            onClick={handleCustomLicense}
+                        >
+                            <PencilIcon className="h-4 w-4 text-[#6aa329]" />
+                            <div>
+                                <div className="font-medium text-[#0c0e0a]">Custom License</div>
+                                <div className="text-xs text-gray-500">Specify your own license name and URL</div>
+                            </div>
+                        </button>
+
+                        {/* SPDX Licenses */}
                         {filteredLicenses.length > 0 ? (
                             filteredLicenses.map((license) => (
                                 <button
@@ -107,11 +139,11 @@ function LicenseDropdown({ value, onChange, placeholder }: LicenseDropdownProps)
                                     <div className="text-xs text-gray-500 truncate">{license.name}</div>
                                 </button>
                             ))
-                        ) : (
+                        ) : searchTerm ? (
                             <div className="px-3 py-2 text-sm text-gray-500">
                                 No licenses found matching &quot;{searchTerm}&quot;
                             </div>
-                        )}
+                        ) : null}
                     </div>
                 </div>
             )}
@@ -134,6 +166,7 @@ export default function ContainerMetadata({
     const [deleteConfirmIndex, setDeleteConfirmIndex] = useState<number | null>(null);
     const [showInputTypeWarning, setShowInputTypeWarning] = useState(false);
     const [pendingInputType, setPendingInputType] = useState<"content" | "url" | null>(null);
+    const [customLicenseIndex, setCustomLicenseIndex] = useState<number | null>(null);
 
     const inputType =
         recipe.readme !== undefined
@@ -261,6 +294,16 @@ export default function ContainerMetadata({
     const handleLicenseChange = (index: number, license: string, url: string) => {
         if (!recipe.copyright) return;
         updateCopyright(index, { license, url });
+    };
+
+    const handleCustomLicense = (index: number) => {
+        setCustomLicenseIndex(index);
+    };
+
+    const isCustomLicense = (index: number) => {
+        if (!recipe.copyright?.[index]) return false;
+        const license = recipe.copyright[index].license;
+        return !SPDX_LICENSES.find(l => l.id === license) && license;
     };
 
     return (
@@ -627,10 +670,10 @@ export default function ContainerMetadata({
                                                         Specify licenses for your container and any included software:
                                                     </p>
                                                     <div>
-                                                        <strong>Fields:</strong>
+                                                        <strong>Options:</strong>
                                                         <ul className="list-disc list-inside mt-1 space-y-1">
-                                                            <li><strong>License:</strong> Use SPDX identifiers (e.g., MIT, Apache-2.0, GPL-3.0)</li>
-                                                            <li><strong>URL:</strong> Link to the full license text</li>
+                                                            <li><strong>SPDX Licenses:</strong> Choose from common standardized licenses</li>
+                                                            <li><strong>Custom License:</strong> Specify your own license name and URL</li>
                                                         </ul>
                                                     </div>
                                                     <p>
@@ -681,15 +724,54 @@ export default function ContainerMetadata({
                                                 <label className="block mb-2 text-sm font-medium text-[#1e2a16]">
                                                     License Identifier
                                                 </label>
-                                                <LicenseDropdown
-                                                    value={info.license}
-                                                    onChange={(license, url) =>
-                                                        handleLicenseChange(index, license, url)
-                                                    }
-                                                    placeholder="Select or search for a license"
-                                                />
+                                                {customLicenseIndex === index ? (
+                                                    <div className="space-y-2">
+                                                        <input
+                                                            className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329] bg-white"
+                                                            value={info.license}
+                                                            onChange={(e) =>
+                                                                updateCopyright(index, {
+                                                                    ...info,
+                                                                    license: e.target.value,
+                                                                })
+                                                            }
+                                                            placeholder="e.g., Proprietary, Custom License v1.0"
+                                                        />
+                                                        <div className="flex gap-2">
+                                                            <button
+                                                                type="button"
+                                                                className="text-xs px-2 py-1 bg-[#6aa329] text-white rounded hover:bg-[#4f7b38] transition-colors"
+                                                                onClick={() => setCustomLicenseIndex(null)}
+                                                            >
+                                                                Done
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors"
+                                                                onClick={() => {
+                                                                    updateCopyright(index, { ...info, license: "", url: "" });
+                                                                    setCustomLicenseIndex(null);
+                                                                }}
+                                                            >
+                                                                Cancel
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <LicenseDropdown
+                                                        value={info.license}
+                                                        onChange={(license, url) =>
+                                                            handleLicenseChange(index, license, url)
+                                                        }
+                                                        onCustomLicense={() => handleCustomLicense(index)}
+                                                        placeholder="Select or search for a license"
+                                                    />
+                                                )}
                                                 <p className="text-xs text-gray-500 mt-1">
-                                                    SPDX license identifiers are preferred
+                                                    {isCustomLicense(index)
+                                                        ? "Custom license name"
+                                                        : "SPDX license identifiers are preferred"
+                                                    }
                                                 </p>
                                             </div>
 

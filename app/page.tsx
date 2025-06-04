@@ -9,15 +9,17 @@ import {
 import { ContainerRecipe } from "@/components/common";
 import BuildRecipeComponent from "@/components/recipe";
 import ContainerMetadata from "@/components/metadata";
+import ValidateRecipeComponent from "@/components/validate";
 
 enum WizardStep {
     BasicInfo = 0,
-    BuildRecipe = 1
+    BuildRecipe = 1,
+    ValidateRecipe = 2
 }
 
 const NEUROCONTAINERS_REPO = "https://github.com/neurodesk/neurocontainers";
 
-const TOTAL_STEPS = 2;
+const TOTAL_STEPS = 3; // Updated to include validation step
 
 async function getDefaultYAML(): Promise<ContainerRecipe> {
     const res = await fetch("/qsmxt.yaml");
@@ -48,13 +50,39 @@ function WizardNavigation({
     currentStep,
     totalSteps,
     onNext,
-    onPrevious
+    onPrevious,
+    canProceed = true
 }: {
     currentStep: number;
     totalSteps: number;
     onNext: () => void;
     onPrevious: () => void;
+    canProceed?: boolean;
 }) {
+    const getNextButtonText = () => {
+        switch (currentStep) {
+            case WizardStep.BasicInfo:
+                return "Next: Build Recipe";
+            case WizardStep.BuildRecipe:
+                return "Next: Validate";
+            case WizardStep.ValidateRecipe:
+                return "Download YAML";
+            default:
+                return "Next";
+        }
+    };
+
+    const getPreviousButtonText = () => {
+        switch (currentStep) {
+            case WizardStep.BuildRecipe:
+                return "Back: Basic Info";
+            case WizardStep.ValidateRecipe:
+                return "Back: Build Recipe";
+            default:
+                return "Previous";
+        }
+    };
+
     return (
         <div className="flex justify-between items-center py-4 px-4 sm:px-6 border-t border-[#e6f1d6] bg-white">
             <button
@@ -65,7 +93,7 @@ function WizardNavigation({
                 onClick={onPrevious}
                 disabled={currentStep === 0}
             >
-                Previous
+                {getPreviousButtonText()}
             </button>
 
             <div className="text-xs sm:text-sm text-[#1e2a16]">
@@ -73,13 +101,16 @@ function WizardNavigation({
             </div>
 
             <button
-                className={`px-3 py-2 sm:px-4 sm:py-2 rounded-md text-sm ${currentStep < totalSteps - 1
-                    ? "bg-[#6aa329] text-white hover:bg-[#4f7b38]"
-                    : "bg-[#4f7b38] text-white"
+                className={`px-3 py-2 sm:px-4 sm:py-2 rounded-md text-sm ${canProceed
+                    ? currentStep < totalSteps - 1
+                        ? "bg-[#6aa329] text-white hover:bg-[#4f7b38]"
+                        : "bg-[#4f7b38] text-white hover:bg-[#3d5f2b]"
+                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
                     }`}
                 onClick={onNext}
+                disabled={!canProceed}
             >
-                {currentStep < totalSteps - 1 ? "Next" : "Download YAML"}
+                {getNextButtonText()}
             </button>
         </div>
     );
@@ -232,6 +263,25 @@ export default function Home() {
         }
     }, [yamlData]);
 
+    // Check if we can proceed to the next step
+    const canProceedToNext = () => {
+        if (!yamlData) return false;
+
+        switch (currentStep) {
+            case WizardStep.BasicInfo:
+                // Basic validation for metadata
+                return yamlData.name !== "" && yamlData.version !== "" && yamlData.name.trim() !== "";
+            case WizardStep.BuildRecipe:
+                // Check if we have at least one directive or it's intentionally empty
+                return yamlData.build !== undefined && yamlData.build["base-image"] !== "";
+            case WizardStep.ValidateRecipe:
+                // Always allow download from validation step
+                return true;
+            default:
+                return true;
+        }
+    };
+
     const nextStep = () => {
         if (currentStep < TOTAL_STEPS - 1) {
             setCurrentStep(currentStep + 1);
@@ -343,9 +393,9 @@ export default function Home() {
                     <div className="mt-4">
                         {/* Wizard Steps */}
                         <div className="mb-6">
-                            <div className="grid grid-cols-2 gap-2">
+                            <div className="grid grid-cols-3 gap-2">
                                 <div
-                                    className={`p-2 sm:p-3 rounded-md text-center ${currentStep === 0
+                                    className={`p-2 sm:p-3 rounded-md text-center transition-colors ${currentStep === 0
                                         ? "bg-[#6aa329] text-white"
                                         : "bg-[#e6f1d6] text-[#1e2a16] hover:bg-[#d3e7b6] cursor-pointer"
                                         }`}
@@ -360,7 +410,7 @@ export default function Home() {
                                 </div>
 
                                 <div
-                                    className={`p-2 sm:p-3 rounded-md text-center ${currentStep === 1
+                                    className={`p-2 sm:p-3 rounded-md text-center transition-colors ${currentStep === 1
                                         ? "bg-[#6aa329] text-white"
                                         : "bg-[#e6f1d6] text-[#1e2a16] hover:bg-[#d3e7b6] cursor-pointer"
                                         }`}
@@ -373,6 +423,38 @@ export default function Home() {
                                         Define build process
                                     </div>
                                 </div>
+
+                                <div
+                                    className={`p-2 sm:p-3 rounded-md text-center transition-colors ${currentStep === 2
+                                        ? "bg-[#6aa329] text-white"
+                                        : "bg-[#e6f1d6] text-[#1e2a16] hover:bg-[#d3e7b6] cursor-pointer"
+                                        }`}
+                                    onClick={() => setCurrentStep(2)}
+                                >
+                                    <div className="font-medium text-sm sm:text-base">
+                                        Validate
+                                    </div>
+                                    <div className="text-xs mt-1 opacity-80 hidden sm:block">
+                                        Test & generate
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Progress Indicator */}
+                        <div className="mb-6">
+                            <div className="flex items-center">
+                                <div className="flex-1 bg-gray-200 rounded-full h-2">
+                                    <div
+                                        className="bg-[#6aa329] h-2 rounded-full transition-all duration-300"
+                                        style={{
+                                            width: `${((currentStep + 1) / TOTAL_STEPS) * 100}%`,
+                                        }}
+                                    ></div>
+                                </div>
+                                <span className="ml-3 text-sm text-[#1e2a16] font-medium">
+                                    {Math.round(((currentStep + 1) / TOTAL_STEPS) * 100)}%
+                                </span>
                             </div>
                         </div>
 
@@ -391,6 +473,12 @@ export default function Home() {
                                     onChange={(updated) =>
                                         setYamlData({ ...yamlData, build: updated })
                                     }
+                                />
+                            )}
+
+                            {currentStep === WizardStep.ValidateRecipe && (
+                                <ValidateRecipeComponent
+                                    recipe={yamlData}
                                 />
                             )}
                         </div>
@@ -532,6 +620,7 @@ export default function Home() {
                             totalSteps={TOTAL_STEPS}
                             onNext={nextStep}
                             onPrevious={previousStep}
+                            canProceed={canProceedToNext()}
                         />
                     </div>
                 </div>

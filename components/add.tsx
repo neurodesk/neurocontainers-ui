@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Directive } from "@/components/common";
 import {
     ChevronDownIcon,
@@ -20,17 +20,17 @@ import {
     XMarkIcon,
 } from "@heroicons/react/24/outline";
 
-/**
- * Props for the AddDirectiveButton component
- */
 interface AddDirectiveButtonProps {
-    /** Callback function called when a new directive is added */
     onAddDirective: (directive: Directive) => void;
 }
 
-/**
- * Configuration for available directive types with their display names, icons, and default values
- */
+interface DropdownPosition {
+    top?: number;
+    bottom?: number;
+    left?: number;
+    right?: number;
+}
+
 const DIRECTIVE_TYPES = {
     group: {
         label: "Group",
@@ -151,23 +151,99 @@ const DIRECTIVE_TYPES = {
     },
 } as const;
 
-/**
- * AddDirectiveButton - A graphical component for adding new directives to a container builder
- *
- * This component provides a custom dropdown with visual directive cards that can be
- * added to a container configuration. Each directive type has an icon, color coding,
- * and predefined default values for quick setup. Includes keyboard search functionality.
- *
- * @param props - The component props
- * @returns A styled dropdown button with graphical directive selection and search
- */
+// Shared directive item component to reduce duplication
+interface DirectiveItemProps {
+    directiveKey: string;
+    config: (typeof DIRECTIVE_TYPES)[keyof typeof DIRECTIVE_TYPES];
+    index: number;
+    isFocused: boolean;
+    isMobile: boolean;
+    onSelect: (key: keyof typeof DIRECTIVE_TYPES) => void;
+    onMouseEnter: (index: number) => void;
+    itemRef: (el: HTMLButtonElement | null) => void;
+}
+
+const DirectiveItem = ({
+    directiveKey,
+    config,
+    index,
+    isFocused,
+    isMobile,
+    onSelect,
+    onMouseEnter,
+    itemRef,
+}: DirectiveItemProps) => {
+    const IconComponent = config.icon;
+
+    return (
+        <button
+            ref={itemRef}
+            type="button"
+            onClick={() => onSelect(directiveKey as keyof typeof DIRECTIVE_TYPES)}
+            onMouseEnter={() => onMouseEnter(index)}
+            className={`
+        w-full flex items-center gap-${isMobile ? "4" : "3"} p-${isMobile ? "4" : "3"
+                } rounded-${isMobile ? "xl" : "lg"} border-2 text-left
+        transition-all duration-200
+        ${config.color}
+        ${isFocused
+                    ? "ring-2 ring-[#6aa329] ring-offset-1 shadow-lg scale-[1.02] bg-opacity-80"
+                    : ""
+                }
+        focus:outline-none focus:ring-2 focus:ring-[#6aa329]
+        active:scale-95
+      `}
+            role="menuitem"
+        >
+            <div
+                className={`
+          flex-shrink-0 w-${isMobile ? "12" : "8"} h-${isMobile ? "12" : "8"
+                    } rounded-${isMobile ? "xl" : "lg"}
+          flex items-center justify-center
+          ${config.iconColor} 
+          ${isFocused ? "bg-white shadow-md" : "bg-white/70"}
+          transition-all duration-200
+        `}
+            >
+                <IconComponent
+                    className={`w-${isMobile ? "6" : "4"} h-${isMobile ? "6" : "4"} ${isFocused ? "scale-110" : ""
+                        } transition-transform duration-200`}
+                />
+            </div>
+            <div className="flex-1 min-w-0">
+                <div
+                    className={`text-${isMobile ? "base" : "sm"
+                        } font-semibold text-[#0c0e0a] ${isMobile ? "mb-1" : ""}`}
+                >
+                    {config.label}
+                </div>
+                <div
+                    className={`text-${isMobile ? "sm" : "xs"} text-[#4f7b38] ${isMobile ? "leading-relaxed" : "truncate"
+                        }`}
+                >
+                    {config.description}
+                </div>
+            </div>
+            <PlusIcon
+                className={`w-5 h-5 flex-shrink-0 transition-all duration-200 ${isFocused ? "text-[#6aa329] scale-110" : "text-gray-400"
+                    }`}
+            />
+        </button>
+    );
+};
+
 export default function AddDirectiveButton({
     onAddDirective,
 }: AddDirectiveButtonProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [focusedIndex, setFocusedIndex] = useState(-1);
+    const [dropdownPosition, setDropdownPosition] = useState<DropdownPosition>(
+        {}
+    );
+
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const buttonRef = useRef<HTMLButtonElement>(null);
     const searchInputRef = useRef<HTMLInputElement>(null);
     const listRef = useRef<HTMLDivElement>(null);
     const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -187,51 +263,159 @@ export default function AddDirectiveButton({
         }
     );
 
-    /**
-     * Scrolls the focused item into view
-     */
-    const scrollToFocusedItem = (index: number) => {
-        if (itemRefs.current[index] && listRef.current) {
-            const item = itemRefs.current[index];
-            const list = listRef.current;
+    // Stable position calculation that only runs when needed
+    const calculateDropdownPosition = useCallback((): DropdownPosition => {
+        if (!buttonRef.current) return {};
 
-            if (item) {
-                const itemRect = item.getBoundingClientRect();
-                const listRect = list.getBoundingClientRect();
+        const buttonRect = buttonRef.current.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
 
-                if (itemRect.bottom > listRect.bottom) {
-                    list.scrollTop += itemRect.bottom - listRect.bottom + 8;
-                } else if (itemRect.top < listRect.top) {
-                    list.scrollTop -= listRect.top - itemRect.top + 8;
-                }
+        const dropdownWidth = 384; // w-96
+        const dropdownHeight = 512; // max-h-[32rem]
+        const margin = 8;
+
+        const spaceRight = viewportWidth - buttonRect.right;
+        const spaceLeft = buttonRect.left;
+        const spaceBelow = viewportHeight - buttonRect.bottom;
+        const spaceAbove = buttonRect.top;
+
+        const position: DropdownPosition = {};
+
+        // Horizontal positioning
+        if (spaceRight >= dropdownWidth + margin) {
+            position.left = buttonRect.left;
+        } else if (spaceLeft >= dropdownWidth + margin) {
+            position.right = viewportWidth - buttonRect.right;
+        } else {
+            // Center if neither side has enough space
+            position.left = Math.max(
+                margin,
+                Math.min(buttonRect.left, viewportWidth - dropdownWidth - margin)
+            );
+        }
+
+        // Vertical positioning
+        if (spaceBelow >= dropdownHeight + margin) {
+            position.top = buttonRect.bottom + margin;
+        } else if (spaceAbove >= dropdownHeight + margin) {
+            position.bottom = viewportHeight - buttonRect.top + margin;
+        } else {
+            // Use the side with more space
+            if (spaceBelow > spaceAbove) {
+                position.top = buttonRect.bottom + margin;
+            } else {
+                position.bottom = viewportHeight - buttonRect.top + margin;
             }
         }
-    };
 
-    /**
-     * Handles adding a new directive of the specified type
-     */
-    const handleAddDirective = (directiveType: keyof typeof DIRECTIVE_TYPES) => {
-        const directiveConfig = DIRECTIVE_TYPES[directiveType];
-        onAddDirective(directiveConfig.defaultValue);
-        setIsOpen(false);
-        setSearchTerm("");
-        setFocusedIndex(-1);
-    };
+        return position;
+    }, []);
 
-    /**
-     * Closes the modal
-     */
-    const closeModal = () => {
-        setIsOpen(false);
-        setSearchTerm("");
-        setFocusedIndex(-1);
-    };
+    // Update position function
+    const updatePosition = useCallback(() => {
+        if (isOpen) {
+            const position = calculateDropdownPosition();
+            setDropdownPosition(position);
+        }
+    }, [isOpen, calculateDropdownPosition]);
 
-    /**
-     * Handles clicking outside the dropdown to close it
-     */
+    // Update position when opening dropdown
     useEffect(() => {
+        if (isOpen) {
+            updatePosition();
+        }
+    }, [isOpen, updatePosition]);
+
+    // Handle scroll and resize events to keep dropdown attached
+    useEffect(() => {
+        if (!isOpen) return;
+
+        // Throttle function to limit how often we recalculate position
+        let timeoutId: NodeJS.Timeout;
+        const throttledUpdate = () => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(updatePosition, 10);
+        };
+
+        // Add event listeners for scroll and resize
+        const handleScroll = throttledUpdate;
+        const handleResize = throttledUpdate;
+
+        // Listen to scroll events on window and all scrollable parents
+        window.addEventListener("scroll", handleScroll, { passive: true });
+        window.addEventListener("resize", handleResize, { passive: true });
+
+        // Also listen to scroll events on all parent elements that might be scrollable
+        let element = buttonRef.current?.parentElement;
+        const scrollableParents: Element[] = [];
+
+        while (element && element !== document.body) {
+            const computedStyle = window.getComputedStyle(element);
+            const overflowY = computedStyle.overflowY;
+            const overflowX = computedStyle.overflowX;
+
+            if (
+                overflowY === "scroll" ||
+                overflowY === "auto" ||
+                overflowX === "scroll" ||
+                overflowX === "auto"
+            ) {
+                scrollableParents.push(element);
+                element.addEventListener("scroll", handleScroll, { passive: true });
+            }
+            element = element.parentElement;
+        }
+
+        return () => {
+            clearTimeout(timeoutId);
+            window.removeEventListener("scroll", handleScroll);
+            window.removeEventListener("resize", handleResize);
+
+            // Clean up parent scroll listeners
+            scrollableParents.forEach((parent) => {
+                parent.removeEventListener("scroll", handleScroll);
+            });
+        };
+    }, [isOpen, updatePosition]);
+
+    const scrollToFocusedItem = useCallback((index: number) => {
+        const item = itemRefs.current[index];
+        const list = listRef.current;
+
+        if (item && list) {
+            const itemRect = item.getBoundingClientRect();
+            const listRect = list.getBoundingClientRect();
+
+            if (itemRect.bottom > listRect.bottom) {
+                list.scrollTop += itemRect.bottom - listRect.bottom + 8;
+            } else if (itemRect.top < listRect.top) {
+                list.scrollTop -= listRect.top - itemRect.top + 8;
+            }
+        }
+    }, []);
+
+    const handleAddDirective = useCallback(
+        (directiveType: keyof typeof DIRECTIVE_TYPES) => {
+            const directiveConfig = DIRECTIVE_TYPES[directiveType];
+            onAddDirective(directiveConfig.defaultValue);
+            setIsOpen(false);
+            setSearchTerm("");
+            setFocusedIndex(-1);
+        },
+        [onAddDirective]
+    );
+
+    const closeModal = useCallback(() => {
+        setIsOpen(false);
+        setSearchTerm("");
+        setFocusedIndex(-1);
+    }, []);
+
+    // Click outside handler
+    useEffect(() => {
+        if (!isOpen) return;
+
         const handleClickOutside = (event: MouseEvent) => {
             if (
                 dropdownRef.current &&
@@ -243,43 +427,30 @@ export default function AddDirectiveButton({
 
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
+    }, [isOpen, closeModal]);
 
-    /**
-     * Focus search input when dropdown opens
-     */
+    // Focus search input when dropdown opens
     useEffect(() => {
         if (isOpen && searchInputRef.current) {
-            // Small delay to ensure dropdown is rendered
-            setTimeout(() => {
+            const timer = setTimeout(() => {
                 searchInputRef.current?.focus();
             }, 50);
+            return () => clearTimeout(timer);
         }
     }, [isOpen]);
 
-    /**
-     * Auto-select first item when search term changes and there are results
-     */
+    // Auto-select first item when search changes
     useEffect(() => {
-        if (filteredDirectives.length > 0) {
-            setFocusedIndex(0);
-        } else {
-            setFocusedIndex(-1);
-        }
+        setFocusedIndex(filteredDirectives.length > 0 ? 0 : -1);
     }, [searchTerm, filteredDirectives.length]);
 
-    /**
-     * Scroll to focused item when focus changes
-     */
+    // Scroll to focused item
     useEffect(() => {
         if (focusedIndex >= 0) {
             scrollToFocusedItem(focusedIndex);
         }
-    }, [focusedIndex]);
+    }, [focusedIndex, scrollToFocusedItem]);
 
-    /**
-     * Handles keyboard navigation and search
-     */
     const handleKeyDown = (event: React.KeyboardEvent) => {
         if (!isOpen) {
             if (event.key === "Enter" || event.key === " ") {
@@ -320,22 +491,85 @@ export default function AddDirectiveButton({
         }
     };
 
+    const renderSearchInput = (isMobile: boolean) => (
+        <div className="relative">
+            <MagnifyingGlassIcon
+                className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-${isMobile ? "5" : "4"
+                    } h-${isMobile ? "5" : "4"} text-gray-400`}
+            />
+            <input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Search directives..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className={`
+          w-full pl-10 pr-4 py-${isMobile ? "3" : "2"}
+          text-${isMobile ? "base" : "sm"} border border-[#e6f1d6] rounded-${isMobile ? "xl" : "lg"
+                    }
+          focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:border-[#6aa329]
+          transition-colors duration-200 bg-white
+        `}
+            />
+        </div>
+    );
+
+    const renderDirectiveList = (isMobile: boolean) => (
+        <div className={isMobile ? "space-y-3" : "grid grid-cols-1 gap-1"}>
+            {filteredDirectives.map(([key, config], index) => (
+                <DirectiveItem
+                    key={key}
+                    directiveKey={key}
+                    config={config}
+                    index={index}
+                    isFocused={index === focusedIndex}
+                    isMobile={isMobile}
+                    onSelect={handleAddDirective}
+                    onMouseEnter={setFocusedIndex}
+                    itemRef={(el) => {
+                        itemRefs.current[index] = el;
+                    }}
+                />
+            ))}
+        </div>
+    );
+
+    const renderEmptyState = (isMobile: boolean) => (
+        <div
+            className={`${isMobile ? "py-12" : "p-4"} text-center text-gray-500`}
+        >
+            <MagnifyingGlassIcon
+                className={`w-${isMobile ? "12" : "8"} h-${isMobile ? "12" : "8"
+                    } mx-auto mb-${isMobile ? "4" : "2"} text-gray-300`}
+            />
+            <p className={`text-${isMobile ? "base" : "sm"} font-medium`}>
+                No directives found
+            </p>
+            <p
+                className={`text-${isMobile ? "sm" : "xs"} text-gray-400 mt-${isMobile ? "2" : "1"
+                    }`}
+            >
+                Try a different search term
+            </p>
+        </div>
+    );
+
     return (
         <div className="relative" ref={dropdownRef}>
             {/* Main Trigger Button */}
             <button
+                ref={buttonRef}
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
                 onKeyDown={handleKeyDown}
                 className="
-                    inline-flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5
-                    text-sm font-medium text-white
-                    rounded-lg
-                    bg-[#4f7b38] hover:bg-[#6aa329]
-                    focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:ring-offset-2
-                    transition-all duration-200
-                    min-w-0 flex-shrink-0
-                "
+          inline-flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5
+          text-sm font-medium text-white rounded-lg
+          bg-[#4f7b38] hover:bg-[#6aa329]
+          focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:ring-offset-2
+          transition-all duration-200 min-w-0 flex-shrink-0
+        "
                 aria-expanded={isOpen}
                 aria-haspopup="true"
                 aria-label="Add new directive"
@@ -371,107 +605,18 @@ export default function AddDirectiveButton({
 
                                 {/* Mobile Search */}
                                 <div className="p-4 border-b border-gray-100 bg-[#f8fdf2]">
-                                    <div className="relative">
-                                        <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                                        <input
-                                            ref={searchInputRef}
-                                            type="text"
-                                            placeholder="Search directives..."
-                                            value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                            onKeyDown={handleKeyDown}
-                                            className="
-                                                w-full pl-10 pr-4 py-3
-                                                text-base border border-[#e6f1d6] rounded-xl
-                                                focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:border-[#6aa329]
-                                                transition-colors duration-200
-                                                bg-white
-                                            "
-                                        />
-                                    </div>
+                                    {renderSearchInput(true)}
                                 </div>
 
                                 {/* Mobile Directive List */}
                                 <div
                                     ref={listRef}
                                     className="p-4 overflow-y-auto"
-                                    style={{ maxHeight: 'calc(90vh - 200px)' }}
+                                    style={{ maxHeight: "calc(90vh - 200px)" }}
                                 >
-                                    {filteredDirectives.length > 0 ? (
-                                        <div className="space-y-3">
-                                            {filteredDirectives.map(([key, config], index) => {
-                                                const IconComponent = config.icon;
-                                                const isFocused = index === focusedIndex;
-                                                return (
-                                                    <button
-                                                        key={key}
-                                                        ref={(el) => {
-                                                            itemRefs.current[index] = el;
-                                                        }}
-                                                        type="button"
-                                                        onClick={() =>
-                                                            handleAddDirective(
-                                                                key as keyof typeof DIRECTIVE_TYPES
-                                                            )
-                                                        }
-                                                        onMouseEnter={() => setFocusedIndex(index)}
-                                                        className={`
-                                                            w-full flex items-center gap-4 p-4 rounded-xl border-2 text-left
-                                                            transition-all duration-200
-                                                            ${config.color}
-                                                            ${isFocused
-                                                                ? "ring-2 ring-[#6aa329] ring-offset-1 shadow-lg scale-[1.02] bg-opacity-80"
-                                                                : ""
-                                                            }
-                                                            focus:outline-none focus:ring-2 focus:ring-[#6aa329]
-                                                            active:scale-95
-                                                        `}
-                                                        role="menuitem"
-                                                    >
-                                                        <div
-                                                            className={`
-                                                                flex-shrink-0 w-12 h-12 rounded-xl
-                                                                flex items-center justify-center
-                                                                ${config.iconColor} 
-                                                                ${isFocused
-                                                                    ? "bg-white shadow-md"
-                                                                    : "bg-white/70"
-                                                                }
-                                                                transition-all duration-200
-                                                            `}
-                                                        >
-                                                            <IconComponent
-                                                                className={`w-6 h-6 ${isFocused ? "scale-110" : ""
-                                                                    } transition-transform duration-200`}
-                                                            />
-                                                        </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="text-base font-semibold text-[#0c0e0a] mb-1">
-                                                                {config.label}
-                                                            </div>
-                                                            <div className="text-sm text-[#4f7b38] leading-relaxed">
-                                                                {config.description}
-                                                            </div>
-                                                        </div>
-                                                        <PlusIcon
-                                                            className={`w-5 h-5 flex-shrink-0 transition-all duration-200 ${isFocused
-                                                                ? "text-[#6aa329] scale-110"
-                                                                : "text-gray-400"
-                                                                }`}
-                                                        />
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    ) : (
-                                        <div className="py-12 text-center text-gray-500">
-                                            <MagnifyingGlassIcon className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                                            <p className="text-base font-medium">No directives found</p>
-                                            <p className="text-sm text-gray-400 mt-2">
-                                                Try a different search term
-                                            </p>
-                                        </div>
-                                    )}
+                                    {filteredDirectives.length > 0
+                                        ? renderDirectiveList(true)
+                                        : renderEmptyState(true)}
                                 </div>
                             </div>
                         </div>
@@ -479,14 +624,13 @@ export default function AddDirectiveButton({
 
                     {/* Desktop Dropdown */}
                     <div
-                        className={`
-                            hidden sm:block
-                            absolute left-0 mt-2 z-50
-                            w-96 max-w-[calc(100vw-2rem)]
-                            max-h-[32rem] overflow-hidden
-                            bg-white rounded-xl shadow-xl border border-gray-200
-                            animate-in fade-in-0 zoom-in-95 duration-200
-                        `}
+                        className="
+              hidden sm:block fixed z-50
+              w-96 max-w-[calc(100vw-2rem)] max-h-[32rem] overflow-hidden
+              bg-white rounded-xl shadow-xl border border-gray-200
+              animate-in fade-in-0 zoom-in-95 duration-200
+            "
+                        style={dropdownPosition}
                         role="menu"
                         aria-orientation="vertical"
                     >
@@ -495,109 +639,17 @@ export default function AddDirectiveButton({
                             <h3 className="text-sm font-semibold text-[#0c0e0a] mb-2">
                                 Choose a directive type
                             </h3>
-                            <div className="relative">
-                                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                <input
-                                    ref={searchInputRef}
-                                    type="text"
-                                    placeholder="Search directives..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    onKeyDown={handleKeyDown}
-                                    className="
-                                        w-full pl-10 pr-4 py-2
-                                        text-sm border border-[#e6f1d6] rounded-lg
-                                        focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:border-[#6aa329]
-                                        transition-colors duration-200
-                                        bg-white
-                                    "
-                                />
-                            </div>
+                            {renderSearchInput(false)}
                         </div>
 
                         {/* Desktop Directive Grid */}
-                        <div
-                            ref={listRef}
-                            className="p-2 max-h-80 overflow-y-auto scroll-smooth"
-                        >
-                            {filteredDirectives.length > 0 ? (
-                                <div className="grid grid-cols-1 gap-1">
-                                    {filteredDirectives.map(([key, config], index) => {
-                                        const IconComponent = config.icon;
-                                        const isFocused = index === focusedIndex;
-                                        return (
-                                            <button
-                                                key={key}
-                                                ref={(el) => {
-                                                    itemRefs.current[index] = el;
-                                                }}
-                                                type="button"
-                                                onClick={() =>
-                                                    handleAddDirective(
-                                                        key as keyof typeof DIRECTIVE_TYPES
-                                                    )
-                                                }
-                                                onMouseEnter={() => setFocusedIndex(index)}
-                                                className={`
-                                                    flex items-center gap-3 p-3 rounded-lg border-2 text-left
-                                                    transition-all duration-200
-                                                    ${config.color}
-                                                    ${isFocused
-                                                        ? "ring-2 ring-[#6aa329] ring-offset-1 shadow-md scale-[1.02] bg-opacity-80"
-                                                        : ""
-                                                    }
-                                                    focus:outline-none focus:ring-2 focus:ring-[#6aa329]
-                                                    active:scale-95
-                                                `}
-                                                role="menuitem"
-                                            >
-                                                <div
-                                                    className={`
-                                                        flex-shrink-0 w-8 h-8 rounded-lg
-                                                        flex items-center justify-center
-                                                        ${config.iconColor} 
-                                                        ${isFocused
-                                                            ? "bg-white shadow-sm"
-                                                            : "bg-white/50"
-                                                        }
-                                                        transition-all duration-200
-                                                    `}
-                                                >
-                                                    <IconComponent
-                                                        className={`w-4 h-4 ${isFocused ? "scale-110" : ""
-                                                            } transition-transform duration-200`}
-                                                    />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="text-sm font-medium text-[#0c0e0a]">
-                                                        {config.label}
-                                                    </div>
-                                                    <div className="text-xs text-[#4f7b38] truncate">
-                                                        {config.description}
-                                                    </div>
-                                                </div>
-                                                <PlusIcon
-                                                    className={`w-4 h-4 flex-shrink-0 transition-all duration-200 ${isFocused
-                                                        ? "text-[#6aa329] scale-110"
-                                                        : "text-gray-400"
-                                                        }`}
-                                                />
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            ) : (
-                                <div className="p-4 text-center text-gray-500">
-                                    <MagnifyingGlassIcon className="w-8 h-8 mx-auto mb-2 text-gray-300" />
-                                    <p className="text-sm">No directives found</p>
-                                    <p className="text-xs text-gray-400 mt-1">
-                                        Try a different search term
-                                    </p>
-                                </div>
-                            )}
+                        <div ref={listRef} className="p-2 max-h-80 overflow-y-auto">
+                            {filteredDirectives.length > 0
+                                ? renderDirectiveList(false)
+                                : renderEmptyState(false)}
                         </div>
 
-                        {/* Desktop Footer with keyboard hints */}
+                        {/* Desktop Footer */}
                         {filteredDirectives.length > 0 && (
                             <div className="px-4 py-2 border-t border-gray-100 bg-[#f8fdf2]">
                                 <div className="flex items-center justify-between text-xs text-[#4f7b38]">

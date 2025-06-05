@@ -37,7 +37,6 @@ export default function NeuroDockerBuildRecipeComponent({
     const [showPkgManagerHelp, setShowPkgManagerHelp] = useState(false);
     const [baseImageSource, setBaseImageSource] =
         useState<BaseImageSource>("ubuntu");
-    const [customBaseImage, setCustomBaseImage] = useState("");
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
     const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
     const [deleteConfirmIndex, setDeleteConfirmIndex] = useState<number | null>(
@@ -47,6 +46,14 @@ export default function NeuroDockerBuildRecipeComponent({
     // Refs for scroll behavior - only for user-added directives
     const lastDirectiveRef = useRef<HTMLDivElement>(null);
     const shouldScrollToNew = useRef(false);
+
+    const onChangeWrapper = (updatedRecipe: NeuroDockerBuildRecipe, cause: string) => {
+        console.log(
+            `Recipe updated via ${cause}:`,
+            updatedRecipe
+        );
+        onChange(updatedRecipe);
+    };
 
     // Determine initial base image source based on current recipe
     useEffect(() => {
@@ -58,9 +65,8 @@ export default function NeuroDockerBuildRecipeComponent({
             setBaseImageSource("other");
         } else if (recipe["base-image"]) {
             setBaseImageSource("custom");
-            setCustomBaseImage(recipe["base-image"]);
         }
-    }, [recipe["base-image"]]);
+    }, [recipe]);
 
     // Scroll to newly added directive only when explicitly added by user
     useEffect(() => {
@@ -81,31 +87,27 @@ export default function NeuroDockerBuildRecipeComponent({
         }
     }, [recipe.directives.length]);
 
-    const updateBaseImage = (value: string) => {
-        onChange({ ...recipe, "base-image": value });
-    };
-
-    const updatePkgManager = (value: string) => {
-        onChange({ ...recipe, "pkg-manager": value });
+    const updateBaseImageAndPkgManager = (baseImage: string, pkgManager: string) => {
+        onChangeWrapper({ ...recipe, "base-image": baseImage, "pkg-manager": pkgManager }, "updateBaseImageAndPkgManager");
     };
 
     const updateDirective = (index: number, directive: Directive) => {
         const updatedDirectives = [...recipe.directives];
         updatedDirectives[index] = directive;
-        onChange({ ...recipe, directives: updatedDirectives });
+        onChangeWrapper({ ...recipe, directives: updatedDirectives }, "updateDirective");
     };
 
     const addDirective = (directive: Directive) => {
         // Set flag to trigger scroll for user-added directive
         shouldScrollToNew.current = true;
-        onChange({ ...recipe, directives: [...recipe.directives, directive] });
+        onChangeWrapper({ ...recipe, directives: [...recipe.directives, directive] }, "addDirective");
     };
 
     const removeDirective = (index: number) => {
-        onChange({
+        onChangeWrapper({
             ...recipe,
             directives: recipe.directives.filter((_, i) => i !== index),
-        });
+        }, "removeDirective");
         setDeleteConfirmIndex(null);
     };
 
@@ -127,7 +129,7 @@ export default function NeuroDockerBuildRecipeComponent({
             updatedDirectives[index],
         ];
 
-        onChange({ ...recipe, directives: updatedDirectives });
+        onChangeWrapper({ ...recipe, directives: updatedDirectives }, "moveDirective");
     };
 
     // Drag and drop handlers
@@ -166,7 +168,7 @@ export default function NeuroDockerBuildRecipeComponent({
             draggedIndex < dropIndex ? dropIndex - 1 : dropIndex;
         updatedDirectives.splice(insertIndex, 0, draggedItem);
 
-        onChange({ ...recipe, directives: updatedDirectives });
+        onChangeWrapper({ ...recipe, directives: updatedDirectives }, "handleDrop");
         setDraggedIndex(null);
         setDragOverIndex(null);
     };
@@ -181,353 +183,305 @@ export default function NeuroDockerBuildRecipeComponent({
 
         // Set default base image and package manager based on source
         if (source === "ubuntu") {
-            updateBaseImage("ubuntu:22.04");
-            updatePkgManager("apt");
+            updateBaseImageAndPkgManager("ubuntu:22.04", "apt");
         } else if (source === "other") {
             const defaultImage = OTHER_BASE_IMAGES[0];
-            updateBaseImage(defaultImage.value);
-            updatePkgManager(defaultImage.pkgManager);
+            updateBaseImageAndPkgManager(defaultImage.value, defaultImage.pkgManager);
         } else {
-            updateBaseImage("");
+            updateBaseImageAndPkgManager("", "apt");
             // Keep current package manager for custom images
         }
     };
 
     const handleBaseImageSelect = (value: string) => {
-        updateBaseImage(value);
-
         // Auto-set package manager based on selected image
         if (baseImageSource === "ubuntu") {
-            updatePkgManager("apt");
+            updateBaseImageAndPkgManager(value, "apt");
         } else if (baseImageSource === "other") {
             const selectedImage = OTHER_BASE_IMAGES.find(
                 (img) => img.value === value
             );
             if (selectedImage) {
-                updatePkgManager(selectedImage.pkgManager);
+                updateBaseImageAndPkgManager(value, selectedImage.pkgManager);
             }
         }
     };
 
     const handleCustomBaseImageChange = (value: string) => {
-        setCustomBaseImage(value);
-        updateBaseImage(value);
+        updateBaseImageAndPkgManager(value, recipe["pkg-manager"]);
         // Don't auto-set package manager for custom images
-    };
-
-    const getPackageManagerDisplay = () => {
-        if (baseImageSource === "custom") {
-            return null; // Will show dropdown
-        }
-
-        const pkgManager = recipe["pkg-manager"];
-        const displayText =
-            pkgManager === "apt"
-                ? "apt (Debian/Ubuntu)"
-                : "yum (RHEL/CentOS/Fedora)";
-
-        return (
-            <div className="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-700">
-                {displayText}
-                <span className="text-xs text-gray-500 block mt-1">
-                    Automatically selected based on base image
-                </span>
-            </div>
-        );
     };
 
     return (
         <div className="bg-white rounded-lg shadow-md border border-[#d3e7b6]">
             <div className="p-4 sm:p-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
-                    {/* Base Image Section */}
-                    <div>
-                        <div className="flex items-center gap-2 mb-3">
-                            <label className="block font-medium text-[#1e2a16]">
-                                Base Image
-                            </label>
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    setShowBaseImageHelp(!showBaseImageHelp)
-                                }
-                                className="text-gray-400 hover:text-[#6aa329]"
-                            >
-                                <InformationCircleIcon className="h-4 w-4" />
-                            </button>
+                {/* Base Image Section */}
+                <div className="w-full">
+                    <div className="flex items-center gap-2 mb-4">
+                        <label className="block font-medium text-[#1e2a16]">
+                            Base Image
+                        </label>
+                        <button
+                            type="button"
+                            onClick={() => setShowBaseImageHelp(!showBaseImageHelp)}
+                            className="text-gray-400 hover:text-[#6aa329] transition-colors"
+                        >
+                            <InformationCircleIcon className="h-4 w-4" />
+                        </button>
+                    </div>
+
+                    {showBaseImageHelp && (
+                        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+                            <p className="font-medium mb-2">Base Image:</p>
+                            <p>
+                                The Docker base image that your container will be built upon.
+                                This determines the operating system and initial software
+                                stack. Ubuntu LTS versions are recommended for stability and
+                                long-term support.
+                            </p>
                         </div>
+                    )}
 
-                        {showBaseImageHelp && (
-                            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-800">
-                                <p className="font-medium mb-1">Base Image:</p>
-                                <p>
-                                    The Docker base image that your container will
-                                    be built upon. This determines the operating
-                                    system and initial software stack. Ubuntu LTS
-                                    versions are recommended for stability and
-                                    long-term support.
-                                </p>
-                            </div>
-                        )}
-
-                        {/* Improved Base Image Source Selection */}
-                        <div className="mb-4">
-                            <div className="grid grid-cols-1 gap-2">
-                                <label className="relative">
-                                    <input
-                                        type="radio"
-                                        name="baseImageSource"
-                                        value="ubuntu"
-                                        checked={baseImageSource === "ubuntu"}
-                                        onChange={() =>
-                                            handleBaseImageSourceChange("ubuntu")
-                                        }
-                                        className="sr-only"
-                                    />
-                                    <div
-                                        className={`p-3 border-2 rounded-lg cursor-pointer transition-all ${baseImageSource === "ubuntu"
-                                            ? "border-[#6aa329] bg-[#f0f7e7] ring-1 ring-[#6aa329]"
-                                            : "border-gray-200 hover:border-gray-300"
-                                            }`}
-                                    >
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <div className="font-medium text-[#0c0e0a]">
-                                                    Ubuntu LTS
-                                                </div>
-                                                <div className="text-sm text-gray-600">
-                                                    Long-term support versions
-                                                    (Recommended)
-                                                </div>
-                                            </div>
-                                            <div
-                                                className={`w-4 h-4 rounded-full border-2 ${baseImageSource === "ubuntu"
-                                                    ? "border-[#6aa329] bg-[#6aa329]"
-                                                    : "border-gray-300"
-                                                    }`}
-                                            >
-                                                {baseImageSource ===
-                                                    "ubuntu" && (
-                                                        <div className="w-full h-full rounded-full bg-white scale-50"></div>
-                                                    )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </label>
-
-                                <label className="relative">
-                                    <input
-                                        type="radio"
-                                        name="baseImageSource"
-                                        value="other"
-                                        checked={baseImageSource === "other"}
-                                        onChange={() =>
-                                            handleBaseImageSourceChange("other")
-                                        }
-                                        className="sr-only"
-                                    />
-                                    <div
-                                        className={`p-3 border-2 rounded-lg cursor-pointer transition-all ${baseImageSource === "other"
-                                            ? "border-[#6aa329] bg-[#f0f7e7] ring-1 ring-[#6aa329]"
-                                            : "border-gray-200 hover:border-gray-300"
-                                            }`}
-                                    >
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <div className="font-medium text-[#0c0e0a]">
-                                                    Other Distributions
-                                                </div>
-                                                <div className="text-sm text-gray-600">
-                                                    Debian, CentOS, Fedora
-                                                </div>
-                                            </div>
-                                            <div
-                                                className={`w-4 h-4 rounded-full border-2 ${baseImageSource === "other"
-                                                    ? "border-[#6aa329] bg-[#6aa329]"
-                                                    : "border-gray-300"
-                                                    }`}
-                                            >
-                                                {baseImageSource === "other" && (
-                                                    <div className="w-full h-full rounded-full bg-white scale-50"></div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </label>
-
-                                <label className="relative">
-                                    <input
-                                        type="radio"
-                                        name="baseImageSource"
-                                        value="custom"
-                                        checked={baseImageSource === "custom"}
-                                        onChange={() =>
-                                            handleBaseImageSourceChange("custom")
-                                        }
-                                        className="sr-only"
-                                    />
-                                    <div
-                                        className={`p-3 border-2 rounded-lg cursor-pointer transition-all ${baseImageSource === "custom"
-                                            ? "border-[#6aa329] bg-[#f0f7e7] ring-1 ring-[#6aa329]"
-                                            : "border-gray-200 hover:border-gray-300"
-                                            }`}
-                                    >
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <div className="font-medium text-[#0c0e0a]">
-                                                    Custom Image
-                                                </div>
-                                                <div className="text-sm text-gray-600">
-                                                    Any Docker Hub image
-                                                </div>
-                                            </div>
-                                            <div
-                                                className={`w-4 h-4 rounded-full border-2 ${baseImageSource === "custom"
-                                                    ? "border-[#6aa329] bg-[#6aa329]"
-                                                    : "border-gray-300"
-                                                    }`}
-                                            >
-                                                {baseImageSource ===
-                                                    "custom" && (
-                                                        <div className="w-full h-full rounded-full bg-white scale-50"></div>
-                                                    )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </label>
-                            </div>
-                        </div>
-
-                        {/* Conditional Base Image Selection */}
-                        {baseImageSource === "ubuntu" && (
-                            <div>
-                                <label className="text-sm font-medium text-gray-600 mb-2 block">
-                                    Ubuntu Version
-                                </label>
-                                <select
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] bg-white focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
-                                    value={recipe["base-image"]}
-                                    onChange={(e) =>
-                                        handleBaseImageSelect(e.target.value)
-                                    }
-                                >
-                                    {UBUNTU_VERSIONS.map((version) => (
-                                        <option
-                                            key={version.value}
-                                            value={version.value}
-                                        >
-                                            {version.label}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                        )}
-
-                        {baseImageSource === "other" && (
-                            <div>
-                                <label className="text-sm font-medium text-gray-600 mb-2 block">
-                                    Distribution
-                                </label>
-                                <select
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] bg-white focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
-                                    value={recipe["base-image"]}
-                                    onChange={(e) =>
-                                        handleBaseImageSelect(e.target.value)
-                                    }
-                                >
-                                    {OTHER_BASE_IMAGES.map((image) => (
-                                        <option
-                                            key={image.value}
-                                            value={image.value}
-                                        >
-                                            {image.label}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                        )}
-
-                        {baseImageSource === "custom" && (
-                            <div>
-                                <label className="text-sm font-medium text-gray-600 mb-2 block">
-                                    Custom Image
-                                </label>
+                    {/* Base Image Source Selection - Horizontal Layout */}
+                    <div className="mb-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <label className="relative group">
                                 <input
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
-                                    value={customBaseImage}
-                                    onChange={(e) =>
-                                        handleCustomBaseImageChange(
-                                            e.target.value
-                                        )
-                                    }
-                                    placeholder="e.g. neurodebian:sid"
+                                    type="radio"
+                                    name="baseImageSource"
+                                    value="ubuntu"
+                                    checked={baseImageSource === "ubuntu"}
+                                    onChange={() => handleBaseImageSourceChange("ubuntu")}
+                                    className="sr-only"
                                 />
-                                <p className="text-xs text-gray-500 mt-1">
-                                    Enter any valid Docker image name and tag
-                                </p>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Package Manager Section */}
-                    <div>
-                        <div className="flex items-center gap-2 mb-3">
-                            <label className="block font-medium text-[#1e2a16]">
-                                Package Manager
+                                <div
+                                    className={`p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 h-full ${baseImageSource === "ubuntu"
+                                        ? "border-[#6aa329] bg-[#f0f7e7] shadow-md ring-2 ring-[#6aa329]/20"
+                                        : "border-gray-200 hover:border-[#6aa329]/50 hover:bg-gray-50 group-hover:shadow-sm"
+                                        }`}
+                                >
+                                    <div className="flex flex-col items-center text-center space-y-2">
+                                        <div
+                                            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${baseImageSource === "ubuntu"
+                                                ? "border-[#6aa329] bg-[#6aa329]"
+                                                : "border-gray-300"
+                                                }`}
+                                        >
+                                            {baseImageSource === "ubuntu" && (
+                                                <div className="w-2 h-2 rounded-full bg-white"></div>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <div className="font-semibold text-[#0c0e0a] mb-1">
+                                                Ubuntu LTS
+                                            </div>
+                                            <div className="text-xs text-gray-600 leading-relaxed">
+                                                Long-term support
+                                                <br />
+                                                <span className="text-[#6aa329] font-medium">
+                                                    (Recommended)
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </label>
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    setShowPkgManagerHelp(!showPkgManagerHelp)
-                                }
-                                className="text-gray-400 hover:text-[#6aa329]"
-                            >
-                                <InformationCircleIcon className="h-4 w-4" />
-                            </button>
+
+                            <label className="relative group">
+                                <input
+                                    type="radio"
+                                    name="baseImageSource"
+                                    value="other"
+                                    checked={baseImageSource === "other"}
+                                    onChange={() => handleBaseImageSourceChange("other")}
+                                    className="sr-only"
+                                />
+                                <div
+                                    className={`p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 h-full ${baseImageSource === "other"
+                                        ? "border-[#6aa329] bg-[#f0f7e7] shadow-md ring-2 ring-[#6aa329]/20"
+                                        : "border-gray-200 hover:border-[#6aa329]/50 hover:bg-gray-50 group-hover:shadow-sm"
+                                        }`}
+                                >
+                                    <div className="flex flex-col items-center text-center space-y-2">
+                                        <div
+                                            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${baseImageSource === "other"
+                                                ? "border-[#6aa329] bg-[#6aa329]"
+                                                : "border-gray-300"
+                                                }`}
+                                        >
+                                            {baseImageSource === "other" && (
+                                                <div className="w-2 h-2 rounded-full bg-white"></div>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <div className="font-semibold text-[#0c0e0a] mb-1">
+                                                Other Distros
+                                            </div>
+                                            <div className="text-xs text-gray-600 leading-relaxed">
+                                                Debian, CentOS
+                                                <br />
+                                                Fedora
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label className="relative group">
+                                <input
+                                    type="radio"
+                                    name="baseImageSource"
+                                    value="custom"
+                                    checked={baseImageSource === "custom"}
+                                    onChange={() => handleBaseImageSourceChange("custom")}
+                                    className="sr-only"
+                                />
+                                <div
+                                    className={`p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 h-full ${baseImageSource === "custom"
+                                        ? "border-[#6aa329] bg-[#f0f7e7] shadow-md ring-2 ring-[#6aa329]/20"
+                                        : "border-gray-200 hover:border-[#6aa329]/50 hover:bg-gray-50 group-hover:shadow-sm"
+                                        }`}
+                                >
+                                    <div className="flex flex-col items-center text-center space-y-2">
+                                        <div
+                                            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${baseImageSource === "custom"
+                                                ? "border-[#6aa329] bg-[#6aa329]"
+                                                : "border-gray-300"
+                                                }`}
+                                        >
+                                            {baseImageSource === "custom" && (
+                                                <div className="w-2 h-2 rounded-full bg-white"></div>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <div className="font-semibold text-[#0c0e0a] mb-1">
+                                                Custom Image
+                                            </div>
+                                            <div className="text-xs text-gray-600 leading-relaxed">
+                                                Any Docker Hub
+                                                <br />
+                                                image
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </label>
                         </div>
-
-                        {showPkgManagerHelp && (
-                            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-800">
-                                <p className="font-medium mb-1">
-                                    Package Manager:
-                                </p>
-                                <ul className="list-disc list-inside space-y-1">
-                                    <li>
-                                        <strong>apt:</strong> Used by
-                                        Debian/Ubuntu systems for installing
-                                        packages
-                                    </li>
-                                    <li>
-                                        <strong>yum:</strong> Used by
-                                        RHEL/CentOS/Fedora systems for package
-                                        management
-                                    </li>
-                                </ul>
-                                <p className="mt-2">
-                                    {baseImageSource === "custom"
-                                        ? "For custom images, select the appropriate package manager."
-                                        : "Package manager is automatically selected based on your base image."}
-                                </p>
-                            </div>
-                        )}
-
-                        {baseImageSource === "custom" ? (
-                            <select
-                                className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] bg-white focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
-                                value={recipe["pkg-manager"]}
-                                onChange={(e) => updatePkgManager(e.target.value)}
-                            >
-                                <option value="apt">
-                                    apt (Debian/Ubuntu)
-                                </option>
-                                <option value="yum">
-                                    yum (RHEL/CentOS/Fedora)
-                                </option>
-                            </select>
-                        ) : (
-                            getPackageManagerDisplay()
-                        )}
                     </div>
+
+                    {/* Conditional Base Image Selection */}
+                    {baseImageSource === "ubuntu" && (
+                        <div className="mb-4">
+                            <label className="text-sm font-semibold text-gray-700 mb-3 block">
+                                Ubuntu Version
+                            </label>
+                            <select
+                                className="w-full px-4 py-3 border border-gray-200 rounded-lg text-[#0c0e0a] bg-white focus:outline-none focus:ring-2 focus:ring-[#6aa329]/20 focus:border-[#6aa329] transition-all"
+                                value={recipe["base-image"]}
+                                onChange={(e) => handleBaseImageSelect(e.target.value)}
+                            >
+                                {UBUNTU_VERSIONS.map((version) => (
+                                    <option key={version.value} value={version.value}>
+                                        {version.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+
+                    {baseImageSource === "other" && (
+                        <div className="mb-4">
+                            <label className="text-sm font-semibold text-gray-700 mb-3 block">
+                                Distribution
+                            </label>
+                            <select
+                                className="w-full px-4 py-3 border border-gray-200 rounded-lg text-[#0c0e0a] bg-white focus:outline-none focus:ring-2 focus:ring-[#6aa329]/20 focus:border-[#6aa329] transition-all"
+                                value={recipe["base-image"]}
+                                onChange={(e) => handleBaseImageSelect(e.target.value)}
+                            >
+                                {OTHER_BASE_IMAGES.map((image) => (
+                                    <option key={image.value} value={image.value}>
+                                        {image.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+
+                    {baseImageSource === "custom" && (
+                        <div className="mb-4">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="text-sm font-semibold text-gray-700 mb-3 block">
+                                        Custom Image
+                                    </label>
+                                    <input
+                                        className="w-full px-4 py-3 border border-gray-200 rounded-lg text-[#0c0e0a] focus:outline-none focus:ring-2 focus:ring-[#6aa329]/20 focus:border-[#6aa329] transition-all"
+                                        value={recipe["base-image"]}
+                                        onChange={(e) =>
+                                            handleCustomBaseImageChange(e.target.value)
+                                        }
+                                        placeholder="e.g. neurodebian:sid"
+                                    />
+                                    <p className="text-xs text-gray-500 mt-2">
+                                        Enter any valid Docker image name and tag
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <label className="text-sm font-semibold text-gray-700 block">
+                                            Package Manager
+                                        </label>
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setShowPkgManagerHelp(!showPkgManagerHelp)
+                                            }
+                                            className="text-gray-400 hover:text-[#6aa329] transition-colors"
+                                        >
+                                            <InformationCircleIcon className="h-4 w-4" />
+                                        </button>
+                                    </div>
+
+                                    {showPkgManagerHelp && (
+                                        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+                                            <p className="font-medium mb-2">Package Manager:</p>
+                                            <ul className="list-disc list-inside space-y-1">
+                                                <li>
+                                                    <strong>apt:</strong> Used by Debian/Ubuntu
+                                                    systems for installing packages
+                                                </li>
+                                                <li>
+                                                    <strong>yum:</strong> Used by
+                                                    RHEL/CentOS/Fedora systems for package
+                                                    management
+                                                </li>
+                                            </ul>
+                                            <p className="mt-2">
+                                                For custom images, select the appropriate
+                                                package manager.
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    <select
+                                        className="w-full px-4 py-3 border border-gray-200 rounded-lg text-[#0c0e0a] bg-white focus:outline-none focus:ring-2 focus:ring-[#6aa329]/20 focus:border-[#6aa329] transition-all"
+                                        value={recipe["pkg-manager"]}
+                                        onChange={(e) =>
+                                            updateBaseImageAndPkgManager(
+                                                recipe["base-image"],
+                                                e.target.value
+                                            )
+                                        }
+                                    >
+                                        <option value="apt">apt (Debian/Ubuntu)</option>
+                                        <option value="yum">yum (RHEL/CentOS/Fedora)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Directives Section */}
@@ -545,7 +499,7 @@ export default function NeuroDockerBuildRecipeComponent({
                         <AddDirectiveButton onAddDirective={addDirective} />
                     </div>
 
-                    <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-md text-sm text-yellow-800">
+                    <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-800">
                         <p className="font-medium mb-1">About Directives:</p>
                         <p>
                             Directives define the software and configurations to

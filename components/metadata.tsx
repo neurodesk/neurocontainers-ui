@@ -8,6 +8,7 @@ import {
     ChevronDownIcon,
     MagnifyingGlassIcon,
     PencilIcon,
+    ExclamationCircleIcon,
 } from "@heroicons/react/24/outline";
 import { ContainerRecipe, Architecture, CopyrightInfo } from "@/components/common";
 import { useState, useEffect, useRef } from "react";
@@ -151,6 +152,33 @@ function LicenseDropdown({ value, onChange, onCustomLicense, placeholder }: Lice
     );
 }
 
+// Validation functions
+function validateName(name: string): string | null {
+    if (!name.trim()) return "Container name is required";
+    if (name.length < 2) return "Container name must be at least 2 characters";
+    return null;
+}
+
+function validateVersion(version: string): string | null {
+    if (!version.trim()) return "Version is required";
+    return null;
+}
+
+function validateDocumentation(recipe: ContainerRecipe): string | null {
+    const hasReadme = recipe.readme && recipe.readme.trim();
+    const hasReadmeUrl = recipe.readme_url && recipe.readme_url.trim();
+
+    if (!hasReadme && !hasReadmeUrl) {
+        return "Documentation is required (either content or URL)";
+    }
+
+    if (hasReadmeUrl && !/^https?:\/\/.+/.test(recipe.readme_url!)) {
+        return "Documentation URL must be a valid HTTP/HTTPS URL";
+    }
+
+    return null;
+}
+
 export default function ContainerMetadata({
     recipe,
     onChange,
@@ -167,6 +195,7 @@ export default function ContainerMetadata({
     const [showInputTypeWarning, setShowInputTypeWarning] = useState(false);
     const [pendingInputType, setPendingInputType] = useState<"content" | "url" | null>(null);
     const [customLicenseIndex, setCustomLicenseIndex] = useState<number | null>(null);
+    const [showValidation, setShowValidation] = useState(false);
 
     const inputType =
         recipe.readme !== undefined
@@ -175,10 +204,25 @@ export default function ContainerMetadata({
                 ? "url"
                 : "content";
 
+    // Validation states
+    const nameError = validateName(recipe.name);
+    const versionError = validateVersion(recipe.version);
+    const documentationError = validateDocumentation(recipe);
+    const architectureError = recipe.architectures.length === 0 ? "At least one architecture must be selected" : null;
+
+    const hasErrors = !!(nameError || versionError || documentationError || architectureError);
+
     useEffect(() => {
         // Update local state when recipe changes externally
         setReadmeContent(recipe.readme || "");
     }, [recipe.readme, recipe.readme_url]);
+
+    // Show validation after user has interacted with the form
+    useEffect(() => {
+        if (recipe.name || recipe.version || recipe.readme || recipe.readme_url) {
+            setShowValidation(true);
+        }
+    }, [recipe.name, recipe.version, recipe.readme, recipe.readme_url]);
 
     const updateName = (name: string) => {
         onChange({ ...recipe, name });
@@ -309,6 +353,26 @@ export default function ContainerMetadata({
     return (
         <>
             <div className="bg-white rounded-lg shadow-md border border-[#d3e7b6] mb-6">
+                {/* Validation Summary */}
+                {showValidation && hasErrors && (
+                    <div className="p-4 bg-red-50 border-b border-red-200 rounded-t-lg">
+                        <div className="flex items-start gap-3">
+                            <ExclamationCircleIcon className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+                            <div>
+                                <h4 className="text-sm font-medium text-red-800 mb-2">
+                                    Please fix the following issues:
+                                </h4>
+                                <ul className="text-sm text-red-700 space-y-1">
+                                    {nameError && <li>• {nameError}</li>}
+                                    {versionError && <li>• {versionError}</li>}
+                                    {documentationError && <li>• {documentationError}</li>}
+                                    {architectureError && <li>• {architectureError}</li>}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 <div className="p-4 sm:p-6">
                     {/* Basic Information Section */}
                     <div className="mb-8">
@@ -318,34 +382,46 @@ export default function ContainerMetadata({
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                             <div>
                                 <label className="block mb-2 font-medium text-[#1e2a16]">
-                                    Container Name
+                                    Container Name *
                                 </label>
                                 <input
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
+                                    className={`w-full px-3 py-2 border rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 transition-colors ${showValidation && nameError
+                                        ? "border-red-300 focus:ring-red-500 focus:border-red-500 bg-red-50"
+                                        : "border-gray-200 focus:ring-[#6aa329] focus:border-[#6aa329]"
+                                        }`}
                                     value={recipe.name}
                                     onChange={(e) => updateName(e.target.value)}
                                     placeholder="e.g., my-neuroimaging-container"
                                 />
-                                <p className="text-xs text-gray-500 mt-1">
-                                    A unique identifier for your container
-                                </p>
+                                {showValidation && nameError ? (
+                                    <p className="text-xs text-red-600 mt-1">{nameError}</p>
+                                ) : (
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        A unique identifier for your container
+                                    </p>
+                                )}
                             </div>
 
                             <div>
                                 <label className="block mb-2 font-medium text-[#1e2a16]">
-                                    Version
+                                    Version *
                                 </label>
                                 <input
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
+                                    className={`w-full px-3 py-2 border rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 transition-colors ${showValidation && versionError
+                                        ? "border-red-300 focus:ring-red-500 focus:border-red-500 bg-red-50"
+                                        : "border-gray-200 focus:ring-[#6aa329] focus:border-[#6aa329]"
+                                        }`}
                                     value={recipe.version}
-                                    onChange={(e) =>
-                                        updateVersion(e.target.value)
-                                    }
+                                    onChange={(e) => updateVersion(e.target.value)}
                                     placeholder="e.g., 1.0.0"
                                 />
-                                <p className="text-xs text-gray-500 mt-1">
-                                    Semantic version number (recommended)
-                                </p>
+                                {showValidation && versionError ? (
+                                    <p className="text-xs text-red-600 mt-1">{versionError}</p>
+                                ) : (
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Semantic version number (recommended)
+                                    </p>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -354,7 +430,7 @@ export default function ContainerMetadata({
                     <div className="mb-8">
                         <div className="flex items-center gap-2 mb-4">
                             <h3 className="text-lg font-medium text-[#0c0e0a]">
-                                Target Architectures
+                                Target Architectures *
                             </h3>
                             <div className="relative">
                                 <button
@@ -411,7 +487,10 @@ export default function ContainerMetadata({
                         </div>
 
                         <div className="flex flex-wrap gap-4">
-                            <label className="inline-flex items-center p-4 bg-gray-50 rounded-lg border-2 hover:bg-gray-100 hover:border-[#d3e7b6] transition-all cursor-pointer">
+                            <label className={`inline-flex items-center p-4 rounded-lg border cursor-pointer transition-all ${recipe.architectures.includes("x86_64")
+                                ? "bg-[#f0f7e7] border-[#6aa329] shadow-sm"
+                                : "bg-gray-50 border-gray-200 hover:bg-gray-100 hover:border-gray-300"
+                                }`}>
                                 <input
                                     type="checkbox"
                                     className="rounded border-gray-300 text-[#6aa329] focus:ring-[#6aa329]"
@@ -441,7 +520,10 @@ export default function ContainerMetadata({
                                 </div>
                             </label>
 
-                            <label className="inline-flex items-center p-4 bg-gray-50 rounded-lg border-2 hover:bg-gray-100 hover:border-[#d3e7b6] transition-all cursor-pointer">
+                            <label className={`inline-flex items-center p-4 rounded-lg border cursor-pointer transition-all ${recipe.architectures.includes("aarch64")
+                                ? "bg-[#f0f7e7] border-[#6aa329] shadow-sm"
+                                : "bg-gray-50 border-gray-200 hover:bg-gray-100 hover:border-gray-300"
+                                }`}>
                                 <input
                                     type="checkbox"
                                     className="rounded border-gray-300 text-[#6aa329] focus:ring-[#6aa329]"
@@ -472,8 +554,8 @@ export default function ContainerMetadata({
                             </label>
                         </div>
 
-                        {recipe.architectures.length === 0 && (
-                            <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-md text-sm text-yellow-800">
+                        {showValidation && architectureError && (
+                            <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-800">
                                 <p className="font-medium">
                                     No architectures selected
                                 </p>
@@ -489,7 +571,7 @@ export default function ContainerMetadata({
                     <div className="mb-8">
                         <div className="flex items-center gap-2 mb-4">
                             <h3 className="text-lg font-medium text-[#0c0e0a]">
-                                Documentation
+                                Documentation *
                             </h3>
                             <div className="relative">
                                 <button
@@ -562,7 +644,8 @@ export default function ContainerMetadata({
                         </div>
 
                         {inputType === "content" ? (
-                            <div className="border border-gray-200 rounded-lg overflow-hidden">
+                            <div className={`border rounded-lg overflow-hidden ${showValidation && documentationError ? "border-red-300" : "border-gray-200"
+                                }`}>
                                 <div className="flex justify-between items-center px-4 py-3 bg-gray-50 border-b">
                                     <div className="text-sm font-medium text-gray-700">
                                         {showPreview
@@ -598,30 +681,36 @@ export default function ContainerMetadata({
                                     </div>
                                 ) : (
                                     <textarea
-                                        className="w-full px-4 py-3 text-[#0c0e0a] focus:outline-none focus:ring-0 border-0 min-h-[250px] resize-y"
+                                        className="w-full px-4 py-3 text-[#0c0e0a] focus:outline-none focus:ring-0 border-0 min-h-[250px] resize-y font-mono text-sm leading-relaxed"
                                         value={readmeContent}
                                         onChange={(e) =>
                                             updateReadme(e.target.value)
                                         }
-                                        placeholder="Write your container documentation here using Markdown..."
+                                        style={{ fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace' }}
                                     />
                                 )}
                             </div>
                         ) : (
                             <div>
                                 <input
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
+                                    className={`w-full px-3 py-2 border rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 transition-colors ${showValidation && documentationError
+                                        ? "border-red-300 focus:ring-red-500 focus:border-red-500 bg-red-50"
+                                        : "border-gray-200 focus:ring-[#6aa329] focus:border-[#6aa329]"
+                                        }`}
                                     value={recipe.readme_url || ""}
                                     onChange={(e) =>
                                         updateReadmeUrl(e.target.value)
                                     }
                                     placeholder="https://raw.githubusercontent.com/user/repo/main/README.md"
                                 />
-                                <p className="mt-2 text-sm text-gray-500">
-                                    Enter a URL to an external documentation file.
-                                    GitHub raw file URLs work well for this
-                                    purpose.
-                                </p>
+                                {showValidation && documentationError ? (
+                                    <p className="text-xs text-red-600 mt-1">{documentationError}</p>
+                                ) : (
+                                    <p className="mt-2 text-sm text-gray-500">
+                                        Enter a URL to an external documentation file.
+                                        GitHub raw file URLs work well for this purpose.
+                                    </p>
+                                )}
                             </div>
                         )}
                     </div>

@@ -18,10 +18,10 @@ const UBUNTU_VERSIONS = [
 ];
 
 const OTHER_BASE_IMAGES = [
-    { value: "debian:12", label: "Debian 12 (Bookworm)" },
-    { value: "debian:11", label: "Debian 11 (Bullseye)" },
-    { value: "centos:8", label: "CentOS 8" },
-    { value: "fedora:39", label: "Fedora 39" },
+    { value: "debian:12", label: "Debian 12 (Bookworm)", pkgManager: "apt" },
+    { value: "debian:11", label: "Debian 11 (Bullseye)", pkgManager: "apt" },
+    { value: "centos:8", label: "CentOS 8", pkgManager: "yum" },
+    { value: "fedora:39", label: "Fedora 39", pkgManager: "yum" },
 ];
 
 type BaseImageSource = "ubuntu" | "other" | "custom";
@@ -49,7 +49,7 @@ export default function NeuroDockerBuildRecipeComponent({
     const shouldScrollToNew = useRef(false);
 
     // Determine initial base image source based on current recipe
-    useState(() => {
+    useEffect(() => {
         if (UBUNTU_VERSIONS.some((img) => img.value === recipe["base-image"])) {
             setBaseImageSource("ubuntu");
         } else if (
@@ -60,7 +60,7 @@ export default function NeuroDockerBuildRecipeComponent({
             setBaseImageSource("custom");
             setCustomBaseImage(recipe["base-image"]);
         }
-    });
+    }, [recipe["base-image"]]);
 
     // Scroll to newly added directive only when explicitly added by user
     useEffect(() => {
@@ -179,23 +179,61 @@ export default function NeuroDockerBuildRecipeComponent({
     const handleBaseImageSourceChange = (source: BaseImageSource) => {
         setBaseImageSource(source);
 
-        // Clear the base image when switching sources
+        // Set default base image and package manager based on source
         if (source === "ubuntu") {
-            updateBaseImage("ubuntu:22.04"); // Default to latest LTS
+            updateBaseImage("ubuntu:22.04");
+            updatePkgManager("apt");
         } else if (source === "other") {
-            updateBaseImage("debian:12"); // Default to latest Debian
+            const defaultImage = OTHER_BASE_IMAGES[0];
+            updateBaseImage(defaultImage.value);
+            updatePkgManager(defaultImage.pkgManager);
         } else {
             updateBaseImage("");
+            // Keep current package manager for custom images
         }
     };
 
     const handleBaseImageSelect = (value: string) => {
         updateBaseImage(value);
+
+        // Auto-set package manager based on selected image
+        if (baseImageSource === "ubuntu") {
+            updatePkgManager("apt");
+        } else if (baseImageSource === "other") {
+            const selectedImage = OTHER_BASE_IMAGES.find(
+                (img) => img.value === value
+            );
+            if (selectedImage) {
+                updatePkgManager(selectedImage.pkgManager);
+            }
+        }
     };
 
     const handleCustomBaseImageChange = (value: string) => {
         setCustomBaseImage(value);
         updateBaseImage(value);
+        // Don't auto-set package manager for custom images
+    };
+
+    const getPackageManagerDisplay = () => {
+        if (baseImageSource === "custom") {
+            return null; // Will show dropdown
+        }
+
+        const pkgManager = recipe["pkg-manager"];
+        const displayText =
+            pkgManager === "apt"
+                ? "apt (Debian/Ubuntu)"
+                : "yum (RHEL/CentOS/Fedora)";
+
+        return (
+            <div className="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-700">
+                {displayText}
+                <span className="text-xs text-gray-500 block mt-1">
+                    Automatically selected based on base image
+                </span>
+            </div>
+        );
     };
 
     return (
@@ -214,7 +252,7 @@ export default function NeuroDockerBuildRecipeComponent({
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
                     {/* Base Image Section */}
                     <div>
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="flex items-center gap-2 mb-3">
                             <label className="block font-medium text-[#1e2a16]">
                                 Base Image
                             </label>
@@ -230,7 +268,7 @@ export default function NeuroDockerBuildRecipeComponent({
                         </div>
 
                         {showBaseImageHelp && (
-                            <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-800">
+                            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-800">
                                 <p className="font-medium mb-1">Base Image:</p>
                                 <p>
                                     The Docker base image that your container will
@@ -242,13 +280,10 @@ export default function NeuroDockerBuildRecipeComponent({
                             </div>
                         )}
 
-                        {/* Base Image Source Selection */}
+                        {/* Improved Base Image Source Selection */}
                         <div className="mb-4">
-                            <label className="text-sm font-medium text-gray-600 mb-2 block">
-                                Image Source
-                            </label>
-                            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-                                <label className="flex items-center">
+                            <div className="grid grid-cols-1 gap-2">
+                                <label className="relative">
                                     <input
                                         type="radio"
                                         name="baseImageSource"
@@ -257,11 +292,40 @@ export default function NeuroDockerBuildRecipeComponent({
                                         onChange={() =>
                                             handleBaseImageSourceChange("ubuntu")
                                         }
-                                        className="mr-2 text-[#6aa329] focus:ring-[#6aa329]"
+                                        className="sr-only"
                                     />
-                                    <span className="text-sm">Ubuntu LTS</span>
+                                    <div
+                                        className={`p-3 border-2 rounded-lg cursor-pointer transition-all ${baseImageSource === "ubuntu"
+                                            ? "border-[#6aa329] bg-[#f0f7e7] ring-1 ring-[#6aa329]"
+                                            : "border-gray-200 hover:border-gray-300"
+                                            }`}
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <div className="font-medium text-[#0c0e0a]">
+                                                    Ubuntu LTS
+                                                </div>
+                                                <div className="text-sm text-gray-600">
+                                                    Long-term support versions
+                                                    (Recommended)
+                                                </div>
+                                            </div>
+                                            <div
+                                                className={`w-4 h-4 rounded-full border-2 ${baseImageSource === "ubuntu"
+                                                    ? "border-[#6aa329] bg-[#6aa329]"
+                                                    : "border-gray-300"
+                                                    }`}
+                                            >
+                                                {baseImageSource ===
+                                                    "ubuntu" && (
+                                                        <div className="w-full h-full rounded-full bg-white scale-50"></div>
+                                                    )}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </label>
-                                <label className="flex items-center">
+
+                                <label className="relative">
                                     <input
                                         type="radio"
                                         name="baseImageSource"
@@ -270,11 +334,38 @@ export default function NeuroDockerBuildRecipeComponent({
                                         onChange={() =>
                                             handleBaseImageSourceChange("other")
                                         }
-                                        className="mr-2 text-[#6aa329] focus:ring-[#6aa329]"
+                                        className="sr-only"
                                     />
-                                    <span className="text-sm">Other Distros</span>
+                                    <div
+                                        className={`p-3 border-2 rounded-lg cursor-pointer transition-all ${baseImageSource === "other"
+                                            ? "border-[#6aa329] bg-[#f0f7e7] ring-1 ring-[#6aa329]"
+                                            : "border-gray-200 hover:border-gray-300"
+                                            }`}
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <div className="font-medium text-[#0c0e0a]">
+                                                    Other Distributions
+                                                </div>
+                                                <div className="text-sm text-gray-600">
+                                                    Debian, CentOS, Fedora
+                                                </div>
+                                            </div>
+                                            <div
+                                                className={`w-4 h-4 rounded-full border-2 ${baseImageSource === "other"
+                                                    ? "border-[#6aa329] bg-[#6aa329]"
+                                                    : "border-gray-300"
+                                                    }`}
+                                            >
+                                                {baseImageSource === "other" && (
+                                                    <div className="w-full h-full rounded-full bg-white scale-50"></div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </label>
-                                <label className="flex items-center">
+
+                                <label className="relative">
                                     <input
                                         type="radio"
                                         name="baseImageSource"
@@ -283,9 +374,36 @@ export default function NeuroDockerBuildRecipeComponent({
                                         onChange={() =>
                                             handleBaseImageSourceChange("custom")
                                         }
-                                        className="mr-2 text-[#6aa329] focus:ring-[#6aa329]"
+                                        className="sr-only"
                                     />
-                                    <span className="text-sm">Custom</span>
+                                    <div
+                                        className={`p-3 border-2 rounded-lg cursor-pointer transition-all ${baseImageSource === "custom"
+                                            ? "border-[#6aa329] bg-[#f0f7e7] ring-1 ring-[#6aa329]"
+                                            : "border-gray-200 hover:border-gray-300"
+                                            }`}
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <div className="font-medium text-[#0c0e0a]">
+                                                    Custom Image
+                                                </div>
+                                                <div className="text-sm text-gray-600">
+                                                    Any Docker Hub image
+                                                </div>
+                                            </div>
+                                            <div
+                                                className={`w-4 h-4 rounded-full border-2 ${baseImageSource === "custom"
+                                                    ? "border-[#6aa329] bg-[#6aa329]"
+                                                    : "border-gray-300"
+                                                    }`}
+                                            >
+                                                {baseImageSource ===
+                                                    "custom" && (
+                                                        <div className="w-full h-full rounded-full bg-white scale-50"></div>
+                                                    )}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </label>
                             </div>
                         </div>
@@ -293,7 +411,7 @@ export default function NeuroDockerBuildRecipeComponent({
                         {/* Conditional Base Image Selection */}
                         {baseImageSource === "ubuntu" && (
                             <div>
-                                <label className="text-sm font-medium text-gray-600 mb-1 block">
+                                <label className="text-sm font-medium text-gray-600 mb-2 block">
                                     Ubuntu Version
                                 </label>
                                 <select
@@ -317,7 +435,7 @@ export default function NeuroDockerBuildRecipeComponent({
 
                         {baseImageSource === "other" && (
                             <div>
-                                <label className="text-sm font-medium text-gray-600 mb-1 block">
+                                <label className="text-sm font-medium text-gray-600 mb-2 block">
                                     Distribution
                                 </label>
                                 <select
@@ -341,7 +459,7 @@ export default function NeuroDockerBuildRecipeComponent({
 
                         {baseImageSource === "custom" && (
                             <div>
-                                <label className="text-sm font-medium text-gray-600 mb-1 block">
+                                <label className="text-sm font-medium text-gray-600 mb-2 block">
                                     Custom Image
                                 </label>
                                 <input
@@ -352,7 +470,7 @@ export default function NeuroDockerBuildRecipeComponent({
                                             e.target.value
                                         )
                                     }
-                                    placeholder="e.g. python:3.11-slim, node:18-alpine"
+                                    placeholder="e.g. neurodebian:sid"
                                 />
                                 <p className="text-xs text-gray-500 mt-1">
                                     Enter any valid Docker image name and tag
@@ -363,7 +481,7 @@ export default function NeuroDockerBuildRecipeComponent({
 
                     {/* Package Manager Section */}
                     <div>
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="flex items-center gap-2 mb-3">
                             <label className="block font-medium text-[#1e2a16]">
                                 Package Manager
                             </label>
@@ -379,7 +497,7 @@ export default function NeuroDockerBuildRecipeComponent({
                         </div>
 
                         {showPkgManagerHelp && (
-                            <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-800">
+                            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-800">
                                 <p className="font-medium mb-1">
                                     Package Manager:
                                 </p>
@@ -396,29 +514,29 @@ export default function NeuroDockerBuildRecipeComponent({
                                     </li>
                                 </ul>
                                 <p className="mt-2">
-                                    NeuroDocker supports apt and yum package
-                                    managers.
+                                    {baseImageSource === "custom"
+                                        ? "For custom images, select the appropriate package manager."
+                                        : "Package manager is automatically selected based on your base image."}
                                 </p>
                             </div>
                         )}
 
-                        <select
-                            className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] bg-white focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
-                            value={recipe["pkg-manager"]}
-                            onChange={(e) => updatePkgManager(e.target.value)}
-                        >
-                            <option value="apt">
-                                apt (Debian/Ubuntu) - Recommended
-                            </option>
-                            <option value="yum">yum (RHEL/CentOS/Fedora)</option>
-                        </select>
-
-                        <p className="text-xs text-gray-500 mt-1">
-                            {recipe["pkg-manager"] === "apt" &&
-                                "Advanced Package Tool - Standard for Ubuntu/Debian"}
-                            {recipe["pkg-manager"] === "yum" &&
-                                "Yellowdog Updater Modified - For RHEL/CentOS/Fedora"}
-                        </p>
+                        {baseImageSource === "custom" ? (
+                            <select
+                                className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] bg-white focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
+                                value={recipe["pkg-manager"]}
+                                onChange={(e) => updatePkgManager(e.target.value)}
+                            >
+                                <option value="apt">
+                                    apt (Debian/Ubuntu)
+                                </option>
+                                <option value="yum">
+                                    yum (RHEL/CentOS/Fedora)
+                                </option>
+                            </select>
+                        ) : (
+                            getPackageManagerDisplay()
+                        )}
                     </div>
                 </div>
 

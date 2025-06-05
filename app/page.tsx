@@ -462,8 +462,6 @@ function SideNavigation({
 }
 
 function TopNavigation({
-    activeSection,
-    onSectionChange,
     onSidebarToggle,
     yamlData,
     onNewContainer,

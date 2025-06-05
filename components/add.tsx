@@ -17,6 +17,7 @@ import {
     ClipboardDocumentListIcon,
     DocumentArrowDownIcon,
     MagnifyingGlassIcon,
+    XMarkIcon,
 } from "@heroicons/react/24/outline";
 
 /**
@@ -219,6 +220,15 @@ export default function AddDirectiveButton({
     };
 
     /**
+     * Closes the modal
+     */
+    const closeModal = () => {
+        setIsOpen(false);
+        setSearchTerm("");
+        setFocusedIndex(-1);
+    };
+
+    /**
      * Handles clicking outside the dropdown to close it
      */
     useEffect(() => {
@@ -227,9 +237,7 @@ export default function AddDirectiveButton({
                 dropdownRef.current &&
                 !dropdownRef.current.contains(event.target as Node)
             ) {
-                setIsOpen(false);
-                setSearchTerm("");
-                setFocusedIndex(-1);
+                closeModal();
             }
         };
 
@@ -283,9 +291,7 @@ export default function AddDirectiveButton({
 
         switch (event.key) {
             case "Escape":
-                setIsOpen(false);
-                setSearchTerm("");
-                setFocusedIndex(-1);
+                closeModal();
                 break;
             case "ArrowDown":
                 event.preventDefault();
@@ -343,25 +349,148 @@ export default function AddDirectiveButton({
                 />
             </button>
 
-            {/* Custom Dropdown */}
+            {/* Modal/Dropdown */}
             {isOpen && (
                 <>
-                    {/* Mobile Overlay */}
-                    <div className="fixed inset-0 bg-black bg-opacity-50 z-40 sm:hidden" />
+                    {/* Mobile Full Screen Modal */}
+                    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 sm:hidden">
+                        <div className="flex items-center justify-center min-h-screen p-4">
+                            <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl max-h-[90vh] overflow-hidden">
+                                {/* Mobile Header */}
+                                <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-[#f8fdf2]">
+                                    <h2 className="text-lg font-semibold text-[#0c0e0a]">
+                                        Add Directive
+                                    </h2>
+                                    <button
+                                        onClick={closeModal}
+                                        className="p-2 rounded-lg hover:bg-[#e6f1d6] transition-colors"
+                                    >
+                                        <XMarkIcon className="w-5 h-5 text-[#4f7b38]" />
+                                    </button>
+                                </div>
 
+                                {/* Mobile Search */}
+                                <div className="p-4 border-b border-gray-100 bg-[#f8fdf2]">
+                                    <div className="relative">
+                                        <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                        <input
+                                            ref={searchInputRef}
+                                            type="text"
+                                            placeholder="Search directives..."
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                            onKeyDown={handleKeyDown}
+                                            className="
+                                                w-full pl-10 pr-4 py-3
+                                                text-base border border-[#e6f1d6] rounded-xl
+                                                focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:border-[#6aa329]
+                                                transition-colors duration-200
+                                                bg-white
+                                            "
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Mobile Directive List */}
+                                <div
+                                    ref={listRef}
+                                    className="p-4 overflow-y-auto"
+                                    style={{ maxHeight: 'calc(90vh - 200px)' }}
+                                >
+                                    {filteredDirectives.length > 0 ? (
+                                        <div className="space-y-3">
+                                            {filteredDirectives.map(([key, config], index) => {
+                                                const IconComponent = config.icon;
+                                                const isFocused = index === focusedIndex;
+                                                return (
+                                                    <button
+                                                        key={key}
+                                                        ref={(el) => {
+                                                            itemRefs.current[index] = el;
+                                                        }}
+                                                        type="button"
+                                                        onClick={() =>
+                                                            handleAddDirective(
+                                                                key as keyof typeof DIRECTIVE_TYPES
+                                                            )
+                                                        }
+                                                        onMouseEnter={() => setFocusedIndex(index)}
+                                                        className={`
+                                                            w-full flex items-center gap-4 p-4 rounded-xl border-2 text-left
+                                                            transition-all duration-200
+                                                            ${config.color}
+                                                            ${isFocused
+                                                                ? "ring-2 ring-[#6aa329] ring-offset-1 shadow-lg scale-[1.02] bg-opacity-80"
+                                                                : ""
+                                                            }
+                                                            focus:outline-none focus:ring-2 focus:ring-[#6aa329]
+                                                            active:scale-95
+                                                        `}
+                                                        role="menuitem"
+                                                    >
+                                                        <div
+                                                            className={`
+                                                                flex-shrink-0 w-12 h-12 rounded-xl
+                                                                flex items-center justify-center
+                                                                ${config.iconColor} 
+                                                                ${isFocused
+                                                                    ? "bg-white shadow-md"
+                                                                    : "bg-white/70"
+                                                                }
+                                                                transition-all duration-200
+                                                            `}
+                                                        >
+                                                            <IconComponent
+                                                                className={`w-6 h-6 ${isFocused ? "scale-110" : ""
+                                                                    } transition-transform duration-200`}
+                                                            />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="text-base font-semibold text-[#0c0e0a] mb-1">
+                                                                {config.label}
+                                                            </div>
+                                                            <div className="text-sm text-[#4f7b38] leading-relaxed">
+                                                                {config.description}
+                                                            </div>
+                                                        </div>
+                                                        <PlusIcon
+                                                            className={`w-5 h-5 flex-shrink-0 transition-all duration-200 ${isFocused
+                                                                ? "text-[#6aa329] scale-110"
+                                                                : "text-gray-400"
+                                                                }`}
+                                                        />
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        <div className="py-12 text-center text-gray-500">
+                                            <MagnifyingGlassIcon className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                                            <p className="text-base font-medium">No directives found</p>
+                                            <p className="text-sm text-gray-400 mt-2">
+                                                Try a different search term
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Desktop Dropdown */}
                     <div
                         className={`
-                            fixed sm:absolute
-                            inset-x-4 top-1/2 -translate-y-1/2 sm:inset-x-auto sm:top-full sm:translate-y-0 sm:left-0 sm:mt-2
-                            z-50 w-auto sm:w-96
-                            max-h-[80vh] sm:max-h-96 overflow-hidden
+                            hidden sm:block
+                            absolute left-0 mt-2 z-50
+                            w-96 max-w-[calc(100vw-2rem)]
+                            max-h-[32rem] overflow-hidden
                             bg-white rounded-xl shadow-xl border border-gray-200
                             animate-in fade-in-0 zoom-in-95 duration-200
                         `}
                         role="menu"
                         aria-orientation="vertical"
                     >
-                        {/* Header with Search */}
+                        {/* Desktop Header with Search */}
                         <div className="px-4 py-3 border-b border-gray-100 bg-[#f8fdf2]">
                             <h3 className="text-sm font-semibold text-[#0c0e0a] mb-2">
                                 Choose a directive type
@@ -386,10 +515,10 @@ export default function AddDirectiveButton({
                             </div>
                         </div>
 
-                        {/* Directive Grid */}
+                        {/* Desktop Directive Grid */}
                         <div
                             ref={listRef}
-                            className="p-2 max-h-60 sm:max-h-60 overflow-y-auto scroll-smooth"
+                            className="p-2 max-h-80 overflow-y-auto scroll-smooth"
                         >
                             {filteredDirectives.length > 0 ? (
                                 <div className="grid grid-cols-1 gap-1">
@@ -440,27 +569,17 @@ export default function AddDirectiveButton({
                                                     />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <div
-                                                        className={`text-sm font-medium ${isFocused
-                                                                ? "text-[#0c0e0a]"
-                                                                : "text-[#0c0e0a]"
-                                                            }`}
-                                                    >
+                                                    <div className="text-sm font-medium text-[#0c0e0a]">
                                                         {config.label}
                                                     </div>
-                                                    <div
-                                                        className={`text-xs truncate ${isFocused
-                                                                ? "text-[#4f7b38]"
-                                                                : "text-[#4f7b38]"
-                                                            }`}
-                                                    >
+                                                    <div className="text-xs text-[#4f7b38] truncate">
                                                         {config.description}
                                                     </div>
                                                 </div>
                                                 <PlusIcon
                                                     className={`w-4 h-4 flex-shrink-0 transition-all duration-200 ${isFocused
-                                                            ? "text-[#6aa329] scale-110"
-                                                            : "text-gray-400"
+                                                        ? "text-[#6aa329] scale-110"
+                                                        : "text-gray-400"
                                                         }`}
                                                 />
                                             </button>
@@ -478,15 +597,12 @@ export default function AddDirectiveButton({
                             )}
                         </div>
 
-                        {/* Footer with keyboard hints */}
+                        {/* Desktop Footer with keyboard hints */}
                         {filteredDirectives.length > 0 && (
                             <div className="px-4 py-2 border-t border-gray-100 bg-[#f8fdf2]">
                                 <div className="flex items-center justify-between text-xs text-[#4f7b38]">
-                                    <span className="hidden sm:inline">Use ↑↓ to navigate</span>
-                                    <span className="sm:hidden">Tap to select</span>
-                                    <span className="hidden sm:inline">
-                                        Enter to select • Esc to close
-                                    </span>
+                                    <span>Use ↑↓ to navigate</span>
+                                    <span>Enter to select • Esc to close</span>
                                 </div>
                             </div>
                         )}

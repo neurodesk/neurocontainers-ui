@@ -1,3 +1,5 @@
+export const NEUROCONTAINERS_REPO = "https://github.com/neurodesk/neurocontainers";
+
 export type Architecture = "x86_64" | "aarch64";
 
 export interface CopyrightInfo {

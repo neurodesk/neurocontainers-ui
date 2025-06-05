@@ -175,15 +175,6 @@ export default function ContainerValidator({
 
     return (
         <div className="bg-white rounded-lg shadow-md border border-[#d3e7b6]">
-            <div className="p-4 bg-[#f0f7e7] rounded-t-lg">
-                <h2 className="text-xl font-semibold text-[#0c0e0a]">
-                    Container Validator
-                </h2>
-                <p className="text-sm text-[#1e2a16] mt-1">
-                    Validate your recipe and generate the Dockerfile
-                </p>
-            </div>
-
             <div className="p-4 sm:p-6">
                 {/* Status Section */}
                 <div className="mb-6">

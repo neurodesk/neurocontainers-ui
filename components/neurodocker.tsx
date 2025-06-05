@@ -238,16 +238,6 @@ export default function NeuroDockerBuildRecipeComponent({
 
     return (
         <div className="bg-white rounded-lg shadow-md border border-[#d3e7b6]">
-            <div className="p-4 bg-[#f0f7e7] rounded-t-lg">
-                <h2 className="text-xl font-semibold text-[#0c0e0a]">
-                    NeuroDocker Build Recipe
-                </h2>
-                <p className="text-sm text-[#1e2a16] mt-1">
-                    Configure your Docker container build settings and
-                    installation directives
-                </p>
-            </div>
-
             <div className="p-4 sm:p-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
                     {/* Base Image Section */}

@@ -2,7 +2,19 @@
 
 import { load as loadYAML, dump as dumpYAML } from "js-yaml";
 import { useState, useEffect } from "react";
-import { ArrowUpTrayIcon, ChevronDownIcon, DocumentTextIcon } from "@heroicons/react/24/outline";
+import {
+    ArrowUpTrayIcon,
+    ChevronDownIcon,
+    DocumentTextIcon,
+    InformationCircleIcon,
+    CogIcon,
+    CheckCircleIcon,
+    Bars3Icon,
+    XMarkIcon,
+    PlusIcon,
+    ArrowDownTrayIcon,
+    CloudArrowUpIcon,
+} from "@heroicons/react/24/outline";
 import { ContainerRecipe, migrateLegacyRecipe } from "@/components/common";
 import BuildRecipeComponent from "@/components/recipe";
 import ContainerMetadata from "@/components/metadata";
@@ -10,13 +22,32 @@ import ValidateRecipeComponent from "@/components/validate";
 import RecipesList from "@/components/recipes";
 import GitHubModal from "@/components/githubExport";
 
-enum WizardStep {
-    BasicInfo = 0,
-    BuildRecipe = 1,
-    ValidateRecipe = 2
+enum Section {
+    BasicInfo = "basic-info",
+    BuildRecipe = "build-recipe",
+    ValidateRecipe = "validate-recipe",
 }
 
-const TOTAL_STEPS = 3; // Updated to include validation step
+const sections = [
+    {
+        id: Section.BasicInfo,
+        title: "Basic Info",
+        description: "Container metadata",
+        icon: InformationCircleIcon,
+    },
+    {
+        id: Section.BuildRecipe,
+        title: "Build Recipe",
+        description: "Define build process",
+        icon: CogIcon,
+    },
+    {
+        id: Section.ValidateRecipe,
+        title: "Validate",
+        description: "Test & generate",
+        icon: CheckCircleIcon,
+    },
+];
 
 async function getDefaultYAML(): Promise<ContainerRecipe> {
     const res = await fetch("/qsmxt.yaml");
@@ -38,77 +69,295 @@ function getNewContainerYAML(): ContainerRecipe {
             kind: "neurodocker",
             "base-image": "ubuntu:24.04",
             "pkg-manager": "apt",
-            directives: []
-        }
+            directives: [],
+        },
     };
 }
 
-function WizardNavigation({
-    currentStep,
-    totalSteps,
-    onNext,
-    onPrevious,
-    canProceed = true
+function SideNavigation({
+    activeSection,
+    onSectionChange,
+    isOpen,
+    onToggle,
+    yamlData,
+    onNewContainer,
+    onExportYAML,
+    onOpenGitHub,
 }: {
-    currentStep: number;
-    totalSteps: number;
-    onNext: () => void;
-    onPrevious: () => void;
-    canProceed?: boolean;
+    activeSection: Section;
+    onSectionChange: (section: Section) => void;
+    isOpen: boolean;
+    onToggle: () => void;
+    yamlData: ContainerRecipe | null;
+    onNewContainer: () => void;
+    onExportYAML: () => void;
+    onOpenGitHub: () => void;
 }) {
-    const getNextButtonText = () => {
-        switch (currentStep) {
-            case WizardStep.BasicInfo:
-                return "Next: Build Recipe";
-            case WizardStep.BuildRecipe:
-                return "Next: Validate";
-            case WizardStep.ValidateRecipe:
-                return "Download YAML";
-            default:
-                return "Next";
-        }
-    };
-
-    const getPreviousButtonText = () => {
-        switch (currentStep) {
-            case WizardStep.BuildRecipe:
-                return "Back: Basic Info";
-            case WizardStep.ValidateRecipe:
-                return "Back: Build Recipe";
-            default:
-                return "Previous";
-        }
-    };
-
     return (
-        <div className="flex justify-between items-center py-4 px-4 sm:px-6 border-t border-[#e6f1d6] bg-white">
-            <button
-                className={`px-3 py-2 sm:px-4 sm:py-2 rounded-md text-sm ${currentStep > 0
-                    ? "bg-[#e6f1d6] text-[#4f7b38] hover:bg-[#d3e7b6]"
-                    : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    }`}
-                onClick={onPrevious}
-                disabled={currentStep === 0}
-            >
-                {getPreviousButtonText()}
-            </button>
+        <>
+            {/* Overlay for mobile */}
+            {isOpen && (
+                <div
+                    className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+                    onClick={onToggle}
+                />
+            )}
 
-            <div className="text-xs sm:text-sm text-[#1e2a16]">
-                Step {currentStep + 1} of {totalSteps}
+            {/* Sidebar */}
+            <nav
+                className={`
+                    fixed lg:sticky top-0 left-0 h-full lg:h-screen
+                    w-64 bg-white border-r border-[#e6f1d6] 
+                    transform transition-transform duration-300 ease-in-out z-50
+                    ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+                    flex flex-col
+                `}
+            >
+                {/* Header with Title */}
+                <div className="p-4 border-b border-[#e6f1d6] bg-[#0c0e0a] text-white">
+                    <div className="flex items-center justify-between">
+                        <h1 className="text-base font-bold">
+                            Neurocontainers Builder
+                        </h1>
+                        <button
+                            onClick={onToggle}
+                            className="lg:hidden p-1 rounded-md hover:bg-[#1e2a16]"
+                        >
+                            <XMarkIcon className="h-4 w-4" />
+                        </button>
+                    </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="p-3 border-b border-[#e6f1d6] bg-[#f8fdf2]">
+                    <div className="space-y-1">
+                        <button
+                            className="w-full flex items-center space-x-2 px-3 py-2 text-sm font-medium text-[#1e2a16] hover:bg-[#e6f1d6] rounded-md transition-colors"
+                            onClick={onNewContainer}
+                        >
+                            <PlusIcon className="h-4 w-4" />
+                            <span>New Container</span>
+                        </button>
+                        <button
+                            className="w-full flex items-center space-x-2 px-3 py-2 text-sm font-medium text-[#1e2a16] hover:bg-[#e6f1d6] rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            onClick={onExportYAML}
+                            disabled={!yamlData}
+                        >
+                            <ArrowDownTrayIcon className="h-4 w-4" />
+                            <span>Export YAML</span>
+                        </button>
+                        <button
+                            className="w-full flex items-center space-x-2 px-3 py-2 text-sm font-medium text-[#1e2a16] hover:bg-[#e6f1d6] rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            onClick={onOpenGitHub}
+                            disabled={!yamlData}
+                        >
+                            <CloudArrowUpIcon className="h-4 w-4" />
+                            <span>Publish to GitHub</span>
+                        </button>
+                    </div>
+                </div>
+
+                {/* Build Steps Header */}
+                <div className="p-3 border-b border-[#e6f1d6]">
+                    <h2 className="text-sm font-semibold text-[#0c0e0a]">
+                        Build Steps
+                    </h2>
+                    <p className="text-xs text-[#4f7b38] mt-1">
+                        Follow these steps to build your container
+                    </p>
+                </div>
+
+                {/* Navigation Items */}
+                <div className="flex-1 p-2 space-y-1 overflow-y-auto">
+                    {sections.map((section, index) => {
+                        const Icon = section.icon;
+                        const isActive = activeSection === section.id;
+
+                        return (
+                            <button
+                                key={section.id}
+                                onClick={() => {
+                                    onSectionChange(section.id);
+                                    // Close sidebar on mobile after selection
+                                    if (window.innerWidth < 1024) {
+                                        onToggle();
+                                    }
+                                }}
+                                className={`
+                                    w-full text-left p-3 rounded-md transition-all duration-200
+                                    flex items-start space-x-3 group relative
+                                    ${isActive
+                                        ? "bg-[#6aa329] text-white shadow-sm"
+                                        : "hover:bg-[#f0f7e7] text-[#1e2a16]"
+                                    }
+                                `}
+                            >
+                                {/* Step number */}
+                                <div
+                                    className={`
+                                        flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-xs font-semibold
+                                        ${isActive
+                                            ? "bg-white text-[#6aa329]"
+                                            : "bg-[#e6f1d6] text-[#4f7b38] group-hover:bg-[#d3e7b6]"
+                                        }
+                                    `}
+                                >
+                                    {index + 1}
+                                </div>
+
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center space-x-2 mb-1">
+                                        <Icon className="h-3 w-3 flex-shrink-0" />
+                                        <div className="font-medium truncate text-sm">
+                                            {section.title}
+                                        </div>
+                                    </div>
+                                    <div
+                                        className={`
+                                            text-xs leading-tight
+                                            ${isActive
+                                                ? "text-white/90"
+                                                : "text-[#4f7b38]"
+                                            }
+                                        `}
+                                    >
+                                        {section.description}
+                                    </div>
+                                </div>
+
+                                {/* Active indicator */}
+                                {isActive && (
+                                    <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-1 h-6 bg-white rounded-l-full" />
+                                )}
+                            </button>
+                        );
+                    })}
+                </div>
+
+                {/* Footer */}
+                <div className="p-3 border-t border-[#e6f1d6] bg-[#f8fdf2]">
+                    <div className="text-xs text-[#4f7b38] text-center">
+                        v1.0.0
+                    </div>
+                </div>
+            </nav>
+        </>
+    );
+}
+
+function TopNavigation({
+    activeSection,
+    onSectionChange,
+    onSidebarToggle,
+    yamlData,
+    onNewContainer,
+    onExportYAML,
+}: {
+    activeSection: Section;
+    onSectionChange: (section: Section) => void;
+    onSidebarToggle: () => void;
+    yamlData: ContainerRecipe | null;
+    onNewContainer: () => void;
+    onExportYAML: () => void;
+    onOpenGitHub: () => void;
+}) {
+    return (
+        <div className="bg-white border-b border-[#e6f1d6] p-4 lg:hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-3">
+                    <button
+                        onClick={onSidebarToggle}
+                        className="p-2 rounded-md hover:bg-[#f0f7e7]"
+                    >
+                        <Bars3Icon className="h-5 w-5 text-[#4f7b38]" />
+                    </button>
+                    <h1 className="text-lg font-bold text-[#0c0e0a]">
+                        Neurocontainers Builder
+                    </h1>
+                </div>
+
+                {/* Action buttons for mobile */}
+                <div className="flex items-center space-x-2">
+                    <button
+                        className="bg-[#1e2a16] hover:bg-[#161c10] px-3 py-1 rounded-md text-xs font-medium transition-colors text-white"
+                        onClick={onNewContainer}
+                    >
+                        New
+                    </button>
+                    <button
+                        className="bg-[#4f7b38] hover:bg-[#6aa329] px-3 py-1 rounded-md text-xs font-medium transition-colors text-white"
+                        onClick={onExportYAML}
+                        disabled={!yamlData}
+                    >
+                        Export
+                    </button>
+                </div>
             </div>
 
-            <button
-                className={`px-3 py-2 sm:px-4 sm:py-2 rounded-md text-sm ${canProceed
-                    ? currentStep < totalSteps - 1
-                        ? "bg-[#6aa329] text-white hover:bg-[#4f7b38]"
-                        : "bg-[#4f7b38] text-white hover:bg-[#3d5f2b]"
-                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    }`}
-                onClick={onNext}
-                disabled={!canProceed}
-            >
-                {getNextButtonText()}
-            </button>
+            {/* Progress indicator */}
+            <div className="flex items-center space-x-2">
+                {sections.map((section, index) => {
+                    const isActive = activeSection === section.id;
+                    const isCompleted = sections.findIndex(s => s.id === activeSection) > index;
+
+                    return (
+                        <div key={section.id} className="flex items-center">
+                            <button
+                                onClick={() => onSectionChange(section.id)}
+                                className={`
+                                    w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold
+                                    ${isActive
+                                        ? "bg-[#6aa329] text-white"
+                                        : isCompleted
+                                            ? "bg-[#4f7b38] text-white"
+                                            : "bg-[#e6f1d6] text-[#4f7b38]"
+                                    }
+                                `}
+                            >
+                                {index + 1}
+                            </button>
+                            {index < sections.length - 1 && (
+                                <div
+                                    className={`
+                                        w-8 h-0.5 mx-1
+                                        ${isCompleted
+                                            ? "bg-[#4f7b38]"
+                                            : "bg-[#e6f1d6]"
+                                        }
+                                    `}
+                                />
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
+
+function SectionHeader({
+    icon: Icon,
+    title,
+    description
+}: {
+    icon: React.ComponentType<{ className?: string }>;
+    title: string;
+    description: string;
+}) {
+    return (
+        <div className="flex items-center space-x-3 mb-4">
+            <div className="p-2 bg-[#6aa329] rounded-lg shadow-sm">
+                <Icon className="h-5 w-5 text-white" />
+            </div>
+            <div>
+                <h2 className="text-xl font-bold text-[#0c0e0a]">
+                    {title}
+                </h2>
+                <p className="text-[#4f7b38] mt-1">
+                    {description}
+                </p>
+            </div>
         </div>
     );
 }
@@ -116,14 +365,15 @@ function WizardNavigation({
 export default function Home() {
     const [yamlData, setYamlData] = useState<ContainerRecipe | null>(null);
     const [loading, setLoading] = useState(true);
-    const [currentStep, setCurrentStep] = useState(WizardStep.BasicInfo);
+    const [activeSection, setActiveSection] = useState(Section.BasicInfo);
     const [yamlText, setYamlText] = useState("");
     const [isGitHubModalOpen, setIsGitHubModalOpen] = useState(false);
     const [isRecipesModalOpen, setIsRecipesModalOpen] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const handleLoadRecipeFromList = (recipe: ContainerRecipe) => {
         setYamlData(recipe);
-        setCurrentStep(WizardStep.BasicInfo);
+        setActiveSection(Section.BasicInfo);
         setIsRecipesModalOpen(false);
     };
 
@@ -152,52 +402,6 @@ export default function Home() {
         }
     }, [yamlData]);
 
-    // Check if we can proceed to the next step
-    const canProceedToNext = () => {
-        if (!yamlData) return false;
-
-        switch (currentStep) {
-            case WizardStep.BasicInfo:
-                // Basic validation for metadata
-                return yamlData.name !== "" && yamlData.version !== "" && yamlData.name.trim() !== "";
-            case WizardStep.BuildRecipe:
-                // Check if we have at least one directive or it's intentionally empty
-                return yamlData.build !== undefined && yamlData.build["base-image"] !== "";
-            case WizardStep.ValidateRecipe:
-                // Always allow download from validation step
-                return true;
-            default:
-                return true;
-        }
-    };
-
-    const nextStep = () => {
-        if (currentStep < TOTAL_STEPS - 1) {
-            setCurrentStep(currentStep + 1);
-            // Scroll to top when changing steps
-            window.scrollTo(0, 0);
-        } else {
-            // Download YAML file
-            const blob = new Blob([yamlText], { type: "text/yaml" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `${yamlData?.name}-${yamlData?.version}.yaml`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-    };
-
-    const previousStep = () => {
-        if (currentStep > 0) {
-            setCurrentStep(currentStep - 1);
-            // Scroll to top when changing steps
-            window.scrollTo(0, 0);
-        }
-    };
-
     const exportYAML = () => {
         if (!yamlData) return;
 
@@ -219,232 +423,195 @@ export default function Home() {
             setYamlData(parsed);
         } catch (err) {
             console.error("Error parsing YAML:", err);
-            // Could add user feedback for invalid YAML
+        }
+    };
+
+    const scrollToSection = (sectionId: Section) => {
+        setActiveSection(sectionId);
+        const element = document.getElementById(sectionId);
+        if (element) {
+            const offset = 20;
+            const elementPosition = element.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: "smooth",
+            });
         }
     };
 
     return (
-        <div className="min-h-screen bg-[#f0f7e7] flex flex-col">
-            {/* Fixed Header */}
-            <header className="bg-[#0c0e0a] text-white py-3 px-4 sm:py-4 sm:px-6 shadow-md fixed top-0 left-0 right-0 z-10">
-                <div className="max-w-7xl mx-auto flex justify-between items-center">
-                    <h1 className="text-lg sm:text-2xl font-bold truncate">
-                        Neurocontainers Builder
-                    </h1>
-
-                    <div className="flex items-center space-x-2 sm:space-x-4">
-                        <button
-                            className="bg-[#1e2a16] hover:bg-[#161c10] px-2 py-1 sm:px-4 sm:py-2 rounded-md text-xs sm:text-sm"
-                            onClick={() => setYamlData(null)}
-                        >
-                            New
-                        </button>
-                        <button
-                            className="bg-[#4f7b38] hover:bg-[#6aa329] px-2 py-1 sm:px-4 sm:py-2 rounded-md text-xs sm:text-sm"
-                            onClick={exportYAML}
-                            disabled={!yamlData}
-                        >
-                            Export
-                        </button>
-                        <button
-                            className="bg-[#1e2a16] hover:bg-[#161c10] px-2 py-1 sm:px-4 sm:py-2 rounded-md text-xs sm:text-sm flex items-center"
-                            onClick={() => setIsGitHubModalOpen(true)}
-                            disabled={!yamlData}
-                            title="Export to GitHub"
-                        >
-                            <svg
-                                className="h-4 w-4 sm:h-5 sm:w-5 sm:mr-1"
-                                fill="currentColor"
-                                viewBox="0 0 24 24"
-                                aria-hidden="true"
-                            >
-                                <path
-                                    fillRule="evenodd"
-                                    d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
-                                    clipRule="evenodd"
-                                />
-                            </svg>
-                            <span className="hidden sm:inline">Publish</span>
-                        </button>
-                    </div>
-                </div>
-            </header>
-
-            {/* Main content with padding for fixed header and footer */}
-            <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 pt-20 pb-20">
-                {loading ? (
-                    <div className="bg-white rounded-lg shadow-md p-6 sm:p-10 text-center mt-4">
-                        <div className="animate-pulse text-[#4f7b38] text-xl">
+        <div className="min-h-screen bg-[#f8fdf2] flex">
+            {loading ? (
+                <div className="flex-1 flex items-center justify-center">
+                    <div className="bg-white rounded-lg shadow-md p-8 text-center">
+                        <div className="animate-pulse text-[#4f7b38] text-lg">
                             Loading...
                         </div>
                     </div>
-                ) : yamlData ? (
-                    <div className="mt-4">
-                        {/* Wizard Steps */}
-                        <div className="mb-6">
-                            <div className="grid grid-cols-3 gap-2">
-                                <div
-                                    className={`p-2 sm:p-3 rounded-md text-center transition-colors ${currentStep === 0
-                                        ? "bg-[#6aa329] text-white"
-                                        : "bg-[#e6f1d6] text-[#1e2a16] hover:bg-[#d3e7b6] cursor-pointer"
-                                        }`}
-                                    onClick={() => setCurrentStep(0)}
-                                >
-                                    <div className="font-medium text-sm sm:text-base">
-                                        Basic Info
-                                    </div>
-                                    <div className="text-xs mt-1 opacity-80 hidden sm:block">
-                                        Container metadata
-                                    </div>
-                                </div>
+                </div>
+            ) : yamlData ? (
+                <>
+                    {/* Sidebar Navigation */}
+                    <SideNavigation
+                        activeSection={activeSection}
+                        onSectionChange={scrollToSection}
+                        isOpen={isSidebarOpen}
+                        onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+                        yamlData={yamlData}
+                        onNewContainer={() => setYamlData(null)}
+                        onExportYAML={exportYAML}
+                        onOpenGitHub={() => setIsGitHubModalOpen(true)}
+                    />
 
-                                <div
-                                    className={`p-2 sm:p-3 rounded-md text-center transition-colors ${currentStep === 1
-                                        ? "bg-[#6aa329] text-white"
-                                        : "bg-[#e6f1d6] text-[#1e2a16] hover:bg-[#d3e7b6] cursor-pointer"
-                                        }`}
-                                    onClick={() => setCurrentStep(1)}
-                                >
-                                    <div className="font-medium text-sm sm:text-base">
-                                        Build Recipe
-                                    </div>
-                                    <div className="text-xs mt-1 opacity-80 hidden sm:block">
-                                        Define build process
-                                    </div>
-                                </div>
+                    {/* Main Content */}
+                    <div className="flex-1">
+                        {/* Top Navigation for Mobile */}
+                        <TopNavigation
+                            activeSection={activeSection}
+                            onSectionChange={scrollToSection}
+                            onSidebarToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+                            yamlData={yamlData}
+                            onNewContainer={() => setYamlData(null)}
+                            onExportYAML={exportYAML}
+                            onOpenGitHub={() => setIsGitHubModalOpen(true)}
+                        />
 
-                                <div
-                                    className={`p-2 sm:p-3 rounded-md text-center transition-colors ${currentStep === 2
-                                        ? "bg-[#6aa329] text-white"
-                                        : "bg-[#e6f1d6] text-[#1e2a16] hover:bg-[#d3e7b6] cursor-pointer"
-                                        }`}
-                                    onClick={() => setCurrentStep(2)}
-                                >
-                                    <div className="font-medium text-sm sm:text-base">
-                                        Validate
-                                    </div>
-                                    <div className="text-xs mt-1 opacity-80 hidden sm:block">
-                                        Test & generate
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <div className="max-w-5xl mx-auto px-4 py-6">
+                            {/* All Sections */}
+                            <div className="space-y-8">
+                                {/* Basic Info Section */}
+                                <section id={Section.BasicInfo}>
+                                    <SectionHeader
+                                        icon={InformationCircleIcon}
+                                        title="Basic Information"
+                                        description="Configure your container's metadata and basic settings"
+                                    />
+                                    <ContainerMetadata
+                                        recipe={yamlData}
+                                        onChange={(updated) => setYamlData(updated)}
+                                    />
+                                </section>
 
-                        {/* Progress Indicator */}
-                        <div className="mb-6">
-                            <div className="flex items-center">
-                                <div className="flex-1 bg-gray-200 rounded-full h-2">
+                                {/* Build Recipe Section */}
+                                <section id={Section.BuildRecipe}>
+                                    <SectionHeader
+                                        icon={CogIcon}
+                                        title="Build Recipe"
+                                        description="Define the build process and software installation steps"
+                                    />
+                                    <BuildRecipeComponent
+                                        recipe={yamlData.build}
+                                        onChange={(updated) =>
+                                            setYamlData({ ...yamlData, build: updated })
+                                        }
+                                    />
+                                </section>
+
+                                {/* Validate Section */}
+                                <section id={Section.ValidateRecipe}>
+                                    <SectionHeader
+                                        icon={CheckCircleIcon}
+                                        title="Validate & Generate"
+                                        description="Test your configuration and generate the final container"
+                                    />
+                                    <ValidateRecipeComponent recipe={yamlData} />
+                                </section>
+
+                                {/* YAML Preview */}
+                                <section className="mb-6">
                                     <div
-                                        className="bg-[#6aa329] h-2 rounded-full transition-all duration-300"
-                                        style={{
-                                            width: `${((currentStep + 1) / TOTAL_STEPS) * 100}%`,
-                                        }}
-                                    ></div>
-                                </div>
-                                <span className="ml-3 text-sm text-[#1e2a16] font-medium">
-                                    {Math.round(((currentStep + 1) / TOTAL_STEPS) * 100)}%
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* Current Step Content */}
-                        <div className="mb-6">
-                            {currentStep === WizardStep.BasicInfo && (
-                                <ContainerMetadata
-                                    recipe={yamlData}
-                                    onChange={(updated) => setYamlData(updated)}
-                                />
-                            )}
-
-                            {currentStep === WizardStep.BuildRecipe && (
-                                <BuildRecipeComponent
-                                    recipe={yamlData.build}
-                                    onChange={(updated) =>
-                                        setYamlData({ ...yamlData, build: updated })
-                                    }
-                                />
-                            )}
-
-                            {currentStep === WizardStep.ValidateRecipe && (
-                                <ValidateRecipeComponent
-                                    recipe={yamlData}
-                                />
-                            )}
-                        </div>
-
-                        {/* YAML Preview (for power users) */}
-                        <div className="bg-white rounded-lg shadow-md border border-[#d3e7b6] mb-6">
-                            <div
-                                className="p-3 sm:p-4 bg-[#f0f7e7] rounded-t-lg flex justify-between items-center cursor-pointer"
-                                onClick={() =>
-                                    document
-                                        .getElementById("yaml-preview")
-                                        ?.classList.toggle("hidden")
-                                }
-                            >
-                                <h2 className="font-semibold text-[#0c0e0a] text-sm sm:text-base">
-                                    YAML Preview
-                                </h2>
-                                <ChevronDownIcon className="h-5 w-5 text-[#4f7b38]" />
-                            </div>
-
-                            <div id="yaml-preview" className="hidden p-4 sm:p-6">
-                                <textarea
-                                    className="w-full h-48 sm:h-64 px-3 py-2 sm:px-4 sm:py-3 font-mono text-xs sm:text-sm bg-[#1e2a16] text-white rounded-md focus:outline-none"
-                                    value={yamlText}
-                                    onChange={(e) => setYamlText(e.target.value)}
-                                    onBlur={updateFromYamlText}
-                                ></textarea>
-                                <div className="mt-3 text-right">
-                                    <button
-                                        className="bg-[#6aa329] text-white px-3 py-1 rounded-md text-sm hover:bg-[#4f7b38]"
-                                        onClick={updateFromYamlText}
+                                        className="p-4 bg-gradient-to-r from-[#f8fdf2] to-[#f0f7e7] rounded-t-lg flex justify-between items-center cursor-pointer hover:from-[#f0f7e7] hover:to-[#e6f1d6] transition-colors"
+                                        onClick={() =>
+                                            document
+                                                .getElementById("yaml-preview")
+                                                ?.classList.toggle("hidden")
+                                        }
                                     >
-                                        Apply YAML Changes
-                                    </button>
-                                </div>
+                                        <h3 className="font-semibold text-[#0c0e0a]">
+                                            YAML Preview
+                                        </h3>
+                                        <ChevronDownIcon className="h-5 w-5 text-[#4f7b38]" />
+                                    </div>
+
+                                    <div id="yaml-preview" className="hidden p-4">
+                                        <textarea
+                                            className="w-full h-64 px-3 py-2 font-mono text-sm bg-[#1e2a16] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6aa329] resize-none"
+                                            value={yamlText}
+                                            onChange={(e) => setYamlText(e.target.value)}
+                                            onBlur={updateFromYamlText}
+                                        ></textarea>
+                                        <div className="mt-3 text-right">
+                                            <button
+                                                className="bg-[#6aa329] text-white px-4 py-2 rounded-lg hover:bg-[#4f7b38] transition-colors font-medium"
+                                                onClick={updateFromYamlText}
+                                            >
+                                                Apply YAML Changes
+                                            </button>
+                                        </div>
+                                    </div>
+                                </section>
                             </div>
                         </div>
                     </div>
-                ) : (
-                    <div className="bg-white rounded-lg shadow-md p-6 sm:p-10 text-center mt-4">
-                        <h2 className="text-lg sm:text-xl font-semibold text-[#0c0e0a] mb-4">
-                            Start Building a Container
-                        </h2>
-                        <p className="text-[#1e2a16] mb-6">
-                            Create a new container definition, browse existing recipes, or upload a YAML file
-                        </p>
+                </>
+            ) : (
+                <div className="flex-1 flex items-center justify-center p-6">
+                    <div className="max-w-4xl w-full">
+                        {/* Hero Section */}
+                        <div className="text-center mb-12">
+                            <div className="inline-flex items-center justify-center w-16 h-16 bg-[#6aa329] rounded-2xl mb-6">
+                                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                </svg>
+                            </div>
+                            <h1 className="text-4xl font-bold text-[#0c0e0a] mb-4">
+                                Neurocontainers Builder
+                            </h1>
+                            <p className="text-xl text-[#4f7b38] mb-6 max-w-2xl mx-auto">
+                                Create reproducible neuroimaging containers with ease. Build, validate, and deploy
+                                containerized neuroimaging tools using our intuitive visual interface.
+                            </p>
+                        </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                        {/* Action Cards */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                             <button
-                                className="p-6 border-2 border-[#d3e7b6] rounded-lg hover:border-[#6aa329] hover:bg-[#f9fdf5] transition-colors"
+                                className="group p-8 bg-white border-2 border-[#e6f1d6] rounded-2xl hover:border-[#6aa329] hover:shadow-lg transition-all duration-300 text-left"
                                 onClick={() => {
                                     setYamlData(getNewContainerYAML());
-                                    setCurrentStep(WizardStep.BasicInfo);
+                                    setActiveSection(Section.BasicInfo);
                                 }}
                             >
-                                <div className="text-[#6aa329] mb-2">
-                                    <svg className="h-8 w-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                    </svg>
+                                <div className="flex items-center justify-center w-12 h-12 bg-[#6aa329] rounded-xl mb-4 group-hover:scale-110 transition-transform">
+                                    <PlusIcon className="h-6 w-6 text-white" />
                                 </div>
-                                <h3 className="font-semibold text-[#0c0e0a] mb-1">Create New</h3>
-                                <p className="text-sm text-[#4f7b38]">Start from scratch</p>
+                                <h3 className="text-lg font-semibold text-[#0c0e0a] mb-2">
+                                    Create New Container
+                                </h3>
+                                <p className="text-[#4f7b38] text-sm leading-relaxed">
+                                    Start building a new neuroimaging container from scratch with our guided workflow.
+                                </p>
                             </button>
 
                             <button
-                                className="p-6 border-2 border-[#d3e7b6] rounded-lg hover:border-[#6aa329] hover:bg-[#f9fdf5] transition-colors"
+                                className="group p-8 bg-white border-2 border-[#e6f1d6] rounded-2xl hover:border-[#6aa329] hover:shadow-lg transition-all duration-300 text-left"
                                 onClick={() => setIsRecipesModalOpen(true)}
                             >
-                                <div className="text-[#6aa329] mb-2">
-                                    <DocumentTextIcon className="h-8 w-8 mx-auto" />
+                                <div className="flex items-center justify-center w-12 h-12 bg-[#4f7b38] rounded-xl mb-4 group-hover:scale-110 transition-transform">
+                                    <DocumentTextIcon className="h-6 w-6 text-white" />
                                 </div>
-                                <h3 className="font-semibold text-[#0c0e0a] mb-1">Browse Recipes</h3>
-                                <p className="text-sm text-[#4f7b38]">Load existing recipe</p>
+                                <h3 className="text-lg font-semibold text-[#0c0e0a] mb-2">
+                                    Browse Existing Recipes
+                                </h3>
+                                <p className="text-[#4f7b38] text-sm leading-relaxed">
+                                    Explore and customize pre-built container recipes from the NeuroContainers repository.
+                                </p>
                             </button>
 
                             <div
-                                className="p-6 border-2 border-dashed border-[#d3e7b6] rounded-lg hover:border-[#6aa329] hover:bg-[#f9fdf5] transition-colors cursor-pointer"
+                                className="group p-8 bg-white border-2 border-dashed border-[#e6f1d6] rounded-2xl hover:border-[#6aa329] hover:shadow-lg transition-all duration-300 cursor-pointer text-left"
                                 onClick={() => {
                                     const input = document.createElement("input");
                                     input.type = "file";
@@ -488,28 +655,17 @@ export default function Home() {
                                     }
                                 }}
                             >
-                                <div className="text-[#6aa329] mb-2">
-                                    <ArrowUpTrayIcon className="h-8 w-8 mx-auto" />
+                                <div className="flex items-center justify-center w-12 h-12 bg-[#1e2a16] rounded-xl mb-4 group-hover:scale-110 transition-transform">
+                                    <ArrowUpTrayIcon className="h-6 w-6 text-white" />
                                 </div>
-                                <h3 className="font-semibold text-[#0c0e0a] mb-1">Upload YAML</h3>
-                                <p className="text-sm text-[#4f7b38]">Drag & drop or click</p>
+                                <h3 className="text-lg font-semibold text-[#0c0e0a] mb-2">
+                                    Upload YAML Recipe
+                                </h3>
+                                <p className="text-[#4f7b38] text-sm leading-relaxed">
+                                    Import an existing container recipe YAML file to continue editing.
+                                </p>
                             </div>
                         </div>
-                    </div>
-                )}
-            </main>
-
-            {/* Fixed Footer Navigation */}
-            {yamlData && (
-                <div className="fixed bg-white bottom-0 left-0 right-0 shadow-[0_-2px_10px_rgba(0,0,0,0.1)] z-10">
-                    <div className="max-w-7xl mx-auto">
-                        <WizardNavigation
-                            currentStep={currentStep}
-                            totalSteps={TOTAL_STEPS}
-                            onNext={nextStep}
-                            onPrevious={previousStep}
-                            canProceed={canProceedToNext()}
-                        />
                     </div>
                 </div>
             )}

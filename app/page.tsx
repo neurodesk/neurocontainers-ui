@@ -1,7 +1,7 @@
 "use client";
 
 import { load as loadYAML, dump as dumpYAML } from "js-yaml";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
     ArrowUpTrayIcon,
     ChevronDownIcon,
@@ -14,6 +14,11 @@ import {
     PlusIcon,
     ArrowDownTrayIcon,
     CloudArrowUpIcon,
+    TrashIcon,
+    ClockIcon,
+    ComputerDesktopIcon,
+    CloudIcon,
+    CheckIcon,
 } from "@heroicons/react/24/outline";
 import { ContainerRecipe, migrateLegacyRecipe } from "@/components/common";
 import BuildRecipeComponent from "@/components/recipe";
@@ -26,6 +31,12 @@ enum Section {
     BasicInfo = "basic-info",
     BuildRecipe = "build-recipe",
     ValidateRecipe = "validate-recipe",
+}
+
+enum SaveStatus {
+    Saved = "saved",
+    Saving = "saving",
+    Unsaved = "unsaved",
 }
 
 const sections = [
@@ -48,6 +59,16 @@ const sections = [
         icon: CheckCircleIcon,
     },
 ];
+
+const LOCAL_STORAGE_KEY = "neurocontainers-builder-saved";
+
+interface SavedContainer {
+    id: string;
+    name: string;
+    version: string;
+    lastModified: number;
+    data: ContainerRecipe;
+}
 
 async function getDefaultYAML(): Promise<ContainerRecipe> {
     const res = await fetch("/qsmxt.yaml");
@@ -74,6 +95,200 @@ function getNewContainerYAML(): ContainerRecipe {
     };
 }
 
+// Local storage utilities for multiple containers
+function getSavedContainers(): SavedContainer[] {
+    try {
+        const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (saved) {
+            return JSON.parse(saved) as SavedContainer[];
+        }
+    } catch (error) {
+        console.error("Failed to load saved containers:", error);
+    }
+    return [];
+}
+
+function saveContainer(data: ContainerRecipe, existingId?: string): string {
+    try {
+        const saved = getSavedContainers();
+        const id = existingId || `${data.name}-${Date.now()}`;
+        const container: SavedContainer = {
+            id,
+            name: data.name,
+            version: data.version,
+            lastModified: Date.now(),
+            data,
+        };
+
+        // If we have an existing ID, update that container
+        if (existingId) {
+            const index = saved.findIndex(c => c.id === existingId);
+            if (index !== -1) {
+                saved[index] = container;
+            } else {
+                saved.unshift(container);
+            }
+        } else {
+            // Remove any existing container with same name and add new one
+            const filtered = saved.filter(c => c.name !== data.name);
+            filtered.unshift(container);
+            saved.splice(0, saved.length, ...filtered);
+        }
+
+        // Keep only the 10 most recent containers
+        const limited = saved.slice(0, 10);
+
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(limited));
+        return id;
+    } catch (error) {
+        console.error("Failed to save container:", error);
+        return existingId || "";
+    }
+}
+
+function deleteContainer(id: string) {
+    try {
+        const saved = getSavedContainers();
+        const filtered = saved.filter(c => c.id !== id);
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(filtered));
+    } catch (error) {
+        console.error("Failed to delete container:", error);
+    }
+}
+
+function formatTimeAgo(timestamp: number): string {
+    const now = Date.now();
+    const diff = now - timestamp;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+
+    if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
+    if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+    return 'Just now';
+}
+
+function SaveIndicator({ status }: { status: SaveStatus }) {
+    const getIcon = () => {
+        switch (status) {
+            case SaveStatus.Saved:
+                return <CheckIcon className="h-4 w-4 text-green-600" />;
+            case SaveStatus.Saving:
+                return <CloudIcon className="h-4 w-4 text-blue-500 animate-pulse" />;
+            case SaveStatus.Unsaved:
+                return <div className="h-2 w-2 bg-orange-500 rounded-full" />;
+        }
+    };
+
+    const getText = () => {
+        switch (status) {
+            case SaveStatus.Saved:
+                return "Saved";
+            case SaveStatus.Saving:
+                return "Saving...";
+            case SaveStatus.Unsaved:
+                return "Unsaved changes";
+        }
+    };
+
+    const getTextColor = () => {
+        switch (status) {
+            case SaveStatus.Saved:
+                return "text-green-600";
+            case SaveStatus.Saving:
+                return "text-blue-500";
+            case SaveStatus.Unsaved:
+                return "text-orange-600";
+        }
+    };
+
+    return (
+        <div className={`flex items-center space-x-1 text-xs ${getTextColor()}`}>
+            {getIcon()}
+            <span>{getText()}</span>
+        </div>
+    );
+}
+
+function SavedContainersPreview({
+    onLoadContainer,
+    onDeleteContainer
+}: {
+    onLoadContainer: (container: ContainerRecipe, id: string) => void;
+    onDeleteContainer: (id: string) => void;
+}) {
+    const [savedContainers, setSavedContainers] = useState<SavedContainer[]>([]);
+
+    useEffect(() => {
+        setSavedContainers(getSavedContainers());
+    }, []);
+
+    const handleDelete = (id: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        onDeleteContainer(id);
+        setSavedContainers(getSavedContainers());
+    };
+
+    if (savedContainers.length === 0) {
+        return null;
+    }
+
+    return (
+        <div className="mb-8">
+            <div className="flex items-center space-x-2 mb-4">
+                <ComputerDesktopIcon className="h-5 w-5 text-[#4f7b38]" />
+                <h2 className="text-lg font-semibold text-[#0c0e0a]">
+                    Saved Locally
+                </h2>
+                <div className="text-xs bg-[#e6f1d6] text-[#4f7b38] px-2 py-1 rounded-full">
+                    Browser Only
+                </div>
+            </div>
+            <p className="text-sm text-[#4f7b38] mb-4">
+                These containers are saved in your browser&apos;s local storage and will be lost if you clear your browser data.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {savedContainers.map((container) => (
+                    <div
+                        key={container.id}
+                        className="group bg-white border border-[#e6f1d6] rounded-lg p-4 hover:border-[#6aa329] hover:shadow-md transition-all duration-200 cursor-pointer"
+                        onClick={() => onLoadContainer(container.data, container.id)}
+                    >
+                        <div className="flex items-start justify-between mb-2">
+                            <div className="flex-1 min-w-0">
+                                <h3 className="font-medium text-[#0c0e0a] truncate">
+                                    {container.name}
+                                </h3>
+                                <p className="text-sm text-[#4f7b38]">
+                                    v{container.version}
+                                </p>
+                            </div>
+                            <button
+                                onClick={(e) => handleDelete(container.id, e)}
+                                className="opacity-0 group-hover:opacity-100 p-1 text-red-500 hover:text-red-700 transition-all"
+                                title="Delete container"
+                            >
+                                <TrashIcon className="h-4 w-4" />
+                            </button>
+                        </div>
+
+                        <div className="flex items-center text-xs text-[#4f7b38] mt-2">
+                            <ClockIcon className="h-3 w-3 mr-1" />
+                            {formatTimeAgo(container.lastModified)}
+                        </div>
+
+                        <div className="mt-2 text-xs text-[#4f7b38]">
+                            {container.data.build.directives?.length || 0} build steps
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 function SideNavigation({
     activeSection,
     onSectionChange,
@@ -83,6 +298,7 @@ function SideNavigation({
     onNewContainer,
     onExportYAML,
     onOpenGitHub,
+    saveStatus,
 }: {
     activeSection: Section;
     onSectionChange: (section: Section) => void;
@@ -92,6 +308,7 @@ function SideNavigation({
     onNewContainer: () => void;
     onExportYAML: () => void;
     onOpenGitHub: () => void;
+    saveStatus: SaveStatus;
 }) {
     return (
         <>
@@ -107,7 +324,7 @@ function SideNavigation({
             <nav
                 className={`
                     fixed lg:sticky top-0 left-0 h-full lg:h-screen
-                    w-64 bg-white border-r border-[#e6f1d6] 
+                    w-full lg:w-64 bg-white border-r border-[#e6f1d6] 
                     transform transition-transform duration-300 ease-in-out z-50
                     ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
                     flex flex-col
@@ -126,6 +343,12 @@ function SideNavigation({
                             <XMarkIcon className="h-4 w-4" />
                         </button>
                     </div>
+                    {/* Save Status */}
+                    {yamlData && (
+                        <div className="mt-2">
+                            <SaveIndicator status={saveStatus} />
+                        </div>
+                    )}
                 </div>
 
                 {/* Action Buttons */}
@@ -252,6 +475,7 @@ function TopNavigation({
     yamlData,
     onNewContainer,
     onExportYAML,
+    saveStatus,
 }: {
     activeSection: Section;
     onSectionChange: (section: Section) => void;
@@ -260,9 +484,10 @@ function TopNavigation({
     onNewContainer: () => void;
     onExportYAML: () => void;
     onOpenGitHub: () => void;
+    saveStatus: SaveStatus;
 }) {
     return (
-        <div className="bg-white border-b border-[#e6f1d6] p-4 lg:hidden">
+        <div className="fixed top-0 left-0 right-0 bg-white border-b border-[#e6f1d6] p-4 lg:hidden z-30">
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-3">
@@ -272,9 +497,14 @@ function TopNavigation({
                     >
                         <Bars3Icon className="h-5 w-5 text-[#4f7b38]" />
                     </button>
-                    <h1 className="text-lg font-bold text-[#0c0e0a]">
-                        Neurocontainers Builder
-                    </h1>
+                    <div>
+                        <h1 className="text-lg font-bold text-[#0c0e0a]">
+                            Neurocontainers Builder
+                        </h1>
+                        {yamlData && (
+                            <SaveIndicator status={saveStatus} />
+                        )}
+                    </div>
                 </div>
 
                 {/* Action buttons for mobile */}
@@ -286,7 +516,7 @@ function TopNavigation({
                         New
                     </button>
                     <button
-                        className="bg-[#4f7b38] hover:bg-[#6aa329] px-3 py-1 rounded-md text-xs font-medium transition-colors text-white"
+                        className="bg-[#4f7b38] hover:bg-[#6aa329] px-3 py-1 rounded-md text-xs font-medium transition-colors text-white disabled:opacity-50 disabled:cursor-not-allowed"
                         onClick={onExportYAML}
                         disabled={!yamlData}
                     >
@@ -370,19 +600,75 @@ export default function Home() {
     const [isGitHubModalOpen, setIsGitHubModalOpen] = useState(false);
     const [isRecipesModalOpen, setIsRecipesModalOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [saveStatus, setSaveStatus] = useState<SaveStatus>(SaveStatus.Saved);
+    const [currentContainerId, setCurrentContainerId] = useState<string | null>(null);
+
+    const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Debounced save function
+    const debouncedSave = useCallback((data: ContainerRecipe) => {
+        setSaveStatus(SaveStatus.Saving);
+
+        if (saveTimeoutRef.current) {
+            clearTimeout(saveTimeoutRef.current);
+        }
+
+        saveTimeoutRef.current = setTimeout(() => {
+            const id = saveContainer(data, currentContainerId || undefined);
+            if (!currentContainerId) {
+                setCurrentContainerId(id);
+            }
+            setSaveStatus(SaveStatus.Saved);
+        }, 1000); // 1 second debounce
+    }, [currentContainerId]);
 
     const handleLoadRecipeFromList = (recipe: ContainerRecipe) => {
         setYamlData(recipe);
         setActiveSection(Section.BasicInfo);
         setIsRecipesModalOpen(false);
+        // Create new container ID for loaded recipes
+        const id = saveContainer(recipe);
+        setCurrentContainerId(id);
+        setSaveStatus(SaveStatus.Saved);
     };
 
+    const handleLoadSavedContainer = (recipe: ContainerRecipe, id: string) => {
+        setYamlData(recipe);
+        setActiveSection(Section.BasicInfo);
+        setCurrentContainerId(id);
+        setSaveStatus(SaveStatus.Saved);
+    };
+
+    const handleDeleteSavedContainer = (id: string) => {
+        deleteContainer(id);
+        // If we're currently editing the deleted container, clear the current ID
+        if (currentContainerId === id) {
+            setCurrentContainerId(null);
+        }
+    };
+
+    // Handle yamlData changes with debounced save
     useEffect(() => {
+        if (yamlData) {
+            setSaveStatus(SaveStatus.Unsaved);
+            debouncedSave(yamlData);
+        }
+    }, [yamlData, debouncedSave]);
+
+    // Cleanup timeout on unmount
+    useEffect(() => {
+        return () => {
+            if (saveTimeoutRef.current) {
+                clearTimeout(saveTimeoutRef.current);
+            }
+        };
+    }, []);
+
+    useEffect(() => {
+        // Load default YAML (don't auto-load from localStorage on startup)
         getDefaultYAML()
             .then((data) => {
                 console.log("YAML data:", data);
-                setYamlData(data);
-                setYamlText(dumpYAML(data));
                 setLoading(false);
             })
             .catch((error) => {
@@ -416,6 +702,12 @@ export default function Home() {
         URL.revokeObjectURL(url);
     };
 
+    const handleNewContainer = () => {
+        setYamlData(null);
+        setCurrentContainerId(null);
+        setSaveStatus(SaveStatus.Saved);
+    };
+
     // Update yamlData from YAML text
     const updateFromYamlText = () => {
         try {
@@ -430,7 +722,7 @@ export default function Home() {
         setActiveSection(sectionId);
         const element = document.getElementById(sectionId);
         if (element) {
-            const offset = 20;
+            const offset = window.innerWidth < 1024 ? 120 : 20; // Account for fixed mobile header
             const elementPosition = element.getBoundingClientRect().top;
             const offsetPosition = elementPosition + window.pageYOffset - offset;
 
@@ -460,25 +752,27 @@ export default function Home() {
                         isOpen={isSidebarOpen}
                         onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
                         yamlData={yamlData}
-                        onNewContainer={() => setYamlData(null)}
+                        onNewContainer={handleNewContainer}
                         onExportYAML={exportYAML}
                         onOpenGitHub={() => setIsGitHubModalOpen(true)}
+                        saveStatus={saveStatus}
                     />
 
                     {/* Main Content */}
-                    <div className="flex-1">
+                    <div className="flex-1 min-h-screen">
                         {/* Top Navigation for Mobile */}
                         <TopNavigation
                             activeSection={activeSection}
                             onSectionChange={scrollToSection}
                             onSidebarToggle={() => setIsSidebarOpen(!isSidebarOpen)}
                             yamlData={yamlData}
-                            onNewContainer={() => setYamlData(null)}
+                            onNewContainer={handleNewContainer}
                             onExportYAML={exportYAML}
                             onOpenGitHub={() => setIsGitHubModalOpen(true)}
+                            saveStatus={saveStatus}
                         />
 
-                        <div className="max-w-5xl mx-auto px-4 py-6">
+                        <div className="max-w-5xl mx-auto px-4 py-6 pt-32 lg:pt-6">
                             {/* All Sections */}
                             <div className="space-y-8">
                                 {/* Basic Info Section */}
@@ -557,7 +851,7 @@ export default function Home() {
                     </div>
                 </>
             ) : (
-                <div className="flex-1 flex items-center justify-center p-6">
+                <div className="flex-1 flex items-center justify-center p-6 min-h-screen">
                     <div className="max-w-4xl w-full">
                         {/* Hero Section */}
                         <div className="text-center mb-12">
@@ -570,18 +864,27 @@ export default function Home() {
                                 Neurocontainers Builder
                             </h1>
                             <p className="text-xl text-[#4f7b38] mb-6 max-w-2xl mx-auto">
-                                Create reproducible neuroimaging containers with ease. Build, validate, and deploy
+                                Create reproducible neuroimaging containers with ease. Build, validate, and publish
                                 containerized neuroimaging tools using our intuitive visual interface.
                             </p>
                         </div>
+
+                        {/* Saved Containers Preview */}
+                        <SavedContainersPreview
+                            onLoadContainer={handleLoadSavedContainer}
+                            onDeleteContainer={handleDeleteSavedContainer}
+                        />
 
                         {/* Action Cards */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                             <button
                                 className="group p-8 bg-white border-2 border-[#e6f1d6] rounded-2xl hover:border-[#6aa329] hover:shadow-lg transition-all duration-300 text-left"
                                 onClick={() => {
-                                    setYamlData(getNewContainerYAML());
+                                    const newContainer = getNewContainerYAML();
+                                    setYamlData(newContainer);
                                     setActiveSection(Section.BasicInfo);
+                                    setCurrentContainerId(null);
+                                    setSaveStatus(SaveStatus.Unsaved);
                                 }}
                             >
                                 <div className="flex items-center justify-center w-12 h-12 bg-[#6aa329] rounded-xl mb-4 group-hover:scale-110 transition-transform">
@@ -626,6 +929,8 @@ export default function Home() {
                                                     let parsed = loadYAML(text) as ContainerRecipe;
                                                     parsed = migrateLegacyRecipe(parsed);
                                                     setYamlData(parsed);
+                                                    setCurrentContainerId(null);
+                                                    setSaveStatus(SaveStatus.Unsaved);
                                                 } catch (err) {
                                                     console.error("Error parsing YAML:", err);
                                                 }
@@ -647,6 +952,8 @@ export default function Home() {
                                                 let parsed = loadYAML(text) as ContainerRecipe;
                                                 parsed = migrateLegacyRecipe(parsed);
                                                 setYamlData(parsed);
+                                                setCurrentContainerId(null);
+                                                setSaveStatus(SaveStatus.Unsaved);
                                             } catch (err) {
                                                 console.error("Error parsing YAML:", err);
                                             }

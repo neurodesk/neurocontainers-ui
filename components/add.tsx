@@ -199,10 +199,8 @@ export default function AddDirectiveButton({
                 const listRect = list.getBoundingClientRect();
 
                 if (itemRect.bottom > listRect.bottom) {
-                    // Item is below visible area
                     list.scrollTop += itemRect.bottom - listRect.bottom + 8;
                 } else if (itemRect.top < listRect.top) {
-                    // Item is above visible area
                     list.scrollTop -= listRect.top - itemRect.top + 8;
                 }
             }
@@ -244,7 +242,10 @@ export default function AddDirectiveButton({
      */
     useEffect(() => {
         if (isOpen && searchInputRef.current) {
-            searchInputRef.current.focus();
+            // Small delay to ensure dropdown is rendered
+            setTimeout(() => {
+                searchInputRef.current?.focus();
+            }, 50);
         }
     }, [isOpen]);
 
@@ -321,139 +322,176 @@ export default function AddDirectiveButton({
                 onClick={() => setIsOpen(!isOpen)}
                 onKeyDown={handleKeyDown}
                 className="
-          inline-flex items-center gap-2 px-4 py-2.5
-          text-sm font-medium text-white
-          rounded-lg
-          hover:bg-[#6aa329] text-white bg-[#4f7b38]
-          focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2
-          transition-all duration-200
-        "
+                    inline-flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5
+                    text-sm font-medium text-white
+                    rounded-lg
+                    bg-[#4f7b38] hover:bg-[#6aa329]
+                    focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:ring-offset-2
+                    transition-all duration-200
+                    min-w-0 flex-shrink-0
+                "
                 aria-expanded={isOpen}
                 aria-haspopup="true"
                 aria-label="Add new directive"
             >
-                <PlusIcon className="w-4 h-4" />
-                Add Directive
+                <PlusIcon className="w-4 h-4 flex-shrink-0" />
+                <span className="hidden sm:inline">Add Directive</span>
+                <span className="sm:hidden">Add</span>
                 <ChevronDownIcon
-                    className={`w-4 h-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""
+                    className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180" : ""
                         }`}
                 />
             </button>
 
             {/* Custom Dropdown */}
             {isOpen && (
-                <div
-                    className="
-            absolute top-full left-0 mt-2 z-50
-            w-96 max-h-96 overflow-hidden
-            bg-white rounded-xl shadow-xl border border-gray-200
-            animate-in fade-in-0 zoom-in-95 duration-200
-          "
-                    role="menu"
-                    aria-orientation="vertical"
-                >
-                    {/* Header with Search */}
-                    <div className="px-4 py-3 border-b border-gray-100">
-                        <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                            Choose a directive type
-                        </h3>
-                        <div className="relative">
-                            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                            <input
-                                ref={searchInputRef}
-                                type="text"
-                                placeholder="Search directives..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                onKeyDown={handleKeyDown}
-                                className="
-                  w-full pl-10 pr-4 py-2
-                  text-sm border border-gray-200 rounded-lg
-                  focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500
-                  transition-colors duration-200
-                "
-                            />
-                        </div>
-                    </div>
+                <>
+                    {/* Mobile Overlay */}
+                    <div className="fixed inset-0 bg-black bg-opacity-50 z-40 sm:hidden" />
 
-                    {/* Directive Grid */}
                     <div
-                        ref={listRef}
-                        className="p-2 max-h-60 overflow-y-auto scroll-smooth"
-                    >
-                        {filteredDirectives.length > 0 ? (
-                            <div className="grid grid-cols-1 gap-1">
-                                {filteredDirectives.map(([key, config], index) => {
-                                    const IconComponent = config.icon;
-                                    const isFocused = index === focusedIndex;
-                                    return (
-                                        <button
-                                            key={key}
-                                            ref={(el) => {
-                                                itemRefs.current[index] = el
-                                            }}
-                                            type="button"
-                                            onClick={() =>
-                                                handleAddDirective(key as keyof typeof DIRECTIVE_TYPES)
-                                            }
-                                            onMouseEnter={() => setFocusedIndex(index)}
-                                            className={`
-                        flex items-center gap-3 p-3 rounded-lg border-2 text-left
-                        transition-all duration-200
-                        ${config.color}
-                        ${isFocused
-                                                    ? "ring-2 ring-green-500 ring-offset-1 shadow-md scale-[1.02] bg-opacity-80"
-                                                    : ""
-                                                }
-                        focus:outline-none focus:ring-2 focus:ring-green-500
-                      `}
-                                            role="menuitem"
-                                        >
-                                            <div
-                                                className={`
-                          flex-shrink-0 w-8 h-8 rounded-lg
-                          flex items-center justify-center
-                          ${config.iconColor} 
-                          ${isFocused ? "bg-white shadow-sm" : "bg-white/50"}
-                          transition-all duration-200
+                        className={`
+                            fixed sm:absolute
+                            inset-x-4 top-1/2 -translate-y-1/2 sm:inset-x-auto sm:top-full sm:translate-y-0 sm:left-0 sm:mt-2
+                            z-50 w-auto sm:w-96
+                            max-h-[80vh] sm:max-h-96 overflow-hidden
+                            bg-white rounded-xl shadow-xl border border-gray-200
+                            animate-in fade-in-0 zoom-in-95 duration-200
                         `}
-                                            >
-                                                <IconComponent className={`w-4 h-4 ${isFocused ? "scale-110" : ""} transition-transform duration-200`} />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className={`text-sm font-medium ${isFocused ? "text-gray-900" : "text-gray-900"}`}>
-                                                    {config.label}
-                                                </div>
-                                                <div className={`text-xs truncate ${isFocused ? "text-gray-700" : "text-gray-600"}`}>
-                                                    {config.description}
-                                                </div>
-                                            </div>
-                                            <PlusIcon className={`w-4 h-4 flex-shrink-0 transition-all duration-200 ${isFocused ? "text-green-600 scale-110" : "text-gray-400"}`} />
-                                        </button>
-                                    );
-                                })}
+                        role="menu"
+                        aria-orientation="vertical"
+                    >
+                        {/* Header with Search */}
+                        <div className="px-4 py-3 border-b border-gray-100 bg-[#f8fdf2]">
+                            <h3 className="text-sm font-semibold text-[#0c0e0a] mb-2">
+                                Choose a directive type
+                            </h3>
+                            <div className="relative">
+                                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <input
+                                    ref={searchInputRef}
+                                    type="text"
+                                    placeholder="Search directives..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    onKeyDown={handleKeyDown}
+                                    className="
+                                        w-full pl-10 pr-4 py-2
+                                        text-sm border border-[#e6f1d6] rounded-lg
+                                        focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:border-[#6aa329]
+                                        transition-colors duration-200
+                                        bg-white
+                                    "
+                                />
                             </div>
-                        ) : (
-                            <div className="p-4 text-center text-gray-500">
-                                <MagnifyingGlassIcon className="w-8 h-8 mx-auto mb-2 text-gray-300" />
-                                <p className="text-sm">No directives found</p>
-                                <p className="text-xs text-gray-400 mt-1">
-                                    Try a different search term
-                                </p>
+                        </div>
+
+                        {/* Directive Grid */}
+                        <div
+                            ref={listRef}
+                            className="p-2 max-h-60 sm:max-h-60 overflow-y-auto scroll-smooth"
+                        >
+                            {filteredDirectives.length > 0 ? (
+                                <div className="grid grid-cols-1 gap-1">
+                                    {filteredDirectives.map(([key, config], index) => {
+                                        const IconComponent = config.icon;
+                                        const isFocused = index === focusedIndex;
+                                        return (
+                                            <button
+                                                key={key}
+                                                ref={(el) => {
+                                                    itemRefs.current[index] = el;
+                                                }}
+                                                type="button"
+                                                onClick={() =>
+                                                    handleAddDirective(
+                                                        key as keyof typeof DIRECTIVE_TYPES
+                                                    )
+                                                }
+                                                onMouseEnter={() => setFocusedIndex(index)}
+                                                className={`
+                                                    flex items-center gap-3 p-3 rounded-lg border-2 text-left
+                                                    transition-all duration-200
+                                                    ${config.color}
+                                                    ${isFocused
+                                                        ? "ring-2 ring-[#6aa329] ring-offset-1 shadow-md scale-[1.02] bg-opacity-80"
+                                                        : ""
+                                                    }
+                                                    focus:outline-none focus:ring-2 focus:ring-[#6aa329]
+                                                    active:scale-95
+                                                `}
+                                                role="menuitem"
+                                            >
+                                                <div
+                                                    className={`
+                                                        flex-shrink-0 w-8 h-8 rounded-lg
+                                                        flex items-center justify-center
+                                                        ${config.iconColor} 
+                                                        ${isFocused
+                                                            ? "bg-white shadow-sm"
+                                                            : "bg-white/50"
+                                                        }
+                                                        transition-all duration-200
+                                                    `}
+                                                >
+                                                    <IconComponent
+                                                        className={`w-4 h-4 ${isFocused ? "scale-110" : ""
+                                                            } transition-transform duration-200`}
+                                                    />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div
+                                                        className={`text-sm font-medium ${isFocused
+                                                                ? "text-[#0c0e0a]"
+                                                                : "text-[#0c0e0a]"
+                                                            }`}
+                                                    >
+                                                        {config.label}
+                                                    </div>
+                                                    <div
+                                                        className={`text-xs truncate ${isFocused
+                                                                ? "text-[#4f7b38]"
+                                                                : "text-[#4f7b38]"
+                                                            }`}
+                                                    >
+                                                        {config.description}
+                                                    </div>
+                                                </div>
+                                                <PlusIcon
+                                                    className={`w-4 h-4 flex-shrink-0 transition-all duration-200 ${isFocused
+                                                            ? "text-[#6aa329] scale-110"
+                                                            : "text-gray-400"
+                                                        }`}
+                                                />
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <div className="p-4 text-center text-gray-500">
+                                    <MagnifyingGlassIcon className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                                    <p className="text-sm">No directives found</p>
+                                    <p className="text-xs text-gray-400 mt-1">
+                                        Try a different search term
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Footer with keyboard hints */}
+                        {filteredDirectives.length > 0 && (
+                            <div className="px-4 py-2 border-t border-gray-100 bg-[#f8fdf2]">
+                                <div className="flex items-center justify-between text-xs text-[#4f7b38]">
+                                    <span className="hidden sm:inline">Use ↑↓ to navigate</span>
+                                    <span className="sm:hidden">Tap to select</span>
+                                    <span className="hidden sm:inline">
+                                        Enter to select • Esc to close
+                                    </span>
+                                </div>
                             </div>
                         )}
                     </div>
-
-                    {/* Footer with keyboard hints */}
-                    {filteredDirectives.length > 0 && (
-                        <div className="px-4 py-2 border-t border-gray-100 bg-gray-50">
-                            <div className="flex items-center justify-between text-xs text-gray-500">
-                                <span>Use ↑↓ to navigate</span>
-                                <span>Enter to select • Esc to close</span>
-                            </div>
-                        </div>
-                    )}
-                </div>
+                </>
             )}
         </div>
     );

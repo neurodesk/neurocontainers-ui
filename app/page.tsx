@@ -456,13 +456,6 @@ function SideNavigation({
                         );
                     })}
                 </div>
-
-                {/* Footer */}
-                <div className="p-3 border-t border-[#e6f1d6] bg-[#f8fdf2]">
-                    <div className="text-xs text-[#4f7b38] text-center">
-                        v1.0.0
-                    </div>
-                </div>
             </nav>
         </>
     );
@@ -474,7 +467,7 @@ function TopNavigation({
     onSidebarToggle,
     yamlData,
     onNewContainer,
-    onExportYAML,
+    onOpenGitHub,
     saveStatus,
 }: {
     activeSection: Section;
@@ -482,23 +475,22 @@ function TopNavigation({
     onSidebarToggle: () => void;
     yamlData: ContainerRecipe | null;
     onNewContainer: () => void;
-    onExportYAML: () => void;
     onOpenGitHub: () => void;
     saveStatus: SaveStatus;
 }) {
     return (
-        <div className="fixed top-0 left-0 right-0 bg-white border-b border-[#e6f1d6] p-4 lg:hidden z-30">
+        <div className="fixed top-0 left-0 right-0 bg-[#0c0e0a] border-b border-[#1e2a16] p-3 lg:hidden z-30">
             {/* Header */}
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-3">
                     <button
                         onClick={onSidebarToggle}
-                        className="p-2 rounded-md hover:bg-[#f0f7e7]"
+                        className="p-2 rounded-md hover:bg-[#1e2a16] text-white"
                     >
-                        <Bars3Icon className="h-5 w-5 text-[#4f7b38]" />
+                        <Bars3Icon className="h-5 w-5" />
                     </button>
                     <div>
-                        <h1 className="text-lg font-bold text-[#0c0e0a]">
+                        <h1 className="text-lg font-bold text-white">
                             Neurocontainers Builder
                         </h1>
                         {yamlData && (
@@ -517,50 +509,12 @@ function TopNavigation({
                     </button>
                     <button
                         className="bg-[#4f7b38] hover:bg-[#6aa329] px-3 py-1 rounded-md text-xs font-medium transition-colors text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                        onClick={onExportYAML}
+                        onClick={onOpenGitHub}
                         disabled={!yamlData}
                     >
-                        Export
+                        Publish
                     </button>
                 </div>
-            </div>
-
-            {/* Progress indicator */}
-            <div className="flex items-center space-x-2">
-                {sections.map((section, index) => {
-                    const isActive = activeSection === section.id;
-                    const isCompleted = sections.findIndex(s => s.id === activeSection) > index;
-
-                    return (
-                        <div key={section.id} className="flex items-center">
-                            <button
-                                onClick={() => onSectionChange(section.id)}
-                                className={`
-                                    w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold
-                                    ${isActive
-                                        ? "bg-[#6aa329] text-white"
-                                        : isCompleted
-                                            ? "bg-[#4f7b38] text-white"
-                                            : "bg-[#e6f1d6] text-[#4f7b38]"
-                                    }
-                                `}
-                            >
-                                {index + 1}
-                            </button>
-                            {index < sections.length - 1 && (
-                                <div
-                                    className={`
-                                        w-8 h-0.5 mx-1
-                                        ${isCompleted
-                                            ? "bg-[#4f7b38]"
-                                            : "bg-[#e6f1d6]"
-                                        }
-                                    `}
-                                />
-                            )}
-                        </div>
-                    );
-                })}
             </div>
         </div>
     );
@@ -722,7 +676,7 @@ export default function Home() {
         setActiveSection(sectionId);
         const element = document.getElementById(sectionId);
         if (element) {
-            const offset = window.innerWidth < 1024 ? 120 : 20; // Account for fixed mobile header
+            const offset = window.innerWidth < 1024 ? 100 : 20; // Reduced mobile offset
             const elementPosition = element.getBoundingClientRect().top;
             const offsetPosition = elementPosition + window.pageYOffset - offset;
 
@@ -767,12 +721,11 @@ export default function Home() {
                             onSidebarToggle={() => setIsSidebarOpen(!isSidebarOpen)}
                             yamlData={yamlData}
                             onNewContainer={handleNewContainer}
-                            onExportYAML={exportYAML}
                             onOpenGitHub={() => setIsGitHubModalOpen(true)}
                             saveStatus={saveStatus}
                         />
 
-                        <div className="max-w-5xl mx-auto px-4 py-6 pt-32 lg:pt-6">
+                        <div className="max-w-5xl mx-auto px-4 py-6 pt-24 lg:pt-6">
                             {/* All Sections */}
                             <div className="space-y-8">
                                 {/* Basic Info Section */}

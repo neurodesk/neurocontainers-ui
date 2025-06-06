@@ -675,6 +675,7 @@ export default function NeuroDockerBuildRecipeComponent({
                                     <div className="flex-1 min-w-0">
                                         <DirectiveComponent
                                             directive={directive}
+                                            baseImage={recipe["base-image"]}
                                             onChange={(updated) =>
                                                 updateDirective(index, updated)
                                             }

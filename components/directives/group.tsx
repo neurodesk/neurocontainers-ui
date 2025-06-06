@@ -13,9 +13,11 @@ import AddDirectiveButton from "@/components/add";
 
 export default function GroupDirectiveComponent({
     group,
+    baseImage,
     onChange,
 }: {
     group: Directive[];
+    baseImage: string;
     onChange: (group: Directive[]) => void;
 }) {
     const [isExpanded, setIsExpanded] = useState(true);
@@ -319,6 +321,7 @@ export default function GroupDirectiveComponent({
                                         <div className="flex-1 min-w-0">
                                             <DirectiveComponent
                                                 directive={directive}
+                                                baseImage={baseImage}
                                                 onChange={(updated) =>
                                                     handleDirectiveChange(
                                                         index,

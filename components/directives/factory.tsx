@@ -14,14 +14,16 @@ import WorkingDirectoryDirectiveComponent from "./workdir";
 import TestDirectiveComponent from "./test";
 import IncludeDirectiveComponent from "./include";
 
-export default function DirectiveComponent({ directive, onChange }: {
+export default function DirectiveComponent({ directive, baseImage, onChange }: {
     directive: Directive;
+    baseImage: string;
     onChange: (directive: Directive) => void;
 }) {
     if ('group' in directive) {
         return (
             <GroupDirectiveComponent
                 group={directive.group}
+                baseImage={baseImage}
                 onChange={(group) => onChange({ ...directive, group })}
             />
         );
@@ -36,6 +38,7 @@ export default function DirectiveComponent({ directive, onChange }: {
         return (
             <InstallDirectiveComponent
                 install={directive.install}
+                baseImage={baseImage}
                 onChange={(install) => onChange({ ...directive, install })}
             />
         );

@@ -156,6 +156,11 @@ function LicenseDropdown({ value, onChange, onCustomLicense, placeholder }: Lice
 function validateName(name: string): string | null {
     if (!name.trim()) return "Container name is required";
     if (name.length < 2) return "Container name must be at least 2 characters";
+    // validate the name is a valid docker tag.
+    const validNameRegex = /^[a-z0-9][a-z0-9]{0,62}$/;
+    if (!validNameRegex.test(name)) {
+        return "Container name must be lowercase and can only contain letters, and numbers";
+    }
     return null;
 }
 

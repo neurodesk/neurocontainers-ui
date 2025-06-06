@@ -587,7 +587,7 @@ export default function AddDirectiveButton({
             {isOpen && (
                 <>
                     {/* Mobile Full Screen Modal */}
-                    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 sm:hidden">
+                    <div className="fixed inset-0 bg-black/80 z-50 sm:hidden">
                         <div className="flex items-center justify-center min-h-screen p-4">
                             <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl max-h-[90vh] overflow-hidden">
                                 {/* Mobile Header */}

@@ -24,7 +24,7 @@ import { ContainerRecipe, migrateLegacyRecipe } from "@/components/common";
 import BuildRecipeComponent from "@/components/recipe";
 import ContainerMetadata from "@/components/metadata";
 import ValidateRecipeComponent from "@/components/validate";
-import RecipesList from "@/components/recipes";
+import RecipesList from "@/components/githubRecipes";
 import GitHubModal from "@/components/githubExport";
 
 enum Section {
@@ -315,7 +315,7 @@ function SideNavigation({
             {/* Overlay for mobile */}
             {isOpen && (
                 <div
-                    className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+                    className="fixed inset-0 bg-black/80 z-40 lg:hidden"
                     onClick={onToggle}
                 />
             )}
@@ -938,7 +938,7 @@ export default function Home() {
 
             {/* Recipes Modal */}
             {isRecipesModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
                     <RecipesList
                         owner="NeuroDesk"
                         repo="NeuroContainers"

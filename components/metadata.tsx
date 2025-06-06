@@ -143,7 +143,7 @@ function LicenseDropdown({
                 <>
                     {/* Mobile overlay */}
                     {isMobile && (
-                        <div className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden" />
+                        <div className="fixed inset-0 bg-black/80 z-40 md:hidden" />
                     )}
 
                     <div
@@ -987,7 +987,7 @@ export default function ContainerMetadata({
 
             {/* Input Type Switch Warning Modal */}
             {showInputTypeWarning && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
                         <div className="p-6">
                             <div className="flex items-center gap-3 mb-4">
@@ -1028,7 +1028,7 @@ export default function ContainerMetadata({
 
             {/* Delete Confirmation Modal */}
             {deleteConfirmIndex !== null && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
                         <div className="p-6">
                             <div className="flex items-center gap-3 mb-4">

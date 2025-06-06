@@ -24,6 +24,8 @@ const OTHER_BASE_IMAGES = [
     { value: "fedora:39", label: "Fedora 39", pkgManager: "yum" },
 ];
 
+const LATEST_UBUNTU_VERSION = "ubuntu:24.04";
+
 type BaseImageSource = "ubuntu" | "other" | "custom";
 
 export default function NeuroDockerBuildRecipeComponent({
@@ -183,7 +185,7 @@ export default function NeuroDockerBuildRecipeComponent({
 
         // Set default base image and package manager based on source
         if (source === "ubuntu") {
-            updateBaseImageAndPkgManager("ubuntu:22.04", "apt");
+            updateBaseImageAndPkgManager(LATEST_UBUNTU_VERSION, "apt");
         } else if (source === "other") {
             const defaultImage = OTHER_BASE_IMAGES[0];
             updateBaseImageAndPkgManager(defaultImage.value, defaultImage.pkgManager);

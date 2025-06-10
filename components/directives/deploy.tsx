@@ -1,10 +1,4 @@
-import {
-    ChevronDownIcon,
-    ChevronRightIcon,
-    PlusIcon,
-    XCircleIcon,
-} from "@heroicons/react/24/outline";
-import { useState } from "react";
+import { DirectiveContainer, FormField, TagEditor } from "@/components/ui";
 import { DeployInfo } from "@/components/common";
 
 export default function DeployDirectiveComponent({
@@ -14,171 +8,74 @@ export default function DeployDirectiveComponent({
     deploy: DeployInfo;
     onChange: (deploy: DeployInfo) => void;
 }) {
-    const [isExpanded, setIsExpanded] = useState(true);
-    const [newPath, setNewPath] = useState("");
-    const [newBin, setNewBin] = useState("");
-
-    const addPath = () => {
-        if (newPath.trim() !== "") {
-            onChange({
-                ...deploy,
-                path: [...(deploy.path || []), newPath.trim()],
-            });
-            setNewPath("");
-        }
-    };
-
-    const removePath = (index: number) => {
+    const updatePaths = (paths: string[]) => {
         onChange({
             ...deploy,
-            path: (deploy.path || []).filter((_, i) => i !== index),
+            path: paths,
         });
     };
 
-    const addBin = () => {
-        if (newBin.trim() !== "") {
-            onChange({
-                ...deploy,
-                bins: [...(deploy.bins || []), newBin.trim()],
-            });
-            setNewBin("");
-        }
-    };
-
-    const removeBin = (index: number) => {
+    const updateBins = (bins: string[]) => {
         onChange({
             ...deploy,
-            bins: (deploy.bins || []).filter((_, i) => i !== index),
+            bins: bins,
         });
     };
 
-    const handlePathKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === "Enter") {
-            e.preventDefault();
-            addPath();
-        }
-    };
-
-    const handleBinKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === "Enter") {
-            e.preventDefault();
-            addBin();
-        }
-    };
+    const helpContent = (
+        <>
+            <h3 className="font-semibold text-[#0c0e0a] mb-2">
+                DEPLOY Directive
+            </h3>
+            <div className="text-sm text-gray-600 space-y-2">
+                <p>
+                    The DEPLOY directive configures deployment settings for the container, including paths and binaries.
+                </p>
+                <div>
+                    <strong>Paths:</strong>
+                    <ul className="list-disc list-inside mt-1 space-y-1">
+                        <li>Specify directories to include in deployment</li>
+                        <li>Use absolute paths for clarity</li>
+                        <li>Example: <code>/app/bin</code>, <code>/usr/local/bin</code></li>
+                    </ul>
+                </div>
+                <div>
+                    <strong>Binaries:</strong>
+                    <ul className="list-disc list-inside mt-1 space-y-1">
+                        <li>List specific executable files to deploy</li>
+                        <li>Binary names or full paths</li>
+                        <li>Example: <code>myapp</code>, <code>processingTool</code></li>
+                    </ul>
+                </div>
+            </div>
+        </>
+    );
 
     return (
-        <div className="bg-white rounded-md shadow-sm border border-[#e6f1d6] mb-4">
-            <div
-                className="flex items-center p-3 bg-[#f0f7e7] rounded-t-md cursor-pointer"
-                onClick={() => setIsExpanded(!isExpanded)}
+        <DirectiveContainer title="Deploy" helpContent={helpContent}>
+            <FormField 
+                label="Paths"
+                description="Add directories to include in deployment"
             >
-                <button className="mr-2 text-[#4f7b38]">
-                    {isExpanded ? (
-                        <ChevronDownIcon className="h-5 w-5" />
-                    ) : (
-                        <ChevronRightIcon className="h-5 w-5" />
-                    )}
-                </button>
-                <h2 className="text-[#0c0e0a] font-medium">Deploy</h2>
-            </div>
+                <TagEditor
+                    tags={deploy.path || []}
+                    onChange={updatePaths}
+                    placeholder="Add a path..."
+                    emptyMessage="No paths added yet"
+                />
+            </FormField>
 
-            {isExpanded && (
-                <div className="p-4 border-t border-[#e6f1d6]">
-                    <div className="mb-6">
-                        <div className="flex justify-between items-center mb-2">
-                            <h3 className="font-medium text-sm text-[#1e2a16]">Paths</h3>
-                        </div>
-
-                        <div className="flex flex-wrap gap-2 mb-3">
-                            {(deploy.path || []).map((path, index) => (
-                                <div
-                                    key={index}
-                                    className="flex items-center bg-[#f0f7e7] px-3 py-1 rounded-md border border-[#e6f1d6]"
-                                >
-                                    <span className="font-mono text-[#0c0e0a] mr-2">{path}</span>
-                                    <button
-                                        onClick={() => removePath(index)}
-                                        className="text-[#4f7b38] hover:text-[#3a5c29]"
-                                        aria-label={`Remove ${path}`}
-                                    >
-                                        <XCircleIcon className="h-4 w-4" />
-                                    </button>
-                                </div>
-                            ))}
-                            {(deploy.path || []).length === 0 && (
-                                <div className="text-sm text-gray-500 italic">
-                                    No paths added yet
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="flex">
-                            <input
-                                type="text"
-                                className="font-mono flex-grow px-3 py-2 border border-gray-200 rounded-l-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
-                                placeholder="Add a path..."
-                                value={newPath}
-                                onChange={(e) => setNewPath(e.target.value)}
-                                onKeyDown={handlePathKeyDown}
-                            />
-                            <button
-                                onClick={addPath}
-                                className="bg-[#6aa329] hover:bg-[#4f7b38] text-white px-3 py-2 rounded-r-md flex items-center"
-                                disabled={newPath.trim() === ""}
-                            >
-                                <PlusIcon className="h-5 w-5" />
-                            </button>
-                        </div>
-                    </div>
-
-                    <div>
-                        <div className="flex justify-between items-center mb-2">
-                            <h3 className="font-medium text-sm text-[#1e2a16]">Binaries</h3>
-                        </div>
-
-                        <div className="flex flex-wrap gap-2 mb-3">
-                            {(deploy.bins || []).map((bin, index) => (
-                                <div
-                                    key={index}
-                                    className="flex items-center bg-[#f0f7e7] px-3 py-1 rounded-md border border-[#e6f1d6]"
-                                >
-                                    <span className="font-mono text-[#0c0e0a] mr-2">{bin}</span>
-                                    <button
-                                        onClick={() => removeBin(index)}
-                                        className="text-[#4f7b38] hover:text-[#3a5c29]"
-                                        aria-label={`Remove ${bin}`}
-                                    >
-                                        <XCircleIcon className="h-4 w-4" />
-                                    </button>
-                                </div>
-                            ))}
-                            {(deploy.bins || []).length === 0 && (
-                                <div className="text-sm text-gray-500 italic">
-                                    No binaries added yet
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="flex">
-                            <input
-                                type="text"
-                                className="font-mono flex-grow px-3 py-2 border border-gray-200 rounded-l-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
-                                placeholder="Add a binary..."
-                                value={newBin}
-                                onChange={(e) => setNewBin(e.target.value)}
-                                onKeyDown={handleBinKeyDown}
-                            />
-                            <button
-                                onClick={addBin}
-                                className="bg-[#6aa329] hover:bg-[#4f7b38] text-white px-3 py-2 rounded-r-md flex items-center"
-                                disabled={newBin.trim() === ""}
-                            >
-                                <PlusIcon className="h-5 w-5" />
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
+            <FormField 
+                label="Binaries"
+                description="Add specific executable files to deploy"
+            >
+                <TagEditor
+                    tags={deploy.bins || []}
+                    onChange={updateBins}
+                    placeholder="Add a binary..."
+                    emptyMessage="No binaries added yet"
+                />
+            </FormField>
+        </DirectiveContainer>
     );
 }

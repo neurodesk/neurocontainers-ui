@@ -1,7 +1,7 @@
 import {
     ChevronDownIcon,
     ChevronRightIcon,
-    QuestionMarkCircleIcon,
+    InformationCircleIcon,
 } from "@heroicons/react/24/outline";
 import { useState, ReactNode } from "react";
 
@@ -51,35 +51,29 @@ export default function DirectiveContainer({
                 </button>
                 <h2 className="text-[#0c0e0a] font-medium flex-grow">{title}</h2>
                 {helpContent && (
-                    <div className="relative">
-                        <button
-                            className="text-[#4f7b38] hover:text-[#6aa329] p-1"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setShowHelp(!showHelp);
-                            }}
-                            title="Show documentation"
-                        >
-                            <QuestionMarkCircleIcon className="h-5 w-5" />
-                        </button>
-                        {showHelp && (
-                            <>
-                                <div
-                                    className="fixed inset-0 z-10"
-                                    onClick={() => setShowHelp(false)}
-                                />
-                                <div className="absolute right-0 top-8 w-80 bg-white border border-gray-200 rounded-md shadow-lg p-4 z-20">
-                                    {helpContent}
-                                </div>
-                            </>
-                        )}
-                    </div>
+                    <button
+                        className={`text-[#4f7b38] hover:text-[#6aa329] p-1 transition-colors ${showHelp ? 'text-[#6aa329]' : ''}`}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setShowHelp(!showHelp);
+                        }}
+                        title={showHelp ? "Hide documentation" : "Show documentation"}
+                    >
+                        <InformationCircleIcon className="h-5 w-5" />
+                    </button>
                 )}
             </div>
 
             {currentExpanded && (
-                <div className="p-4 border-t border-[#e6f1d6]">
-                    {children}
+                <div className="border-t border-[#e6f1d6]">
+                    {helpContent && showHelp && (
+                        <div className="px-4 py-3 bg-[#fafcf7] border-b border-[#e6f1d6]">
+                            {helpContent}
+                        </div>
+                    )}
+                    <div className="p-4">
+                        {children}
+                    </div>
                 </div>
             )}
         </div>

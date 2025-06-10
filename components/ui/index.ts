@@ -14,3 +14,7 @@ export { default as DocumentationSection } from './DocumentationSection';
 export { default as LicenseDropdown } from './LicenseDropdown';
 export { default as LicenseSection } from './LicenseSection';
 export { default as ValidationSummary } from './ValidationSummary';
+
+// Neurodocker section components
+export { default as BaseImageSelector } from './BaseImageSelector';
+export { default as DirectivesList } from './DirectivesList';

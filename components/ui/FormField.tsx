@@ -1,7 +1,7 @@
 import { ReactNode, forwardRef } from "react";
 
 interface FormFieldProps {
-    label?: string;
+    label?: string | ReactNode;
     children: ReactNode;
     description?: string;
     className?: string;

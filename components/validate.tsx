@@ -50,8 +50,8 @@ export default function ContainerValidator({
     }, [pyodide, builder, builderLoading, pyodideLoading]);
 
     const canValidate = useMemo(() => {
-        return isReady && !validating && recipe.build.directives && recipe.build.directives.length > 0;
-    }, [isReady, validating, recipe.build.directives]);
+        return isReady && !validating;
+    }, [isReady, validating]);
 
     // Stable function to load builder - prevents infinite loops
     const loadBuilderInstance = useCallback(async () => {
@@ -342,14 +342,6 @@ export default function ContainerValidator({
                         <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md">
                             <p className="text-sm text-yellow-800">
                                 Please load Pyodide and the builder to validate your recipe.
-                            </p>
-                        </div>
-                    )}
-
-                    {isReady && (!recipe.build.directives || recipe.build.directives.length === 0) && (
-                        <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
-                            <p className="text-sm text-blue-800">
-                                Add some directives to your recipe before validating.
                             </p>
                         </div>
                     )}

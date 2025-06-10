@@ -1,5 +1,4 @@
-import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
-import { useState } from "react";
+import { DirectiveContainer, FormField, Select } from "@/components/ui";
 import { IncludeMacro, IncludeMacros } from "@/components/common";
 
 export default function IncludeDirectiveComponent({
@@ -9,39 +8,50 @@ export default function IncludeDirectiveComponent({
     include: IncludeMacro,
     onChange: (include: IncludeMacro) => void
 }) {
-    const [isExpanded, setIsExpanded] = useState(true);
+    const helpContent = (
+        <>
+            <h3 className="font-semibold text-[#0c0e0a] mb-2">
+                INCLUDE Directive
+            </h3>
+            <div className="text-sm text-gray-600 space-y-2">
+                <p>
+                    The INCLUDE directive allows you to include predefined macros or templates in your container build.
+                </p>
+                <div>
+                    <strong>Available Macros:</strong>
+                    <ul className="list-disc list-inside mt-1 space-y-1">
+                        {Object.entries(IncludeMacros).map(([key, value]) => (
+                            <li key={key}>
+                                <code className="bg-gray-100 px-1 rounded text-xs">{value}</code>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+                <p className="text-xs">
+                    Select a macro to include common configurations or setup procedures.
+                </p>
+            </div>
+        </>
+    );
 
     return (
-        <div className="bg-white rounded-md shadow-sm border border-[#e6f1d6] mb-4">
-            <div
-                className="flex items-center p-3 bg-[#f0f7e7] rounded-t-md cursor-pointer"
-                onClick={() => setIsExpanded(!isExpanded)}
+        <DirectiveContainer title="Include" helpContent={helpContent}>
+            <FormField 
+                label="Macro"
+                description="Select a predefined macro to include"
             >
-                <button className="mr-2 text-[#4f7b38]">
-                    {isExpanded ? (
-                        <ChevronDownIcon className="h-5 w-5" />
-                    ) : (
-                        <ChevronRightIcon className="h-5 w-5" />
-                    )}
-                </button>
-                <h2 className="text-[#0c0e0a] font-medium">Include</h2>
-            </div>
-
-            {isExpanded && (
-                <div className="p-4 border-t border-[#e6f1d6]">
-                    <select
-                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329] font-mono"
-                        value={include}
-                        onChange={(e) => onChange(e.target.value as IncludeMacro)}
-                    >
-                        {Object.entries(IncludeMacros).map(([key, value]) => (
-                            <option key={key} value={value}>
-                                {value}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-            )}
-        </div>
+                <Select
+                    value={include}
+                    onChange={(e) => onChange(e.target.value as IncludeMacro)}
+                    className="font-mono"
+                >
+                    {Object.entries(IncludeMacros).map(([key, value]) => (
+                        <option key={key} value={value}>
+                            {value}
+                        </option>
+                    ))}
+                </Select>
+            </FormField>
+        </DirectiveContainer>
     );
 }

@@ -81,8 +81,8 @@ async function getDefaultYAML(): Promise<ContainerRecipe> {
 
 function getNewContainerYAML(): ContainerRecipe {
     return {
-        name: "newcontainer",
-        version: "1.0.0",
+        name: "",
+        version: "",
         architectures: ["x86_64"],
         readme: "",
         readme_url: "",

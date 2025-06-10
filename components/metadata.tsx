@@ -13,10 +13,12 @@ import {
 function validateName(name: string): string | null {
     if (!name.trim()) return "Container name is required";
     if (name.length < 2) return "Container name must be at least 2 characters";
-    // validate the name is a valid docker tag.
-    const validNameRegex = /^[a-z0-9][a-z0-9]{0,62}$/;
+    if (name.length > 63) return "Container name cannot exceed 63 characters";
+    
+    // Container name validation: lowercase letters and numbers only, no hyphens
+    const validNameRegex = /^[a-z0-9]+$/;
     if (!validNameRegex.test(name)) {
-        return "Container name must be lowercase and can only contain letters, and numbers";
+        return "Container name must be lowercase and can only contain letters and numbers";
     }
     return null;
 }
@@ -66,10 +68,14 @@ export default function ContainerMetadata({
 
     // Show validation after user has interacted with the form
     useEffect(() => {
-        if (recipe.name || recipe.version || recipe.readme || recipe.readme_url) {
+        // Always show validation for required fields that are empty
+        const hasRequiredEmptyFields = !recipe.name.trim() || !recipe.version.trim() || 
+            (!recipe.readme?.trim() && !recipe.readme_url?.trim()) || recipe.architectures.length === 0;
+        
+        if (recipe.name || recipe.version || recipe.readme || recipe.readme_url || hasRequiredEmptyFields) {
             setShowValidation(true);
         }
-    }, [recipe.name, recipe.version, recipe.readme, recipe.readme_url]);
+    }, [recipe.name, recipe.version, recipe.readme, recipe.readme_url, recipe.architectures]);
 
     const updateName = (name: string) => {
         onChange({ ...recipe, name });

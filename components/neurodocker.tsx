@@ -533,7 +533,7 @@ export default function NeuroDockerBuildRecipeComponent({
                                     className={`flex flex-col sm:flex-row gap-3 transition-all duration-200 ${draggedIndex === index
                                         ? "opacity-50"
                                         : ""
-                                        } ${dragOverIndex === index
+                                        } ${dragOverIndex === index && !document.body.hasAttribute("data-list-editor-dragging")
                                             ? "border-t-2 border-[#6aa329] pt-2"
                                             : ""
                                         }`}

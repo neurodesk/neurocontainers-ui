@@ -174,7 +174,7 @@ export default function GroupDirectiveComponent({
                                         className={`flex flex-col sm:flex-row gap-2 transition-all duration-200 ${draggedIndex === index
                                             ? "opacity-50"
                                             : ""
-                                            } ${dragOverIndex === index
+                                            } ${dragOverIndex === index && !document.body.hasAttribute("data-list-editor-dragging")
                                                 ? "border-t-2 border-[#6aa329] pt-2"
                                                 : ""
                                             }`}

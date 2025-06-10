@@ -1,5 +1,5 @@
 // hooks/useGitHubFiles.ts
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { githubService, type RepositoryInfo } from '@/lib/github';
 import type { BuildYamlFile } from '@/types/github';
 
@@ -23,7 +23,7 @@ export function useGitHubFiles(
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const fetchFiles = async () => {
+    const fetchFiles = useCallback(async () => {
         if (!owner || !repo) return;
 
         setLoading(true);
@@ -41,7 +41,7 @@ export function useGitHubFiles(
         } finally {
             setLoading(false);
         }
-    };
+    }, [owner, repo, branch]);
 
     const clearCache = () => {
         githubService.clearCache();
@@ -52,7 +52,7 @@ export function useGitHubFiles(
 
     useEffect(() => {
         fetchFiles();
-    }, [owner, repo, branch]);
+    }, [fetchFiles]);
 
     return {
         files,

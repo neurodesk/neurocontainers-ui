@@ -145,7 +145,7 @@ export default function ContainerMetadata({
                     <strong>Container Name:</strong>
                     <ul className="list-disc list-inside mt-1 space-y-1">
                         <li>Must be lowercase letters and numbers only</li>
-                        <li>Should be descriptive of your container&apos;s purpose</li>
+                        <li>Should be named for the primary tool in the container</li>
                         <li>Will be used as the Docker image name</li>
                         <li>Examples: fsl, ants, freesurfer, neurodebian</li>
                     </ul>

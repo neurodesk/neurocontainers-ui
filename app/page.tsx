@@ -111,10 +111,11 @@ function getSavedContainers(): SavedContainer[] {
 function saveContainer(data: ContainerRecipe, existingId?: string): string {
     try {
         const saved = getSavedContainers();
-        const id = existingId || `${data.name}-${Date.now()}`;
+        const id = existingId || `untitled-${Date.now()}`;
+        const displayName = data.name && data.name.trim() ? data.name.trim() : "Untitled";
         const container: SavedContainer = {
             id,
-            name: data.name,
+            name: displayName,
             version: data.version,
             lastModified: Date.now(),
             data,
@@ -184,7 +185,7 @@ function SaveIndicator({ status }: { status: SaveStatus }) {
     const getText = () => {
         switch (status) {
             case SaveStatus.Saved:
-                return "Saved";
+                return "Saved Locally";
             case SaveStatus.Saving:
                 return "Saving...";
             case SaveStatus.Unsaved:
@@ -219,6 +220,7 @@ function SavedContainersPreview({
     onDeleteContainer: (id: string) => void;
 }) {
     const [savedContainers, setSavedContainers] = useState<SavedContainer[]>([]);
+    const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
     useEffect(() => {
         setSavedContainers(getSavedContainers());
@@ -226,13 +228,20 @@ function SavedContainersPreview({
 
     const handleDelete = (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
-        onDeleteContainer(id);
-        setSavedContainers(getSavedContainers());
+        setConfirmDeleteId(id);
     };
 
-    if (savedContainers.length === 0) {
-        return null;
-    }
+    const confirmDelete = () => {
+        if (confirmDeleteId) {
+            onDeleteContainer(confirmDeleteId);
+            setSavedContainers(getSavedContainers());
+            setConfirmDeleteId(null);
+        }
+    };
+
+    const cancelDelete = () => {
+        setConfirmDeleteId(null);
+    };
 
     return (
         <div className="mb-8">
@@ -242,12 +251,15 @@ function SavedContainersPreview({
                     Saved Locally
                 </h2>
                 <div className="text-xs bg-[#e6f1d6] text-[#4f7b38] px-2 py-1 rounded-full">
-                    Browser Only
+                    This Browser Only
                 </div>
             </div>
-            <p className="text-sm text-[#4f7b38] mb-4">
-                These containers are saved in your browser&apos;s local storage and will be lost if you clear your browser data.
-            </p>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                <p className="text-sm text-blue-800">
+                    <strong>Auto-save enabled:</strong> Your work is automatically saved to this browser only. 
+                    These containers will be lost if you clear browser data or use a different device.
+                </p>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {savedContainers.map((container) => (
@@ -258,7 +270,7 @@ function SavedContainersPreview({
                     >
                         <div className="flex items-start justify-between mb-2">
                             <div className="flex-1 min-w-0">
-                                <h3 className="font-medium text-[#0c0e0a] truncate">
+                                <h3 className={`font-medium truncate ${container.name === "Untitled" ? "text-gray-500 italic" : "text-[#0c0e0a]"}`}>
                                     {container.name}
                                 </h3>
                                 <p className="text-sm text-[#4f7b38]">
@@ -285,6 +297,41 @@ function SavedContainersPreview({
                     </div>
                 ))}
             </div>
+            
+            {savedContainers.length === 0 && (
+                <div className="text-center py-8 text-[#4f7b38]">
+                    <ComputerDesktopIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                    <p className="text-sm">No containers saved yet. Your work will appear here automatically.</p>
+                </div>
+            )}
+            
+            {/* Confirmation Dialog */}
+            {confirmDeleteId && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 max-w-sm mx-4">
+                        <h3 className="text-lg font-semibold text-[#0c0e0a] mb-3">
+                            Delete Container?
+                        </h3>
+                        <p className="text-[#4f7b38] mb-6">
+                            This action cannot be undone. The container will be permanently removed from your browser.
+                        </p>
+                        <div className="flex space-x-3">
+                            <button
+                                onClick={cancelDelete}
+                                className="flex-1 px-4 py-2 border border-[#e6f1d6] text-[#4f7b38] rounded-md hover:bg-[#f8fdf2] transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmDelete}
+                                className="flex-1 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

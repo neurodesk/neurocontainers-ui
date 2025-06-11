@@ -40,10 +40,16 @@ export default function GroupDirectiveComponent({
         onChange(updatedGroup);
     };
 
-    const addDirective = (directive: Directive) => {
-        // Set flag to trigger scroll for user-added directive
-        shouldScrollToNew.current = true;
-        onChange([...group, directive]);
+    const addDirective = (directive: Directive, index?: number) => {
+        // Only scroll if adding at the end (no index specified or index is at the end)
+        shouldScrollToNew.current = index === undefined || index >= group.length;
+        const updatedGroup = [...group];
+        if (index !== undefined) {
+            updatedGroup.splice(index, 0, directive);
+        } else {
+            updatedGroup.push(directive);
+        }
+        onChange(updatedGroup);
     };
 
     // Scroll to newly added directive only when explicitly added by user
@@ -156,187 +162,211 @@ export default function GroupDirectiveComponent({
 
                 {isExpanded && (
                     <div className="p-3 border-t border-gray-200">
-                        {group.length === 0 ? (
-                            <div className="text-center py-6 text-gray-400 border border-dashed border-gray-300 rounded-md mb-4">
-                                <p className="mb-1 text-sm">No items in group</p>
-                                <p className="text-xs">
-                                    Add directives to this group
-                                </p>
-                            </div>
-                        ) : (
-                            <div className="space-y-3 mb-4">
-                                {group.map((directive, index) => (
-                                    <div
-                                        key={index}
-                                        ref={
-                                            index === group.length - 1
-                                                ? lastDirectiveRef
-                                                : null
-                                        }
-                                        className={`flex flex-col sm:flex-row gap-2 transition-all duration-200 ${draggedIndex === index
-                                            ? "opacity-50"
-                                            : ""
-                                            } ${dragOverIndex === index && !document.body.hasAttribute("data-list-editor-dragging")
-                                                ? "border-t-2 border-[#6aa329] pt-2"
-                                                : ""
-                                            }`}
-                                        draggable
-                                        onDragStart={(e) =>
-                                            handleDragStart(e, index)
-                                        }
-                                        onDragOver={(e) =>
-                                            handleDragOver(e, index)
-                                        }
-                                        onDragLeave={handleDragLeave}
-                                        onDrop={(e) => handleDrop(e, index)}
-                                        onDragEnd={handleDragEnd}
-                                    >
-                                        {/* Mobile: Horizontal Controls */}
-                                        <div className="flex sm:hidden items-center justify-between bg-white p-2 rounded border border-gray-200">
-                                            <div className="flex items-center gap-2">
-                                                <button
-                                                    className="text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing"
-                                                    onMouseDown={(e) =>
-                                                        e.stopPropagation()
-                                                    }
-                                                >
-                                                    <Bars3Icon className="h-3 w-3" />
-                                                </button>
-                                                <span className="text-xs font-medium text-gray-500">
-                                                    {index + 1}
-                                                </span>
-                                                <div className="flex gap-1">
-                                                    <button
-                                                        className={`p-1 rounded ${index === 0
-                                                            ? "text-gray-300 cursor-not-allowed"
-                                                            : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-                                                            } transition-colors`}
-                                                        onClick={() =>
-                                                            moveDirective(
+                        <div className="space-y-2">
+                            {group.length === 0 ? (
+                                <AddDirectiveButton 
+                                    onAddDirective={addDirective} 
+                                    variant="empty" 
+                                    index={0}
+                                    emptyText={{
+                                        title: "No items in group",
+                                        subtitle: "Click here to add directives to this group"
+                                    }}
+                                />
+                            ) : (
+                                <>
+                                    {/* First add button - only shows when there are items */}
+                                    <div className="py-1">
+                                        <AddDirectiveButton 
+                                            onAddDirective={addDirective} 
+                                            variant="inline" 
+                                            index={0} 
+                                        />
+                                    </div>
+
+                                    {group.map((directive, index) => (
+                                        <div key={index}>
+                                            {/* Directive */}
+                                            <div
+                                                ref={
+                                                    index === group.length - 1
+                                                        ? lastDirectiveRef
+                                                        : null
+                                                }
+                                                className={`flex flex-col sm:flex-row gap-2 transition-all duration-200 ${draggedIndex === index
+                                                    ? "opacity-50"
+                                                    : ""
+                                                    } ${dragOverIndex === index && !document.body.hasAttribute("data-list-editor-dragging")
+                                                        ? "border-t-2 border-[#6aa329] pt-2"
+                                                        : ""
+                                                    }`}
+                                                draggable
+                                                onDragStart={(e) =>
+                                                    handleDragStart(e, index)
+                                                }
+                                                onDragOver={(e) =>
+                                                    handleDragOver(e, index)
+                                                }
+                                                onDragLeave={handleDragLeave}
+                                                onDrop={(e) => handleDrop(e, index)}
+                                                onDragEnd={handleDragEnd}
+                                            >
+                                                {/* Mobile: Horizontal Controls */}
+                                                <div className="flex sm:hidden items-center justify-between bg-white p-2 rounded border border-gray-200">
+                                                    <div className="flex items-center gap-2">
+                                                        <button
+                                                            className="text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing"
+                                                            onMouseDown={(e) =>
+                                                                e.stopPropagation()
+                                                            }
+                                                        >
+                                                            <Bars3Icon className="h-3 w-3" />
+                                                        </button>
+                                                        <span className="text-xs font-medium text-gray-500">
+                                                            {index + 1}
+                                                        </span>
+                                                        <div className="flex gap-1">
+                                                            <button
+                                                                className={`p-1 rounded ${index === 0
+                                                                    ? "text-gray-300 cursor-not-allowed"
+                                                                    : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                                                                    } transition-colors`}
+                                                                onClick={() =>
+                                                                    moveDirective(
+                                                                        index,
+                                                                        "up"
+                                                                    )
+                                                                }
+                                                                disabled={index === 0}
+                                                                title="Move up"
+                                                            >
+                                                                <ChevronUpIcon className="h-3 w-3" />
+                                                            </button>
+                                                            <button
+                                                                className={`p-1 rounded ${index ===
+                                                                    group.length - 1
+                                                                    ? "text-gray-300 cursor-not-allowed"
+                                                                    : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                                                                    } transition-colors`}
+                                                                onClick={() =>
+                                                                    moveDirective(
+                                                                        index,
+                                                                        "down"
+                                                                    )
+                                                                }
+                                                                disabled={
+                                                                    index ===
+                                                                    group.length - 1
+                                                                }
+                                                                title="Move down"
+                                                            >
+                                                                <ChevronDownMoveIcon className="h-3 w-3" />
+                                                            </button>
+                                                            <button
+                                                                className="text-red-400 hover:text-red-600 transition-colors p-1 rounded hover:bg-red-50"
+                                                                onClick={() =>
+                                                                    handleDeleteClick(
+                                                                        index
+                                                                    )
+                                                                }
+                                                                title="Delete item"
+                                                            >
+                                                                <TrashIcon className="h-3 w-3" />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Desktop: Vertical Controls */}
+                                                <div className="hidden sm:flex flex-col items-center pt-2 flex-shrink-0">
+                                                    <div className="flex flex-col bg-white border border-gray-200 rounded shadow-sm">
+                                                        <button
+                                                            className="p-1.5 border-b border-gray-200 text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing transition-colors"
+                                                            onMouseDown={(e) =>
+                                                                e.stopPropagation()
+                                                            }
+                                                            title="Drag to reorder"
+                                                        >
+                                                            <Bars3Icon className="h-4 w-4" />
+                                                        </button>
+                                                        <button
+                                                            className={`p-1.5 border-b border-gray-200 ${index === 0
+                                                                ? "text-gray-300 cursor-not-allowed"
+                                                                : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                                                                } transition-colors`}
+                                                            onClick={() =>
+                                                                moveDirective(
+                                                                    index,
+                                                                    "up"
+                                                                )
+                                                            }
+                                                            disabled={index === 0}
+                                                            title="Move up"
+                                                        >
+                                                            <ChevronUpIcon className="h-4 w-4" />
+                                                        </button>
+                                                        <button
+                                                            className={`p-1.5 border-b border-gray-200 ${index ===
+                                                                group.length - 1
+                                                                ? "text-gray-300 cursor-not-allowed"
+                                                                : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                                                                } transition-colors`}
+                                                            onClick={() =>
+                                                                moveDirective(
+                                                                    index,
+                                                                    "down"
+                                                                )
+                                                            }
+                                                            disabled={
+                                                                index === group.length - 1
+                                                            }
+                                                            title="Move down"
+                                                        >
+                                                            <ChevronDownMoveIcon className="h-4 w-4" />
+                                                        </button>
+                                                        <button
+                                                            className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                                                            onClick={() =>
+                                                                handleDeleteClick(index)
+                                                            }
+                                                            title="Delete item"
+                                                        >
+                                                            <TrashIcon className="h-4 w-4" />
+                                                        </button>
+                                                    </div>
+                                                    <div className="mt-1 text-xs font-medium text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
+                                                        {index + 1}
+                                                    </div>
+                                                </div>
+
+                                                {/* Directive Content */}
+                                                <div className="flex-1 min-w-0">
+                                                    <DirectiveComponent
+                                                        directive={directive}
+                                                        baseImage={baseImage}
+                                                        onChange={(updated) =>
+                                                            handleDirectiveChange(
                                                                 index,
-                                                                "up"
+                                                                updated
                                                             )
                                                         }
-                                                        disabled={index === 0}
-                                                        title="Move up"
-                                                    >
-                                                        <ChevronUpIcon className="h-3 w-3" />
-                                                    </button>
-                                                    <button
-                                                        className={`p-1 rounded ${index ===
-                                                            group.length - 1
-                                                            ? "text-gray-300 cursor-not-allowed"
-                                                            : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-                                                            } transition-colors`}
-                                                        onClick={() =>
-                                                            moveDirective(
-                                                                index,
-                                                                "down"
-                                                            )
-                                                        }
-                                                        disabled={
-                                                            index ===
-                                                            group.length - 1
-                                                        }
-                                                        title="Move down"
-                                                    >
-                                                        <ChevronDownMoveIcon className="h-3 w-3" />
-                                                    </button>
-                                                    <button
-                                                        className="text-red-400 hover:text-red-600 transition-colors p-1 rounded hover:bg-red-50"
-                                                        onClick={() =>
-                                                            handleDeleteClick(
-                                                                index
-                                                            )
-                                                        }
-                                                        title="Delete item"
-                                                    >
-                                                        <TrashIcon className="h-3 w-3" />
-                                                    </button>
+                                                    />
                                                 </div>
                                             </div>
-                                        </div>
 
-                                        {/* Desktop: Vertical Controls */}
-                                        <div className="hidden sm:flex flex-col items-center pt-2 flex-shrink-0">
-                                            <div className="flex flex-col bg-white border border-gray-200 rounded shadow-sm">
-                                                <button
-                                                    className="p-1.5 border-b border-gray-200 text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing transition-colors"
-                                                    onMouseDown={(e) =>
-                                                        e.stopPropagation()
-                                                    }
-                                                    title="Drag to reorder"
-                                                >
-                                                    <Bars3Icon className="h-4 w-4" />
-                                                </button>
-                                                <button
-                                                    className={`p-1.5 border-b border-gray-200 ${index === 0
-                                                        ? "text-gray-300 cursor-not-allowed"
-                                                        : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-                                                        } transition-colors`}
-                                                    onClick={() =>
-                                                        moveDirective(
-                                                            index,
-                                                            "up"
-                                                        )
-                                                    }
-                                                    disabled={index === 0}
-                                                    title="Move up"
-                                                >
-                                                    <ChevronUpIcon className="h-4 w-4" />
-                                                </button>
-                                                <button
-                                                    className={`p-1.5 border-b border-gray-200 ${index ===
-                                                        group.length - 1
-                                                        ? "text-gray-300 cursor-not-allowed"
-                                                        : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-                                                        } transition-colors`}
-                                                    onClick={() =>
-                                                        moveDirective(
-                                                            index,
-                                                            "down"
-                                                        )
-                                                    }
-                                                    disabled={
-                                                        index === group.length - 1
-                                                    }
-                                                    title="Move down"
-                                                >
-                                                    <ChevronDownMoveIcon className="h-4 w-4" />
-                                                </button>
-                                                <button
-                                                    className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                                                    onClick={() =>
-                                                        handleDeleteClick(index)
-                                                    }
-                                                    title="Delete item"
-                                                >
-                                                    <TrashIcon className="h-4 w-4" />
-                                                </button>
-                                            </div>
-                                            <div className="mt-1 text-xs font-medium text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
-                                                {index + 1}
+                                            {/* Add button after this directive */}
+                                            <div className="py-1">
+                                                <AddDirectiveButton 
+                                                    onAddDirective={addDirective} 
+                                                    variant="inline" 
+                                                    index={index + 1} 
+                                                />
                                             </div>
                                         </div>
-
-                                        {/* Directive Content */}
-                                        <div className="flex-1 min-w-0">
-                                            <DirectiveComponent
-                                                directive={directive}
-                                                baseImage={baseImage}
-                                                onChange={(updated) =>
-                                                    handleDirectiveChange(
-                                                        index,
-                                                        updated
-                                                    )
-                                                }
-                                            />
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                        <AddDirectiveButton onAddDirective={addDirective} />
+                                    ))}
+                                </>
+                            )}
+                        </div>
                     </div>
                 )}
             </div>

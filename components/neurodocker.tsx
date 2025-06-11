@@ -26,9 +26,15 @@ export default function NeuroDockerBuildRecipeComponent({
         onChangeWrapper({ ...recipe, directives: updatedDirectives }, "updateDirective");
     };
 
-    const addDirective = (directive: Directive) => {
+    const addDirective = (directive: Directive, index?: number) => {
+        const updatedDirectives = [...recipe.directives];
+        if (index !== undefined) {
+            updatedDirectives.splice(index, 0, directive);
+        } else {
+            updatedDirectives.push(directive);
+        }
         onChangeWrapper(
-            { ...recipe, directives: [...recipe.directives, directive] },
+            { ...recipe, directives: updatedDirectives },
             "addDirective"
         );
     };

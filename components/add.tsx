@@ -10,7 +10,10 @@ import { getAllDirectives } from "@/components/directives";
 import type { DirectiveMetadata } from "@/components/directives/registry";
 
 interface AddDirectiveButtonProps {
-    onAddDirective: (directive: Directive) => void;
+    onAddDirective: (directive: Directive, index?: number) => void;
+    index?: number;
+    variant?: 'default' | 'inline' | 'empty';
+    emptyText?: { title: string; subtitle: string };
 }
 
 interface DropdownPosition {
@@ -115,6 +118,9 @@ const DirectiveItem = ({
 
 export default function AddDirectiveButton({
     onAddDirective,
+    index,
+    variant = 'default',
+    emptyText = { title: "No directives added yet", subtitle: "Click here to start building your container" },
 }: AddDirectiveButtonProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
@@ -282,12 +288,12 @@ export default function AddDirectiveButton({
     const handleAddDirective = useCallback(
         (directiveType: string) => {
             const directiveConfig = directiveTypes[directiveType];
-            onAddDirective(directiveConfig.defaultValue);
+            onAddDirective(directiveConfig.defaultValue, index);
             setIsOpen(false);
             setSearchTerm("");
             setFocusedIndex(-1);
         },
-        [onAddDirective, directiveTypes]
+        [onAddDirective, directiveTypes, index]
     );
 
     const closeModal = useCallback(() => {
@@ -437,21 +443,68 @@ export default function AddDirectiveButton({
         </div>
     );
 
-    return (
-        <div className="relative" ref={dropdownRef}>
-            {/* Main Trigger Button */}
+    const renderTriggerButton = () => {
+        if (variant === 'empty') {
+            return (
+                <button
+                    ref={buttonRef}
+                    type="button"
+                    onClick={() => setIsOpen(!isOpen)}
+                    onKeyDown={handleKeyDown}
+                    className="
+                        group w-full text-center py-8 text-gray-500 
+                        border-2 border-dashed border-gray-200 hover:border-[#6aa329] 
+                        rounded-lg hover:bg-[#f8fdf2] transition-all duration-200
+                        focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:ring-offset-1
+                    "
+                    aria-expanded={isOpen}
+                    aria-haspopup="true"
+                    aria-label="Add your first directive"
+                >
+                    <p className="mb-2 group-hover:text-[#6aa329]">{emptyText.title}</p>
+                    <p className="text-sm group-hover:text-[#6aa329]">{emptyText.subtitle}</p>
+                </button>
+            );
+        }
+
+        if (variant === 'inline') {
+            return (
+                <button
+                    ref={buttonRef}
+                    type="button"
+                    onClick={() => setIsOpen(!isOpen)}
+                    onKeyDown={handleKeyDown}
+                    className="
+                        group flex items-center justify-center gap-2 w-full py-1.5 
+                        text-gray-400 hover:text-[#6aa329] hover:bg-[#f8fdf2]
+                        border border-dashed border-gray-300 hover:border-[#6aa329]
+                        rounded-md transition-all duration-200
+                        focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:ring-offset-1
+                        opacity-50 hover:opacity-100
+                    "
+                    aria-expanded={isOpen}
+                    aria-haspopup="true"
+                    aria-label="Add directive here"
+                >
+                    <PlusIcon className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                    <span className="text-xs font-medium hidden sm:inline text-gray-500 group-hover:text-[#6aa329]">Add directive</span>
+                </button>
+            );
+        }
+
+        return (
             <button
                 ref={buttonRef}
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
                 onKeyDown={handleKeyDown}
                 className="
-          inline-flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5
-          text-sm font-medium text-white rounded-lg
-          bg-[#4f7b38] hover:bg-[#6aa329]
-          focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:ring-offset-2
-          transition-all duration-200 min-w-0 flex-shrink-0
-        "
+                    inline-flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5
+                    text-sm font-medium text-white rounded-lg
+                    bg-[#4f7b38] hover:bg-[#6aa329]
+                    focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:ring-offset-2
+                    transition-all duration-200 min-w-0 flex-shrink-0
+                "
                 aria-expanded={isOpen}
                 aria-haspopup="true"
                 aria-label="Add new directive"
@@ -464,6 +517,13 @@ export default function AddDirectiveButton({
                         }`}
                 />
             </button>
+        );
+    };
+
+    return (
+        <div className="relative" ref={dropdownRef}>
+            {/* Main Trigger Button */}
+            {renderTriggerButton()}
 
             {/* Modal/Dropdown */}
             {isOpen && (

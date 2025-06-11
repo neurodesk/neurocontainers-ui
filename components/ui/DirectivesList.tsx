@@ -13,7 +13,7 @@ import AddDirectiveButton from "@/components/add";
 interface DirectivesListProps {
     directives: Directive[];
     baseImage: string;
-    onAddDirective: (directive: Directive) => void;
+    onAddDirective: (directive: Directive, index?: number) => void;
     onUpdateDirective: (index: number, directive: Directive) => void;
     onRemoveDirective: (index: number) => void;
     onMoveDirective: (index: number, direction: "up" | "down") => void;
@@ -102,9 +102,10 @@ export default function DirectivesList({
         }
     }, [directives.length]);
 
-    const handleAddDirective = (directive: Directive) => {
-        shouldScrollToNew.current = true;
-        onAddDirective(directive);
+    const handleAddDirective = (directive: Directive, index?: number) => {
+        // Only scroll if adding at the end (no index specified or index is at the end)
+        shouldScrollToNew.current = index === undefined || index >= directives.length;
+        onAddDirective(directive, index);
     };
 
     const handleDeleteClick = (index: number) => {
@@ -192,22 +193,19 @@ export default function DirectivesList({
 
     return (
         <div className="mb-6">
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
-                <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-medium text-[#0c0e0a]">Directives</h3>
-                    <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                        {directives.length} directive{directives.length !== 1 ? "s" : ""}
-                    </div>
-                    <button
-                        type="button"
-                        className={`text-[#4f7b38] hover:text-[#6aa329] p-1 transition-colors ${showDirectivesHelp ? 'text-[#6aa329]' : ''}`}
-                        onClick={() => setShowDirectivesHelp(!showDirectivesHelp)}
-                        title={showDirectivesHelp ? "Hide documentation" : "Show documentation"}
-                    >
-                        <InformationCircleIcon className="h-4 w-4" />
-                    </button>
+            <div className="flex items-center gap-2 mb-4">
+                <h3 className="text-lg font-medium text-[#0c0e0a]">Directives</h3>
+                <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                    {directives.length} directive{directives.length !== 1 ? "s" : ""}
                 </div>
-                <AddDirectiveButton onAddDirective={handleAddDirective} />
+                <button
+                    type="button"
+                    className={`text-[#4f7b38] hover:text-[#6aa329] p-1 transition-colors ${showDirectivesHelp ? 'text-[#6aa329]' : ''}`}
+                    onClick={() => setShowDirectivesHelp(!showDirectivesHelp)}
+                    title={showDirectivesHelp ? "Hide documentation" : "Show documentation"}
+                >
+                    <InformationCircleIcon className="h-4 w-4" />
+                </button>
             </div>
 
             {showDirectivesHelp && (
@@ -216,139 +214,162 @@ export default function DirectivesList({
                 </div>
             )}
 
-            {directives.length === 0 ? (
-                <div className="text-center py-8 text-gray-500 border-2 border-dashed border-gray-200 rounded-lg">
-                    <p className="mb-2">No directives added yet</p>
-                    <p className="text-sm">Click &quot;Add Directive&quot; to start building your container</p>
-                </div>
-            ) : (
-                <div className="space-y-4">
-                    {directives.map((directive, index) => (
-                        <div
-                            key={`directive-${index}`}
-                            ref={index === directives.length - 1 ? lastDirectiveRef : null}
-                            className={`flex flex-col sm:flex-row gap-3 transition-all duration-200 ${
-                                draggedIndex === index ? "opacity-50" : ""
-                            } ${
-                                dragOverIndex === index &&
-                                !document.body.hasAttribute("data-list-editor-dragging")
-                                    ? "border-t-2 border-[#6aa329] pt-2"
-                                    : ""
-                            }`}
-                            draggable
-                            onDragStart={(e) => handleDragStart(e, index)}
-                            onDragOver={(e) => handleDragOver(e, index)}
-                            onDragLeave={handleDragLeave}
-                            onDrop={(e) => handleDrop(e, index)}
-                            onDragEnd={handleDragEnd}
-                        >
-                            {/* Mobile: Horizontal Controls */}
-                            <div className="flex sm:hidden items-center justify-between bg-gray-50 p-2 rounded-md border">
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        className="text-gray-400 hover:text-[#6aa329] cursor-grab active:cursor-grabbing"
-                                        onMouseDown={(e) => e.stopPropagation()}
-                                    >
-                                        <Bars3Icon className="h-4 w-4" />
-                                    </button>
-                                    <span className="text-xs font-medium text-gray-600">
-                                        Step {index + 1}
-                                    </span>
-                                    <div className="flex gap-1">
-                                        <button
-                                            className={`p-1.5 rounded ${
-                                                index === 0
-                                                    ? "text-gray-300 cursor-not-allowed"
-                                                    : "text-gray-600 hover:text-[#6aa329] hover:bg-white"
-                                            } transition-colors`}
-                                            onClick={() => onMoveDirective(index, "up")}
-                                            disabled={index === 0}
-                                            title="Move up"
-                                        >
-                                            <ChevronUpIcon className="h-4 w-4" />
-                                        </button>
-                                        <button
-                                            className={`p-1.5 rounded ${
-                                                index === directives.length - 1
-                                                    ? "text-gray-300 cursor-not-allowed"
-                                                    : "text-gray-600 hover:text-[#6aa329] hover:bg-white"
-                                            } transition-colors`}
-                                            onClick={() => onMoveDirective(index, "down")}
-                                            disabled={index === directives.length - 1}
-                                            title="Move down"
-                                        >
-                                            <ChevronDownIcon className="h-4 w-4" />
-                                        </button>
-                                        <button
-                                            className="text-red-400 hover:text-red-600 transition-colors p-1.5 rounded hover:bg-white"
-                                            onClick={() => handleDeleteClick(index)}
-                                            title="Delete directive"
-                                        >
-                                            <TrashIcon className="h-4 w-4" />
-                                        </button>
+            <div className="space-y-2">
+                {directives.length === 0 ? (
+                    <AddDirectiveButton 
+                        onAddDirective={handleAddDirective} 
+                        variant="empty" 
+                        index={0} 
+                    />
+                ) : (
+                    <>
+                        {/* First add button - only shows when there are directives */}
+                        <div className="py-1">
+                            <AddDirectiveButton 
+                                onAddDirective={handleAddDirective} 
+                                variant="inline" 
+                                index={0} 
+                            />
+                        </div>
+
+                        {directives.map((directive, index) => (
+                            <div key={`directive-${index}`}>
+                                {/* Directive */}
+                                <div
+                                    ref={index === directives.length - 1 ? lastDirectiveRef : null}
+                                    className={`flex flex-col sm:flex-row gap-3 transition-all duration-200 ${
+                                        draggedIndex === index ? "opacity-50" : ""
+                                    } ${
+                                        dragOverIndex === index &&
+                                        !document.body.hasAttribute("data-list-editor-dragging")
+                                            ? "border-t-2 border-[#6aa329] pt-2"
+                                            : ""
+                                    }`}
+                                    draggable
+                                    onDragStart={(e) => handleDragStart(e, index)}
+                                    onDragOver={(e) => handleDragOver(e, index)}
+                                    onDragLeave={handleDragLeave}
+                                    onDrop={(e) => handleDrop(e, index)}
+                                    onDragEnd={handleDragEnd}
+                                >
+                                    {/* Mobile: Horizontal Controls */}
+                                    <div className="flex sm:hidden items-center justify-between bg-gray-50 p-2 rounded-md border">
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                className="text-gray-400 hover:text-[#6aa329] cursor-grab active:cursor-grabbing"
+                                                onMouseDown={(e) => e.stopPropagation()}
+                                            >
+                                                <Bars3Icon className="h-4 w-4" />
+                                            </button>
+                                            <span className="text-xs font-medium text-gray-600">
+                                                Step {index + 1}
+                                            </span>
+                                            <div className="flex gap-1">
+                                                <button
+                                                    className={`p-1.5 rounded ${
+                                                        index === 0
+                                                            ? "text-gray-300 cursor-not-allowed"
+                                                            : "text-gray-600 hover:text-[#6aa329] hover:bg-white"
+                                                    } transition-colors`}
+                                                    onClick={() => onMoveDirective(index, "up")}
+                                                    disabled={index === 0}
+                                                    title="Move up"
+                                                >
+                                                    <ChevronUpIcon className="h-4 w-4" />
+                                                </button>
+                                                <button
+                                                    className={`p-1.5 rounded ${
+                                                        index === directives.length - 1
+                                                            ? "text-gray-300 cursor-not-allowed"
+                                                            : "text-gray-600 hover:text-[#6aa329] hover:bg-white"
+                                                    } transition-colors`}
+                                                    onClick={() => onMoveDirective(index, "down")}
+                                                    disabled={index === directives.length - 1}
+                                                    title="Move down"
+                                                >
+                                                    <ChevronDownIcon className="h-4 w-4" />
+                                                </button>
+                                                <button
+                                                    className="text-red-400 hover:text-red-600 transition-colors p-1.5 rounded hover:bg-white"
+                                                    onClick={() => handleDeleteClick(index)}
+                                                    title="Delete directive"
+                                                >
+                                                    <TrashIcon className="h-4 w-4" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Desktop: Vertical Controls */}
+                                    <div className="hidden sm:flex flex-col items-center pt-3 flex-shrink-0">
+                                        <div className="flex flex-col bg-white border border-gray-300 rounded-md shadow-sm">
+                                            <button
+                                                className="p-2 border-b border-gray-200 text-gray-400 hover:text-[#6aa329] cursor-grab active:cursor-grabbing transition-colors"
+                                                onMouseDown={(e) => e.stopPropagation()}
+                                                title="Drag to reorder"
+                                            >
+                                                <Bars3Icon className="h-5 w-5" />
+                                            </button>
+                                            <button
+                                                className={`p-2 border-b border-gray-200 ${
+                                                    index === 0
+                                                        ? "text-gray-300 cursor-not-allowed"
+                                                        : "text-gray-600 hover:text-[#6aa329] hover:bg-[#f0f7e7]"
+                                                } transition-colors`}
+                                                onClick={() => onMoveDirective(index, "up")}
+                                                disabled={index === 0}
+                                                title="Move up"
+                                            >
+                                                <ChevronUpIcon className="h-5 w-5" />
+                                            </button>
+                                            <button
+                                                className={`p-2 border-b border-gray-200 ${
+                                                    index === directives.length - 1
+                                                        ? "text-gray-300 cursor-not-allowed"
+                                                        : "text-gray-600 hover:text-[#6aa329] hover:bg-[#f0f7e7]"
+                                                } transition-colors`}
+                                                onClick={() => onMoveDirective(index, "down")}
+                                                disabled={index === directives.length - 1}
+                                                title="Move down"
+                                            >
+                                                <ChevronDownIcon className="h-5 w-5" />
+                                            </button>
+                                            <button
+                                                className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                                                onClick={() => handleDeleteClick(index)}
+                                                title="Delete directive"
+                                            >
+                                                <TrashIcon className="h-5 w-5" />
+                                            </button>
+                                        </div>
+                                        <div className="mt-2 text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                            {index + 1}
+                                        </div>
+                                    </div>
+
+                                    {/* Directive Content */}
+                                    <div className="flex-1 min-w-0">
+                                        <DirectiveComponent
+                                            directive={directive}
+                                            baseImage={baseImage}
+                                            onChange={(updated) => onUpdateDirective(index, updated)}
+                                        />
                                     </div>
                                 </div>
-                            </div>
 
-                            {/* Desktop: Vertical Controls */}
-                            <div className="hidden sm:flex flex-col items-center pt-3 flex-shrink-0">
-                                <div className="flex flex-col bg-white border border-gray-300 rounded-md shadow-sm">
-                                    <button
-                                        className="p-2 border-b border-gray-200 text-gray-400 hover:text-[#6aa329] cursor-grab active:cursor-grabbing transition-colors"
-                                        onMouseDown={(e) => e.stopPropagation()}
-                                        title="Drag to reorder"
-                                    >
-                                        <Bars3Icon className="h-5 w-5" />
-                                    </button>
-                                    <button
-                                        className={`p-2 border-b border-gray-200 ${
-                                            index === 0
-                                                ? "text-gray-300 cursor-not-allowed"
-                                                : "text-gray-600 hover:text-[#6aa329] hover:bg-[#f0f7e7]"
-                                        } transition-colors`}
-                                        onClick={() => onMoveDirective(index, "up")}
-                                        disabled={index === 0}
-                                        title="Move up"
-                                    >
-                                        <ChevronUpIcon className="h-5 w-5" />
-                                    </button>
-                                    <button
-                                        className={`p-2 border-b border-gray-200 ${
-                                            index === directives.length - 1
-                                                ? "text-gray-300 cursor-not-allowed"
-                                                : "text-gray-600 hover:text-[#6aa329] hover:bg-[#f0f7e7]"
-                                        } transition-colors`}
-                                        onClick={() => onMoveDirective(index, "down")}
-                                        disabled={index === directives.length - 1}
-                                        title="Move down"
-                                    >
-                                        <ChevronDownIcon className="h-5 w-5" />
-                                    </button>
-                                    <button
-                                        className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                                        onClick={() => handleDeleteClick(index)}
-                                        title="Delete directive"
-                                    >
-                                        <TrashIcon className="h-5 w-5" />
-                                    </button>
-                                </div>
-                                <div className="mt-2 text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                                    {index + 1}
+                                {/* Add button after this directive */}
+                                <div className="py-1">
+                                    <AddDirectiveButton 
+                                        onAddDirective={handleAddDirective} 
+                                        variant="inline" 
+                                        index={index + 1} 
+                                    />
                                 </div>
                             </div>
-
-                            {/* Directive Content */}
-                            <div className="flex-1 min-w-0">
-                                <DirectiveComponent
-                                    directive={directive}
-                                    baseImage={baseImage}
-                                    onChange={(updated) => onUpdateDirective(index, updated)}
-                                />
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
+                        ))}
+                    </>
+                )}
+            </div>
 
             <DirectiveDeleteModal
                 isOpen={deleteConfirmIndex !== null}

@@ -15,6 +15,7 @@ interface BaseNeuroDockerArgument {
 export type NeuroDockerArgument = (BaseNeuroDockerArgument & {
     type: "dropdown";
     options: string[];
+    defaultValue?: string;
 }) | (BaseNeuroDockerArgument & {
     type: "text";
     defaultValue?: string;
@@ -22,6 +23,7 @@ export type NeuroDockerArgument = (BaseNeuroDockerArgument & {
 }) | (BaseNeuroDockerArgument & {
     // the array is represented as space separated strings
     type: "array";
+    defaultValue?: string[];
 }) | (BaseNeuroDockerArgument & {
     type: "boolean";
     defaultValue?: boolean;
@@ -36,11 +38,12 @@ export interface NeuroDockerTemplateInformation {
     name: string;
     description?: string;
     url: string;
+    alert?: string;
     source?: NeuroDockerInstallInformation;
     binaries?: NeuroDockerInstallInformation;
 }
 
-function createNeuroDockerTemplateComponent(templateInfo: NeuroDockerTemplateInformation) {
+export function createNeuroDockerTemplateComponent(templateInfo: NeuroDockerTemplateInformation) {
     return function NeuroDockerTemplateComponent({
         template,
         onChange
@@ -146,6 +149,11 @@ function createNeuroDockerTemplateComponent(templateInfo: NeuroDockerTemplateInf
                 </h3>
                 <div className="text-sm text-gray-600 space-y-2">
                     <p>{templateInfo.description}</p>
+                    {templateInfo.alert && (
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-md p-2">
+                            <p className="text-yellow-800 text-xs font-medium">⚠️ {templateInfo.alert}</p>
+                        </div>
+                    )}
                     {templateInfo.url && (
                         <p>
                             <a
@@ -228,7 +236,7 @@ function createNeuroDockerTemplateComponent(templateInfo: NeuroDockerTemplateInf
     };
 }
 
-function registerNeuroDockerTemplate(template: NeuroDockerTemplateInformation) {
+export function registerNeuroDockerTemplate(template: NeuroDockerTemplateInformation) {
     const component = createNeuroDockerTemplateComponent(template);
     const metadata = {
         ...template.metadata,

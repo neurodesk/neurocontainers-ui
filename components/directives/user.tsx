@@ -1,4 +1,6 @@
 import { DirectiveContainer, Input } from "@/components/ui";
+import { UserIcon } from "@heroicons/react/24/outline";
+import { registerDirective, DirectiveMetadata } from "./registry";
 
 export default function UserDirectiveComponent({
     user,
@@ -56,3 +58,18 @@ export default function UserDirectiveComponent({
         </DirectiveContainer>
     );
 }
+
+// Register this directive
+export const userDirectiveMetadata: DirectiveMetadata = {
+    key: "user",
+    label: "User",
+    description: "Set the user context for subsequent commands",
+    icon: UserIcon,
+    color: "bg-teal-50 border-teal-200 hover:bg-teal-100",
+    iconColor: "text-teal-600",
+    defaultValue: { user: "" },
+    keywords: ["user", "account", "permission", "context", "identity"],
+    component: UserDirectiveComponent,
+};
+
+registerDirective(userDirectiveMetadata);

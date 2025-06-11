@@ -1,8 +1,9 @@
-import { TrashIcon } from "@heroicons/react/24/outline";
+import { TrashIcon, DocumentDuplicateIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import { DirectiveContainer, FormField, Input } from "@/components/ui";
 import { Template } from "@/components/common";
 import { VariableComponent } from "@/components/directives/variable";
+import { registerDirective, DirectiveMetadata } from "./registry";
 
 export default function TemplateDirectiveComponent({
     template,
@@ -124,3 +125,18 @@ export default function TemplateDirectiveComponent({
         </DirectiveContainer>
     );
 }
+
+// Register this directive
+export const templateDirectiveMetadata: DirectiveMetadata = {
+    key: "template",
+    label: "Template",
+    description: "Create reusable templates with parameters",
+    icon: DocumentDuplicateIcon,
+    color: "bg-pink-50 border-pink-200 hover:bg-pink-100",
+    iconColor: "text-pink-600",
+    defaultValue: { template: { name: "new-template" } },
+    keywords: ["template", "reusable", "pattern", "blueprint"],
+    component: TemplateDirectiveComponent,
+};
+
+registerDirective(templateDirectiveMetadata);

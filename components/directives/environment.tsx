@@ -1,4 +1,6 @@
 import { DirectiveContainer, KeyValueEditor } from "@/components/ui";
+import { CogIcon } from "@heroicons/react/24/outline";
+import { registerDirective, DirectiveMetadata } from "./registry";
 
 export default function EnvironmentDirectiveComponent({
     environment,
@@ -54,3 +56,18 @@ export default function EnvironmentDirectiveComponent({
         </DirectiveContainer>
     );
 }
+
+// Register this directive
+export const environmentDirectiveMetadata: DirectiveMetadata = {
+    key: "environment",
+    label: "Environment",
+    description: "Set environment variables",
+    icon: CogIcon,
+    color: "bg-green-50 border-green-200 hover:bg-green-100",
+    iconColor: "text-green-600",
+    defaultValue: { environment: {} },
+    keywords: ["environment", "env", "variables", "config", "settings"],
+    component: EnvironmentDirectiveComponent,
+};
+
+registerDirective(environmentDirectiveMetadata);

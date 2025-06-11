@@ -1,5 +1,8 @@
 import { DirectiveContainer, FormField, Input, Textarea, ListEditor } from "@/components/ui";
 import { Variable } from "@/components/common";
+import { TrashIcon, CubeTransparentIcon } from "@heroicons/react/24/outline";
+import { useState } from "react";
+import { registerDirective, DirectiveMetadata } from "./registry";
 
 export function VariableComponent({ variable, onChange }: { variable: Variable, onChange?: (variable: Variable) => void }) {
     if (typeof variable === 'string') {
@@ -64,9 +67,6 @@ export function VariableComponent({ variable, onChange }: { variable: Variable, 
         );
     }
 }
-
-import { TrashIcon } from "@heroicons/react/24/outline";
-import { useState } from "react";
 
 export default function VariableDirectiveComponent({
     variables,
@@ -159,14 +159,29 @@ export default function VariableDirectiveComponent({
                         onKeyDown={(e) => e.key === 'Enter' && addVariable()}
                     />
                     <button
-                        className="px-4 py-2 bg-[#6aa329] text-white rounded-r-md hover:bg-[#4f7b38] disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-3 py-1.5 text-sm bg-[#6aa329] text-white rounded-r-md hover:bg-[#4f7b38] disabled:opacity-50 disabled:cursor-not-allowed"
                         onClick={addVariable}
                         disabled={!newVarKey.trim()}
                     >
-                        Add Variable
+                        Add
                     </button>
                 </div>
             </FormField>
         </DirectiveContainer>
     );
 }
+
+// Register this directive
+export const variablesDirectiveMetadata: DirectiveMetadata = {
+    key: "variables",
+    label: "Variables",
+    description: "Define template variables for dynamic values",
+    icon: CubeTransparentIcon,
+    color: "bg-indigo-50 border-indigo-200 hover:bg-indigo-100",
+    iconColor: "text-indigo-600",
+    defaultValue: { variables: {} },
+    keywords: ["variables", "var", "template", "placeholder", "substitution"],
+    component: VariableDirectiveComponent,
+};
+
+registerDirective(variablesDirectiveMetadata);

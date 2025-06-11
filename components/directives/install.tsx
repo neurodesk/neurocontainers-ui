@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { loadPackageDatabase } from "@/lib/packages";
 import { DirectiveContainer, FormField, Select } from "@/components/ui";
 import PackageTagEditor from "@/components/ui/PackageTagEditor";
+import { CommandLineIcon } from "@heroicons/react/24/outline";
+import { registerDirective, DirectiveMetadata } from "./registry";
 
 type PackageManager = "system";
 
@@ -119,3 +121,18 @@ export default function InstallDirectiveComponent({
         </DirectiveContainer>
     );
 }
+
+// Register this directive
+export const installDirectiveMetadata: DirectiveMetadata = {
+    key: "install",
+    label: "Install",
+    description: "Install packages or dependencies",
+    icon: CommandLineIcon,
+    color: "bg-purple-50 border-purple-200 hover:bg-purple-100",
+    iconColor: "text-purple-600",
+    defaultValue: { install: "" },
+    keywords: ["install", "package", "dependency", "apt", "yum", "npm"],
+    component: InstallDirectiveComponent,
+};
+
+registerDirective(installDirectiveMetadata);

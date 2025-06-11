@@ -5,11 +5,13 @@ import {
     Bars3Icon,
     ChevronUpIcon,
     ChevronDownIcon as ChevronDownMoveIcon,
+    FolderIcon,
 } from "@heroicons/react/24/outline";
 import { useState, useRef, useEffect } from "react";
 import { Directive } from "@/components/common";
 import DirectiveComponent from "./factory";
 import AddDirectiveButton from "@/components/add";
+import { registerDirective, DirectiveMetadata } from "./registry";
 
 export default function GroupDirectiveComponent({
     group,
@@ -384,3 +386,18 @@ export default function GroupDirectiveComponent({
         </>
     );
 }
+
+// Register this directive
+export const groupDirectiveMetadata: DirectiveMetadata = {
+    key: "group",
+    label: "Group",
+    description: "Group related directives together",
+    icon: FolderIcon,
+    color: "bg-blue-50 border-blue-200 hover:bg-blue-100",
+    iconColor: "text-blue-600",
+    defaultValue: { group: [] as Directive[] },
+    keywords: ["group", "folder", "organize", "collection"],
+    component: GroupDirectiveComponent,
+};
+
+registerDirective(groupDirectiveMetadata);

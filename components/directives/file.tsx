@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { DirectiveContainer, FormField, Input, Textarea, ToggleButtonGroup } from "@/components/ui";
 import { FileInfo } from "@/components/common";
+import { ClipboardDocumentListIcon } from "@heroicons/react/24/outline";
+import { registerDirective, DirectiveMetadata } from "./registry";
 
 export default function FileDirectiveComponent({
     file,
@@ -172,3 +174,18 @@ export default function FileDirectiveComponent({
         </DirectiveContainer>
     );
 }
+
+// Register this directive
+export const fileDirectiveMetadata: DirectiveMetadata = {
+    key: "file",
+    label: "File",
+    description: "Create or manage files in the container",
+    icon: ClipboardDocumentListIcon,
+    color: "bg-emerald-50 border-emerald-200 hover:bg-emerald-100",
+    iconColor: "text-emerald-600",
+    defaultValue: { file: { name: "", filename: "" } },
+    keywords: ["file", "create", "manage", "document", "content"],
+    component: FileDirectiveComponent,
+};
+
+registerDirective(fileDirectiveMetadata);

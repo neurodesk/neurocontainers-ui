@@ -3,22 +3,11 @@ import { Directive } from "@/components/common";
 import {
     ChevronDownIcon,
     PlusIcon,
-    FolderIcon,
-    CogIcon,
-    FolderOpenIcon,
-    PlayIcon,
-    VariableIcon,
-    DocumentDuplicateIcon,
-    UserIcon,
-    DocumentIcon,
-    BeakerIcon,
-    RocketLaunchIcon,
-    CommandLineIcon,
-    ClipboardDocumentListIcon,
-    DocumentArrowDownIcon,
     MagnifyingGlassIcon,
     XMarkIcon,
 } from "@heroicons/react/24/outline";
+import { getAllDirectives } from "@/components/directives";
+import type { DirectiveMetadata } from "@/components/directives/registry";
 
 interface AddDirectiveButtonProps {
     onAddDirective: (directive: Directive) => void;
@@ -31,134 +20,26 @@ interface DropdownPosition {
     right?: number;
 }
 
-const DIRECTIVE_TYPES = {
-    group: {
-        label: "Group",
-        description: "Group related directives together",
-        icon: FolderIcon,
-        color: "bg-blue-50 border-blue-200 hover:bg-blue-100",
-        iconColor: "text-blue-600",
-        defaultValue: { group: [] as Directive[] },
-        keywords: ["group", "folder", "organize", "collection"],
-    },
-    environment: {
-        label: "Environment",
-        description: "Set environment variables",
-        icon: CogIcon,
-        color: "bg-green-50 border-green-200 hover:bg-green-100",
-        iconColor: "text-green-600",
-        defaultValue: { environment: {} },
-        keywords: ["environment", "env", "variables", "config", "settings"],
-    },
-    install: {
-        label: "Install",
-        description: "Install packages or dependencies",
-        icon: CommandLineIcon,
-        color: "bg-purple-50 border-purple-200 hover:bg-purple-100",
-        iconColor: "text-purple-600",
-        defaultValue: { install: "" },
-        keywords: ["install", "package", "dependency", "apt", "yum", "npm"],
-    },
-    workdir: {
-        label: "Working Directory",
-        description: "Set the working directory",
-        icon: FolderOpenIcon,
-        color: "bg-yellow-50 border-yellow-200 hover:bg-yellow-100",
-        iconColor: "text-yellow-600",
-        defaultValue: { workdir: "" },
-        keywords: ["workdir", "directory", "folder", "path", "cd"],
-    },
-    run: {
-        label: "Run Commands",
-        description: "Execute shell commands",
-        icon: PlayIcon,
-        color: "bg-red-50 border-red-200 hover:bg-red-100",
-        iconColor: "text-red-600",
-        defaultValue: { run: [] as string[] },
-        keywords: ["run", "command", "execute", "shell", "bash", "script"],
-    },
-    variables: {
-        label: "Variables",
-        description: "Define template variables",
-        icon: VariableIcon,
-        color: "bg-indigo-50 border-indigo-200 hover:bg-indigo-100",
-        iconColor: "text-indigo-600",
-        defaultValue: { variables: {} },
-        keywords: ["variables", "var", "template", "placeholder", "substitution"],
-    },
-    template: {
-        label: "Template",
-        description: "Define a reusable template",
-        icon: DocumentDuplicateIcon,
-        color: "bg-pink-50 border-pink-200 hover:bg-pink-100",
-        iconColor: "text-pink-600",
-        defaultValue: { template: { name: "new-template" } },
-        keywords: ["template", "reusable", "pattern", "blueprint"],
-    },
-    deploy: {
-        label: "Deploy",
-        description: "Configure deployment settings",
-        icon: RocketLaunchIcon,
-        color: "bg-orange-50 border-orange-200 hover:bg-orange-100",
-        iconColor: "text-orange-600",
-        defaultValue: { deploy: { path: [] as string[], bins: [] as string[] } },
-        keywords: ["deploy", "deployment", "publish", "release", "launch"],
-    },
-    user: {
-        label: "User",
-        description: "Set the user context",
-        icon: UserIcon,
-        color: "bg-teal-50 border-teal-200 hover:bg-teal-100",
-        iconColor: "text-teal-600",
-        defaultValue: { user: "" },
-        keywords: ["user", "account", "permission", "context", "identity"],
-    },
-    copy: {
-        label: "Copy",
-        description: "Copy files or directories",
-        icon: DocumentIcon,
-        color: "bg-cyan-50 border-cyan-200 hover:bg-cyan-100",
-        iconColor: "text-cyan-600",
-        defaultValue: { copy: [] as string[] },
-        keywords: ["copy", "file", "transfer", "duplicate", "move"],
-    },
-    file: {
-        label: "File",
-        description: "Create or manage files",
-        icon: ClipboardDocumentListIcon,
-        color: "bg-emerald-50 border-emerald-200 hover:bg-emerald-100",
-        iconColor: "text-emerald-600",
-        defaultValue: { file: { name: "", filename: "" } },
-        keywords: ["file", "create", "manage", "document", "content"],
-    },
-    test: {
-        label: "Test",
-        description: "Define test scripts",
-        icon: BeakerIcon,
-        color: "bg-violet-50 border-violet-200 hover:bg-violet-100",
-        iconColor: "text-violet-600",
-        defaultValue: { test: { name: "", script: "" } },
-        keywords: ["test", "testing", "validation", "check", "verify"],
-    },
-    include: {
-        label: "Include",
-        description: "Include external configuration files",
-        icon: DocumentArrowDownIcon,
-        color: "bg-slate-50 border-slate-200 hover:bg-slate-100",
-        iconColor: "text-slate-600",
-        defaultValue: { include: "macros/openrecon/neurodocker.yaml" },
-        keywords: ["include", "import", "external", "reference", "link"],
-    },
-} as const;
+// Get directive types dynamically from registry
+const getDirectiveTypes = () => {
+    const directives = getAllDirectives();
+    const directiveTypes: Record<string, DirectiveMetadata> = {};
+    
+    directives.forEach(directive => {
+        directiveTypes[directive.key] = directive;
+    });
+    
+    return directiveTypes;
+};
 
 // Shared directive item component to reduce duplication
 interface DirectiveItemProps {
     directiveKey: string;
-    config: (typeof DIRECTIVE_TYPES)[keyof typeof DIRECTIVE_TYPES];
+    config: DirectiveMetadata;
     index: number;
     isFocused: boolean;
     isMobile: boolean;
-    onSelect: (key: keyof typeof DIRECTIVE_TYPES) => void;
+    onSelect: (key: string) => void;
     onMouseEnter: (index: number) => void;
     itemRef: (el: HTMLButtonElement | null) => void;
 }
@@ -179,7 +60,7 @@ const DirectiveItem = ({
         <button
             ref={itemRef}
             type="button"
-            onClick={() => onSelect(directiveKey as keyof typeof DIRECTIVE_TYPES)}
+            onClick={() => onSelect(directiveKey)}
             onMouseEnter={() => onMouseEnter(index)}
             className={`
         w-full flex items-center gap-${isMobile ? "4" : "3"} p-${isMobile ? "4" : "3"
@@ -248,14 +129,17 @@ export default function AddDirectiveButton({
     const listRef = useRef<HTMLDivElement>(null);
     const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
+    // Get directive types from registry
+    const directiveTypes = getDirectiveTypes();
+
     // Filter directives based on search term
-    const filteredDirectives = Object.entries(DIRECTIVE_TYPES).filter(
+    const filteredDirectives = Object.entries(directiveTypes).filter(
         ([key, config]) => {
             const searchLower = searchTerm.toLowerCase();
             return (
                 config.label.toLowerCase().includes(searchLower) ||
                 config.description.toLowerCase().includes(searchLower) ||
-                config.keywords.some((keyword) =>
+                config.keywords.some((keyword: string) =>
                     keyword.toLowerCase().includes(searchLower)
                 ) ||
                 key.toLowerCase().includes(searchLower)
@@ -396,14 +280,14 @@ export default function AddDirectiveButton({
     }, []);
 
     const handleAddDirective = useCallback(
-        (directiveType: keyof typeof DIRECTIVE_TYPES) => {
-            const directiveConfig = DIRECTIVE_TYPES[directiveType];
+        (directiveType: string) => {
+            const directiveConfig = directiveTypes[directiveType];
             onAddDirective(directiveConfig.defaultValue);
             setIsOpen(false);
             setSearchTerm("");
             setFocusedIndex(-1);
         },
-        [onAddDirective]
+        [onAddDirective, directiveTypes]
     );
 
     const closeModal = useCallback(() => {
@@ -483,9 +367,7 @@ export default function AddDirectiveButton({
             case "Enter":
                 event.preventDefault();
                 if (focusedIndex >= 0 && filteredDirectives[focusedIndex]) {
-                    handleAddDirective(
-                        filteredDirectives[focusedIndex][0] as keyof typeof DIRECTIVE_TYPES
-                    );
+                    handleAddDirective(filteredDirectives[focusedIndex][0]);
                 }
                 break;
         }

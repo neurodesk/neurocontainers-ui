@@ -1,5 +1,7 @@
 import { DirectiveContainer, FormField, Input, Textarea } from "@/components/ui";
 import { TestInfo, ScriptTest, BuiltinTest } from "@/components/common";
+import { BeakerIcon } from "@heroicons/react/24/outline";
+import { registerDirective, DirectiveMetadata } from "./registry";
 
 export default function TestDirectiveComponent({
     test,
@@ -81,3 +83,18 @@ export default function TestDirectiveComponent({
         </DirectiveContainer>
     );
 }
+
+// Register this directive
+export const testDirectiveMetadata: DirectiveMetadata = {
+    key: "test",
+    label: "Test",
+    description: "Define test scripts to validate container functionality",
+    icon: BeakerIcon,
+    color: "bg-violet-50 border-violet-200 hover:bg-violet-100",
+    iconColor: "text-violet-600",
+    defaultValue: { test: { name: "", script: "" } },
+    keywords: ["test", "testing", "validation", "check", "verify"],
+    component: TestDirectiveComponent,
+};
+
+registerDirective(testDirectiveMetadata);

@@ -1,5 +1,7 @@
 import { useRef, useEffect, useState } from "react";
 import { DirectiveContainer, ListEditor, Textarea } from "@/components/ui";
+import { PlayIcon } from "@heroicons/react/24/outline";
+import { registerDirective, DirectiveMetadata } from "./registry";
 
 export default function RunCommandDirectiveComponent({
     run,
@@ -121,3 +123,18 @@ export default function RunCommandDirectiveComponent({
         </DirectiveContainer>
     );
 }
+
+// Register this directive
+export const runDirectiveMetadata: DirectiveMetadata = {
+    key: "run",
+    label: "Run Commands",
+    description: "Execute shell commands during container build",
+    icon: PlayIcon,
+    color: "bg-red-50 border-red-200 hover:bg-red-100",
+    iconColor: "text-red-600",
+    defaultValue: { run: [] as string[] },
+    keywords: ["run", "command", "execute", "shell", "bash", "script"],
+    component: RunCommandDirectiveComponent,
+};
+
+registerDirective(runDirectiveMetadata);

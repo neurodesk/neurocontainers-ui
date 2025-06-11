@@ -1,4 +1,6 @@
 import { DirectiveContainer, ListEditor, Input } from "@/components/ui";
+import { DocumentIcon } from "@heroicons/react/24/outline";
+import { registerDirective, DirectiveMetadata } from "./registry";
 
 export default function CopyDirectiveComponent({
     copy,
@@ -51,3 +53,18 @@ export default function CopyDirectiveComponent({
         </DirectiveContainer>
     );
 }
+
+// Register this directive
+export const copyDirectiveMetadata: DirectiveMetadata = {
+    key: "copy",
+    label: "Copy",
+    description: "Copy files and directories into the container",
+    icon: DocumentIcon,
+    color: "bg-cyan-50 border-cyan-200 hover:bg-cyan-100",
+    iconColor: "text-cyan-600",
+    defaultValue: { copy: [] as string[] },
+    keywords: ["copy", "file", "transfer", "duplicate", "move"],
+    component: CopyDirectiveComponent,
+};
+
+registerDirective(copyDirectiveMetadata);

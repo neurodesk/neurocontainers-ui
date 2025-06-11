@@ -1,5 +1,7 @@
 import { DirectiveContainer, FormField, Select } from "@/components/ui";
 import { IncludeMacro, IncludeMacros } from "@/components/common";
+import { DocumentArrowDownIcon } from "@heroicons/react/24/outline";
+import { registerDirective, DirectiveMetadata } from "./registry";
 
 export default function IncludeDirectiveComponent({
     include,
@@ -55,3 +57,18 @@ export default function IncludeDirectiveComponent({
         </DirectiveContainer>
     );
 }
+
+// Register this directive
+export const includeDirectiveMetadata: DirectiveMetadata = {
+    key: "include",
+    label: "Include",
+    description: "Include external macros or templates",
+    icon: DocumentArrowDownIcon,
+    color: "bg-slate-50 border-slate-200 hover:bg-slate-100",
+    iconColor: "text-slate-600",
+    defaultValue: { include: "macros/openrecon/neurodocker.yaml" },
+    keywords: ["include", "import", "external", "reference", "link"],
+    component: IncludeDirectiveComponent,
+};
+
+registerDirective(includeDirectiveMetadata);

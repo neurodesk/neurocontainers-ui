@@ -1,5 +1,7 @@
 import { DirectiveContainer, FormField, TagEditor } from "@/components/ui";
 import { DeployInfo } from "@/components/common";
+import { RocketLaunchIcon } from "@heroicons/react/24/outline";
+import { registerDirective, DirectiveMetadata } from "./registry";
 
 export default function DeployDirectiveComponent({
     deploy,
@@ -79,3 +81,18 @@ export default function DeployDirectiveComponent({
         </DirectiveContainer>
     );
 }
+
+// Register this directive
+export const deployDirectiveMetadata: DirectiveMetadata = {
+    key: "deploy",
+    label: "Deploy",
+    description: "Configure deployment settings for the container",
+    icon: RocketLaunchIcon,
+    color: "bg-orange-50 border-orange-200 hover:bg-orange-100",
+    iconColor: "text-orange-600",
+    defaultValue: { deploy: { path: [] as string[], bins: [] as string[] } },
+    keywords: ["deploy", "deployment", "publish", "release", "launch"],
+    component: DeployDirectiveComponent,
+};
+
+registerDirective(deployDirectiveMetadata);

@@ -1,4 +1,6 @@
 import { DirectiveContainer, Input } from "@/components/ui";
+import { FolderOpenIcon } from "@heroicons/react/24/outline";
+import { registerDirective, DirectiveMetadata } from "./registry";
 
 export default function WorkingDirectoryDirectiveComponent({
     workdir,
@@ -58,3 +60,18 @@ export default function WorkingDirectoryDirectiveComponent({
         </DirectiveContainer>
     );
 }
+
+// Register this directive
+export const workdirDirectiveMetadata: DirectiveMetadata = {
+    key: "workdir",
+    label: "Working Directory",
+    description: "Set the working directory for subsequent commands",
+    icon: FolderOpenIcon,
+    color: "bg-yellow-50 border-yellow-200 hover:bg-yellow-100",
+    iconColor: "text-yellow-600",
+    defaultValue: { workdir: "" },
+    keywords: ["workdir", "directory", "folder", "path", "cd"],
+    component: WorkingDirectoryDirectiveComponent,
+};
+
+registerDirective(workdirDirectiveMetadata);

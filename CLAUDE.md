@@ -8,10 +8,9 @@ This is a Next.js web application for building Neurocontainers - containerized n
 
 ## Common Development Commands
 
-- `bun dev` or `npm run dev` - Start development server
-- `bun build` or `npm run build` - Build for production  
-- `bun start` or `npm run start` - Start production server
-- `bun lint` or `npm run lint` - Run ESLint
+- `bun dev` - Start development server
+- `bun run build` - Build for production  
+- `bun lint` - Run ESLint
 
 ## Architecture Overview
 

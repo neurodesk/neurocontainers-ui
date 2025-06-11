@@ -133,7 +133,7 @@ export const runDirectiveMetadata: DirectiveMetadata = {
     color: "bg-red-50 border-red-200 hover:bg-red-100",
     iconColor: "text-red-600",
     defaultValue: { run: [] as string[] },
-    keywords: ["run", "command", "execute", "shell", "bash", "script"],
+    keywords: ["run", "command", "execute", "bash"],
     component: RunCommandDirectiveComponent,
 };
 

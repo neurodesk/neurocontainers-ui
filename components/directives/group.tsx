@@ -7,11 +7,257 @@ import {
     ChevronDownIcon as ChevronDownMoveIcon,
     FolderIcon,
 } from "@heroicons/react/24/outline";
-import { useState, useRef, useEffect } from "react";
-import { Directive } from "@/components/common";
+import { useState, useRef, useEffect, lazy, Suspense } from "react";
+import type { JSX } from "react";
+import { Directive, GroupDirective } from "@/components/common";
 import DirectiveComponent from "./factory";
-import AddDirectiveButton from "@/components/add";
 import { registerDirective, DirectiveMetadata } from "./registry";
+import { DirectiveContainer, FormField, Input, ToggleButtonGroup, TagEditor } from "@/components/ui";
+
+// Lazy import to avoid circular dependency
+const AddDirectiveButton = lazy(() => import("@/components/add"));
+
+interface BaseGroupEditorArgument {
+    name: string;
+    required: boolean;
+    description?: string;
+    advanced?: boolean;
+}
+
+export type GroupEditorArgument = (BaseGroupEditorArgument & {
+    type: "dropdown";
+    options: string[];
+    defaultValue?: string;
+}) | (BaseGroupEditorArgument & {
+    type: "text";
+    defaultValue?: string;
+    multiline?: boolean;
+}) | (BaseGroupEditorArgument & {
+    // the array is represented as space separated strings
+    type: "array";
+    defaultValue?: string[];
+}) | (BaseGroupEditorArgument & {
+    type: "boolean";
+    defaultValue?: boolean;
+});
+
+// Initialize the group editors registry at module level
+const groupEditors: Map<string, GroupEditor> = new Map();
+
+export interface GroupEditor {
+    metadata: DirectiveMetadata;
+    arguments: GroupEditorArgument[];
+    helpContent: () => JSX.Element;
+    updateDirective: (args: Record<string, unknown>) => GroupDirective;
+}
+
+export function createGroupEditorComponent(editorInfo: GroupEditor) {
+    return function CustomGroupEditorComponent({
+        group,
+        onChange: onGroupChange,
+        customParams = {},
+    }: {
+        group: Directive[];
+        baseImage: string;
+        onChange: (group: Directive[], params: Record<string, unknown>) => void;
+        customParams?: Record<string, unknown>;
+    }) {
+        const [showAdvanced, setShowAdvanced] = useState(false);
+        const initializedRef = useRef(false);
+
+        const onChangeWrapper = (updatedGroup: Directive[], params: Record<string, unknown>) => {
+            console.log("Group updated:", updatedGroup, "Params:", params);
+            onGroupChange(updatedGroup, params);
+        };
+
+        // Initialize with default values if no custom params exist
+        const getDefaultParams = () => {
+            const defaults: Record<string, unknown> = {};
+            editorInfo.arguments.forEach(arg => {
+                if ('defaultValue' in arg && arg.defaultValue !== undefined) {
+                    defaults[arg.name] = arg.defaultValue;
+                }
+            });
+            return defaults;
+        };
+
+        // If no custom params exist, initialize with defaults
+        const currentParams = Object.keys(customParams).length > 0 ? customParams : getDefaultParams();
+
+        // Update a single parameter and regenerate directives
+        const updateParameter = (key: string, value: unknown) => {
+            const updatedParams = { ...currentParams, [key]: value };
+
+            // Generate new directives
+            const updatedDirective = editorInfo.updateDirective(updatedParams);
+            onChangeWrapper(updatedDirective.group, updatedParams);
+        };
+
+        // Auto-initialize on first render if no custom params exist
+        useEffect(() => {
+            if (!initializedRef.current && Object.keys(customParams).length === 0) {
+                const defaultParams = getDefaultParams();
+
+                // Generate initial directives
+                const updatedDirective = editorInfo.updateDirective(defaultParams);
+                onChangeWrapper(updatedDirective.group, defaultParams);
+                initializedRef.current = true;
+            }
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+        }, [customParams]);
+
+        const renderArgument = (arg: GroupEditorArgument) => {
+            const getDefaultValue = () => {
+                if (arg.type === 'boolean' && 'defaultValue' in arg) {
+                    return arg.defaultValue ?? false;
+                }
+                if (arg.type === 'text' && 'defaultValue' in arg) {
+                    return arg.defaultValue ?? '';
+                }
+                if (arg.type === 'array' && 'defaultValue' in arg) {
+                    return arg.defaultValue ?? [];
+                }
+                return '';
+            };
+
+            const currentValue = currentParams[arg.name] ?? getDefaultValue();
+
+            if (arg.advanced && !showAdvanced) return null;
+
+            switch (arg.type) {
+                case 'dropdown':
+                    return (
+                        <FormField key={arg.name} label={arg.name} description={arg.description}>
+                            <select
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:border-transparent"
+                                value={String(currentValue)}
+                                onChange={(e) => updateParameter(arg.name, e.target.value)}
+                            >
+                                {arg.options.map(option => (
+                                    <option key={option} value={option}>{option}</option>
+                                ))}
+                            </select>
+                        </FormField>
+                    );
+
+                case 'boolean':
+                    return (
+                        <FormField key={arg.name} label={arg.name} description={arg.description}>
+                            <ToggleButtonGroup
+                                options={[
+                                    { value: 'true', label: 'Yes' },
+                                    { value: 'false', label: 'No' }
+                                ]}
+                                value={String(currentValue)}
+                                onChange={(value) => updateParameter(arg.name, value === 'true')}
+                            />
+                        </FormField>
+                    );
+
+                case 'array':
+                    const displayName = arg.name
+                        .replace(/_/g, ' ')
+                        .replace(/\b\w/g, l => l.toUpperCase());
+                    return (
+                        <FormField key={arg.name} label={arg.name} description={arg.description}>
+                            <TagEditor
+                                tags={Array.isArray(currentValue) ? currentValue : []}
+                                onChange={(tags) => updateParameter(arg.name, tags)}
+                                placeholder={`Add ${displayName.toLowerCase()}...`}
+                                emptyMessage={`No ${displayName.toLowerCase()} added yet`}
+                            />
+                        </FormField>
+                    );
+
+                case 'text':
+                default:
+                    return (
+                        <FormField key={arg.name} label={arg.name} description={arg.description}>
+                            {arg.multiline ? (
+                                <textarea
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:border-transparent font-mono text-sm"
+                                    rows={6}
+                                    value={String(currentValue)}
+                                    onChange={(e) => updateParameter(arg.name, e.target.value)}
+                                    placeholder={`Enter ${arg.name}`}
+                                />
+                            ) : (
+                                <Input
+                                    value={String(currentValue)}
+                                    onChange={(e) => updateParameter(arg.name, e.target.value)}
+                                    placeholder={`Enter ${arg.name}`}
+                                    monospace
+                                />
+                            )}
+                        </FormField>
+                    );
+            }
+        };
+
+        const basicArgs = editorInfo.arguments.filter(arg => !arg.advanced);
+        const advancedArgs = editorInfo.arguments.filter(arg => arg.advanced);
+
+        return (
+            <DirectiveContainer
+                title={editorInfo.metadata.label}
+                helpContent={editorInfo.helpContent()}
+            >
+                <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                        <h4 className="text-sm font-medium text-gray-700">
+                            {editorInfo.metadata.label} Configuration
+                        </h4>
+                        <button
+                            onClick={() => {
+                                // Remove custom properties and switch to advanced mode
+                                onChangeWrapper(group, {});
+                            }}
+                            className="text-xs text-[#6aa329] hover:underline"
+                            title="Switch to advanced mode for full control (cannot be undone)"
+                        >
+                            Switch to Advanced Mode
+                        </button>
+                    </div>
+
+                    {basicArgs.map(renderArgument)}
+                </div>
+
+                {advancedArgs.length > 0 && (
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h4 className="font-medium text-sm text-gray-700">Advanced Settings</h4>
+                            <button
+                                onClick={() => setShowAdvanced(!showAdvanced)}
+                                className="text-xs text-[#6aa329] hover:underline"
+                            >
+                                {showAdvanced ? 'Hide' : 'Show'} Advanced
+                            </button>
+                        </div>
+                        {showAdvanced && (
+                            <div className="space-y-4 border-l-4 border-[#d3e7b6] pl-4">
+                                {advancedArgs.map(renderArgument)}
+                            </div>
+                        )}
+                    </div>
+                )}
+            </DirectiveContainer>
+        );
+    };
+}
+
+export function registerGroupEditor(name: string, editor: GroupEditor) {
+    groupEditors.set(name, editor);
+    const component = createGroupEditorComponent(editor);
+    const metadata = {
+        ...editor.metadata,
+        component
+    };
+    registerDirective(metadata);
+}
+
+export function getGroupEditor(name: string): GroupEditor | undefined {
+    return groupEditors.get(name);
+}
 
 export default function GroupDirectiveComponent({
     group,
@@ -164,24 +410,28 @@ export default function GroupDirectiveComponent({
                     <div className="p-3 border-t border-gray-200">
                         <div className="space-y-2">
                             {group.length === 0 ? (
-                                <AddDirectiveButton 
-                                    onAddDirective={addDirective} 
-                                    variant="empty" 
-                                    index={0}
-                                    emptyText={{
-                                        title: "No items in group",
-                                        subtitle: "Click here to add directives to this group"
-                                    }}
-                                />
+                                <Suspense fallback={<div>Loading...</div>}>
+                                    <AddDirectiveButton
+                                        onAddDirective={addDirective}
+                                        variant="empty"
+                                        index={0}
+                                        emptyText={{
+                                            title: "No items in group",
+                                            subtitle: "Click here to add directives to this group"
+                                        }}
+                                    />
+                                </Suspense>
                             ) : (
                                 <>
                                     {/* First add button - only shows when there are items */}
                                     <div className="py-1">
-                                        <AddDirectiveButton 
-                                            onAddDirective={addDirective} 
-                                            variant="inline" 
-                                            index={0} 
-                                        />
+                                        <Suspense fallback={<div>Loading...</div>}>
+                                            <AddDirectiveButton
+                                                onAddDirective={addDirective}
+                                                variant="inline"
+                                                index={0}
+                                            />
+                                        </Suspense>
                                     </div>
 
                                     {group.map((directive, index) => (
@@ -356,11 +606,13 @@ export default function GroupDirectiveComponent({
 
                                             {/* Add button after this directive */}
                                             <div className="py-1">
-                                                <AddDirectiveButton 
-                                                    onAddDirective={addDirective} 
-                                                    variant="inline" 
-                                                    index={index + 1} 
-                                                />
+                                                <Suspense fallback={<div>Loading...</div>}>
+                                                    <AddDirectiveButton
+                                                        onAddDirective={addDirective}
+                                                        variant="inline"
+                                                        index={index + 1}
+                                                    />
+                                                </Suspense>
                                             </div>
                                         </div>
                                     ))}

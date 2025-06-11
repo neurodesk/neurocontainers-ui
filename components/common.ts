@@ -21,6 +21,8 @@ export interface BaseDirective {
 }
 
 export interface GroupDirective extends BaseDirective {
+    custom?: string; // Optional name for a custom group editor.
+    customParams?: Record<string, unknown>; // Optional custom parameters for the group.
     group: Directive[];
 }
 

@@ -16,5 +16,8 @@ import "./include";
 // Import all template components to trigger their registration  
 import "./templates";
 
+// Import all custom group editors to trigger their registration
+import "./groups";
+
 // Re-export the registry functions for external use
 export { getAllDirectives, getDirective, getDirectiveRegistry } from "./registry";

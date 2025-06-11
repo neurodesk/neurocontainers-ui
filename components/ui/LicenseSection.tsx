@@ -8,9 +8,11 @@ import spdxLicenses from "./licenses.json";
 interface LicenseSectionProps {
     licenses: CopyrightInfo[];
     onChange: (licenses: CopyrightInfo[]) => void;
+    showAddButton?: boolean;
+    renderAddButton?: (addLicense: () => void) => React.ReactNode;
 }
 
-export default function LicenseSection({ licenses, onChange }: LicenseSectionProps) {
+export default function LicenseSection({ licenses, onChange, showAddButton = true, renderAddButton }: LicenseSectionProps) {
     const [deleteConfirmIndex, setDeleteConfirmIndex] = useState<number | null>(null);
     const [customLicenseIndex, setCustomLicenseIndex] = useState<number | null>(null);
 
@@ -123,17 +125,23 @@ export default function LicenseSection({ licenses, onChange }: LicenseSectionPro
         return false;
     };
 
+    const AddLicenseButton = () => (
+        <button
+            className="text-sm text-white bg-[#6aa329] hover:bg-[#4f7b38] flex items-center gap-2 px-3 py-2 rounded-md transition-colors"
+            onClick={addLicense}
+        >
+            <PlusIcon className="h-4 w-4" />
+            Add License
+        </button>
+    );
+
     return (
         <>
-            <div className="flex items-center justify-end mb-4">
-                <button
-                    className="text-sm text-white bg-[#6aa329] hover:bg-[#4f7b38] flex items-center gap-2 px-3 py-2 rounded-md transition-colors"
-                    onClick={addLicense}
-                >
-                    <PlusIcon className="h-4 w-4" />
-                    Add License
-                </button>
-            </div>
+            {showAddButton && !renderAddButton && (
+                <div className="flex items-center justify-end mb-4">
+                    <AddLicenseButton />
+                </div>
+            )}
 
             {licenses.length === 0 ? (
                 <div className="text-center py-6 text-gray-500 border-2 border-dashed border-gray-200 rounded-lg">

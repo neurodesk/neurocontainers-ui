@@ -1,4 +1,4 @@
-import { InformationCircleIcon, ExclamationTriangleIcon } from "@heroicons/react/24/outline";
+import { InformationCircleIcon, ExclamationTriangleIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { ContainerRecipe, Architecture, CopyrightInfo } from "@/components/common";
 import { useState, useEffect } from "react";
 import {
@@ -99,6 +99,11 @@ export default function ContainerMetadata({
 
     const updateCopyright = (copyright: CopyrightInfo[]) => {
         onChange({ ...recipe, copyright });
+    };
+
+    const addLicense = () => {
+        const newLicense = { license: "", url: "" };
+        updateCopyright([...(recipe.copyright || []), newLicense]);
     };
 
     // Input type switching with warning
@@ -338,18 +343,27 @@ export default function ContainerMetadata({
 
                     {/* License Section */}
                     <div>
-                        <div className="flex items-center gap-2 mb-4">
-                            <h3 className="text-lg font-medium text-[#0c0e0a]">License Information</h3>
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                                <h3 className="text-lg font-medium text-[#0c0e0a]">License Information</h3>
+                                <button
+                                    type="button"
+                                    className={`text-[#4f7b38] hover:text-[#6aa329] p-1 transition-colors ${showLicenseHelp ? 'text-[#6aa329]' : ''}`}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setShowLicenseHelp(!showLicenseHelp);
+                                    }}
+                                    title={showLicenseHelp ? "Hide documentation" : "Show documentation"}
+                                >
+                                    <InformationCircleIcon className="h-4 w-4" />
+                                </button>
+                            </div>
                             <button
-                                type="button"
-                                className={`text-[#4f7b38] hover:text-[#6aa329] p-1 transition-colors ${showLicenseHelp ? 'text-[#6aa329]' : ''}`}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setShowLicenseHelp(!showLicenseHelp);
-                                }}
-                                title={showLicenseHelp ? "Hide documentation" : "Show documentation"}
+                                className="text-sm text-white bg-[#6aa329] hover:bg-[#4f7b38] flex items-center gap-2 px-3 py-2 rounded-md transition-colors"
+                                onClick={addLicense}
                             >
-                                <InformationCircleIcon className="h-4 w-4" />
+                                <PlusIcon className="h-4 w-4" />
+                                Add License
                             </button>
                         </div>
 
@@ -362,6 +376,7 @@ export default function ContainerMetadata({
                         <LicenseSection
                             licenses={recipe.copyright || []}
                             onChange={updateCopyright}
+                            showAddButton={false}
                         />
                     </div>
                 </div>

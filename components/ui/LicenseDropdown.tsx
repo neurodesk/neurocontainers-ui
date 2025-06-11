@@ -5,23 +5,24 @@ import {
     PencilIcon,
     XMarkIcon,
 } from "@heroicons/react/24/outline";
+import spdxLicenses from "./licenses.json";
 
-// SPDX License list (common ones - you can expand this)
-const SPDX_LICENSES = [
-    { id: "MIT", name: "MIT License", url: "https://opensource.org/licenses/MIT" },
-    { id: "Apache-2.0", name: "Apache License 2.0", url: "https://opensource.org/licenses/Apache-2.0" },
-    { id: "GPL-3.0", name: "GNU General Public License v3.0", url: "https://opensource.org/licenses/GPL-3.0" },
-    { id: "GPL-2.0", name: "GNU General Public License v2.0", url: "https://opensource.org/licenses/GPL-2.0" },
-    { id: "BSD-3-Clause", name: "BSD 3-Clause License", url: "https://opensource.org/licenses/BSD-3-Clause" },
-    { id: "BSD-2-Clause", name: "BSD 2-Clause License", url: "https://opensource.org/licenses/BSD-2-Clause" },
-    { id: "LGPL-3.0", name: "GNU Lesser General Public License v3.0", url: "https://opensource.org/licenses/LGPL-3.0" },
-    { id: "LGPL-2.1", name: "GNU Lesser General Public License v2.1", url: "https://opensource.org/licenses/LGPL-2.1" },
-    { id: "ISC", name: "ISC License", url: "https://opensource.org/licenses/ISC" },
-    { id: "MPL-2.0", name: "Mozilla Public License 2.0", url: "https://opensource.org/licenses/MPL-2.0" },
-    { id: "CC0-1.0", name: "Creative Commons Zero v1.0 Universal", url: "https://creativecommons.org/publicdomain/zero/1.0/" },
-    { id: "Unlicense", name: "The Unlicense", url: "https://unlicense.org/" },
-    { id: "AGPL-3.0", name: "GNU Affero General Public License v3.0", url: "https://opensource.org/licenses/AGPL-3.0" },
-];
+// Transform SPDX license data to our format
+const SPDX_LICENSES = spdxLicenses.licenses
+    .filter(license => !license.isDeprecatedLicenseId)
+    .map(license => ({
+        id: license.licenseId,
+        name: license.name,
+        url: license.seeAlso?.[0] || license.reference,
+        isOsiApproved: license.isOsiApproved
+    }));
+
+interface License {
+    id: string;
+    name: string;
+    url: string;
+    isOsiApproved: boolean;
+}
 
 interface LicenseDropdownProps {
     value: string;
@@ -42,11 +43,87 @@ export default function LicenseDropdown({
     const searchInputRef = useRef<HTMLInputElement>(null);
     const [isMobile, setIsMobile] = useState(false);
 
-    const filteredLicenses = SPDX_LICENSES.filter(
-        (license) =>
-            license.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            license.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredLicenses = SPDX_LICENSES.filter((license) => {
+        const term = searchTerm.toLowerCase().trim();
+        if (!term) return true;
+        
+        const licenseId = license.id.toLowerCase();
+        const licenseName = license.name.toLowerCase();
+        
+        // Direct matches
+        if (licenseId.includes(term) || licenseName.includes(term)) {
+            return true;
+        }
+        
+        // Smart matching: handle common patterns
+        // gpl3 -> GPL-3.0, gpl-3, etc.
+        if (term.match(/^gpl\d+$/)) {
+            const version = term.replace('gpl', '');
+            return licenseId.includes(`gpl-${version}`);
+        }
+        
+        // apache2 -> Apache-2.0
+        if (term.match(/^apache\d+$/)) {
+            const version = term.replace('apache', '');
+            return licenseId.includes(`apache-${version}`);
+        }
+        
+        // bsd2, bsd3 -> BSD-2-Clause, BSD-3-Clause
+        if (term.match(/^bsd\d+$/)) {
+            const version = term.replace('bsd', '');
+            return licenseId.includes(`bsd-${version}`);
+        }
+        
+        // lgpl2, lgpl3 -> LGPL-2.1, LGPL-3.0
+        if (term.match(/^lgpl\d+$/)) {
+            const version = term.replace('lgpl', '');
+            return licenseId.includes(`lgpl-${version}`);
+        }
+        
+        // Remove common separators and try fuzzy matching
+        const normalizedTerm = term.replace(/[\s\-_.]/g, '');
+        const normalizedId = licenseId.replace(/[\s\-_.]/g, '');
+        const normalizedName = licenseName.replace(/[\s\-_.]/g, '');
+        
+        return normalizedId.includes(normalizedTerm) || normalizedName.includes(normalizedTerm);
+    }).sort((a, b) => {
+        if (!searchTerm.trim()) {
+            // Default sort when no search
+            if (a.isOsiApproved !== b.isOsiApproved) {
+                return a.isOsiApproved ? -1 : 1;
+            }
+            return a.id.localeCompare(b.id);
+        }
+        
+        const term = searchTerm.toLowerCase().trim();
+        const aId = a.id.toLowerCase();
+        const bId = b.id.toLowerCase();
+        const aName = a.name.toLowerCase();
+        const bName = b.name.toLowerCase();
+        
+        // Exact ID match gets highest priority
+        const aExactId = aId === term;
+        const bExactId = bId === term;
+        if (aExactId !== bExactId) return aExactId ? -1 : 1;
+        
+        // ID starts with search term gets second priority
+        const aStartsId = aId.startsWith(term);
+        const bStartsId = bId.startsWith(term);
+        if (aStartsId !== bStartsId) return aStartsId ? -1 : 1;
+        
+        // Name starts with search term gets third priority
+        const aStartsName = aName.startsWith(term);
+        const bStartsName = bName.startsWith(term);
+        if (aStartsName !== bStartsName) return aStartsName ? -1 : 1;
+        
+        // OSI approved licenses get preference
+        if (a.isOsiApproved !== b.isOsiApproved) {
+            return a.isOsiApproved ? -1 : 1;
+        }
+        
+        // Finally, sort alphabetically
+        return a.id.localeCompare(b.id);
+    });
 
     // Check if mobile on mount and resize
     useEffect(() => {
@@ -87,7 +164,7 @@ export default function LicenseDropdown({
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const handleSelect = (license: typeof SPDX_LICENSES[0]) => {
+    const handleSelect = (license: License) => {
         onChange(license.id, license.url);
         setIsOpen(false);
         setSearchTerm("");
@@ -100,7 +177,7 @@ export default function LicenseDropdown({
     };
 
     const selectedLicense = SPDX_LICENSES.find((l) => l.id === value);
-    const isCustomLicense = !selectedLicense && value;
+    const isCustomLicense = !selectedLicense && value && value.trim();
 
     return (
         <div className="relative" ref={dropdownRef}>
@@ -114,8 +191,9 @@ export default function LicenseDropdown({
                         `${selectedLicense.id} - ${selectedLicense.name}`
                     ) : isCustomLicense ? (
                         <span className="flex items-center gap-2">
-                            <PencilIcon className="h-4 w-4 text-[#6aa329]" />
-                            {value} (Custom)
+                            <PencilIcon className="h-4 w-4 text-blue-600" />
+                            <span className="font-medium">{value}</span>
+                            <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">Custom</span>
                         </span>
                     ) : (
                         placeholder || "Select a license"
@@ -184,10 +262,10 @@ export default function LicenseDropdown({
                                 type="button"
                                 className={`w-full ${
                                     isMobile ? "px-4 py-4" : "px-3 py-3"
-                                } text-left hover:bg-[#f0f7e7] focus:bg-[#f0f7e7] focus:outline-none text-sm border-b border-gray-100 flex items-center gap-2`}
+                                } text-left hover:bg-gray-50 focus:bg-gray-50 focus:outline-none text-sm border-b border-gray-100 flex items-center gap-2`}
                                 onClick={handleCustomLicense}
                             >
-                                <PencilIcon className="h-4 w-4 text-[#6aa329]" />
+                                <PencilIcon className="h-4 w-4 text-blue-600" />
                                 <div>
                                     <div className="font-medium text-[#0c0e0a]">Custom License</div>
                                     <div className="text-xs text-gray-500">
@@ -204,10 +282,17 @@ export default function LicenseDropdown({
                                         type="button"
                                         className={`w-full ${
                                             isMobile ? "px-4 py-3" : "px-3 py-2"
-                                        } text-left hover:bg-[#f0f7e7] focus:bg-[#f0f7e7] focus:outline-none text-sm`}
+                                        } text-left hover:bg-gray-50 focus:bg-gray-50 focus:outline-none text-sm`}
                                         onClick={() => handleSelect(license)}
                                     >
-                                        <div className="font-medium text-[#0c0e0a]">{license.id}</div>
+                                        <div className="flex items-center gap-2">
+                                            <div className="font-medium text-[#0c0e0a]">{license.id}</div>
+                                            {license.isOsiApproved && (
+                                                <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">
+                                                    OSI
+                                                </span>
+                                            )}
+                                        </div>
                                         <div className="text-xs text-gray-500 truncate">{license.name}</div>
                                     </button>
                                 ))

@@ -2,10 +2,17 @@ export const NEUROCONTAINERS_REPO = "https://github.com/neurodesk/neurocontainer
 
 export type Architecture = "x86_64" | "aarch64";
 
-export interface CopyrightInfo {
-    license: string;
-    url: string;
+export interface CustomCopyrightInfo {
+    name: string; // Can be any custom name
+    url?: string; // Optional URL for the license
 }
+
+export interface SPDXCopyrightInfo {
+    license: string; // Must be a valid SPDX license identifier
+    url?: string; // Optional URL for the license
+}
+
+export type CopyrightInfo = CustomCopyrightInfo | SPDXCopyrightInfo;
 
 export type Condition = string;
 

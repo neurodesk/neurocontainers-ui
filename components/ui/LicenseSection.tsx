@@ -3,6 +3,7 @@ import { PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { CopyrightInfo } from "@/components/common";
 import { FormField, Input } from "./FormField";
 import LicenseDropdown from "./LicenseDropdown";
+import spdxLicenses from "./licenses.json";
 
 interface LicenseSectionProps {
     licenses: CopyrightInfo[];
@@ -18,10 +19,62 @@ export default function LicenseSection({ licenses, onChange }: LicenseSectionPro
         updated[index] = info;
         onChange(updated);
     };
+    
+    const getLicenseIdentifier = (info: CopyrightInfo): string => {
+        return 'license' in info ? info.license : info.name;
+    };
+    
+    const setLicenseIdentifier = (info: CopyrightInfo, identifier: string): CopyrightInfo => {
+        if ('license' in info) {
+            return { ...info, license: identifier };
+        } else {
+            return { ...info, name: identifier };
+        }
+    };
 
     const addLicense = () => {
         const newLicense = { license: "", url: "" };
         onChange([...licenses, newLicense]);
+    };
+
+    const validateLicense = (info: CopyrightInfo): string[] => {
+        const errors: string[] = [];
+        
+        const identifier = getLicenseIdentifier(info);
+        
+        if (!identifier?.trim()) {
+            errors.push("License identifier is required");
+        }
+        
+        if (info.url && info.url.trim() && !/^https?:\/\/.+/.test(info.url)) {
+            errors.push("License URL must be a valid HTTP/HTTPS URL");
+        }
+        
+        // For SPDX licenses (license property), validate that it's a valid SPDX identifier
+        if ('license' in info && info.license?.trim()) {
+            const isValidSpdx = spdxLicenses.licenses
+                .filter(l => !l.isDeprecatedLicenseId)
+                .some(l => l.licenseId === info.license);
+                
+            if (!isValidSpdx) {
+                errors.push(`"${info.license}" is not a valid SPDX license identifier. Use a custom license instead or select a valid SPDX license.`);
+            }
+        }
+        
+        // For custom licenses (name property), URL is strongly recommended
+        if ('name' in info && !info.url?.trim()) {
+            errors.push("Custom licenses should include a URL to the license text for legal clarity");
+        }
+        
+        // Check for potentially problematic custom license names
+        if ('name' in info && identifier?.trim()) {
+            const name = identifier.trim();
+            if (name.length < 2) {
+                errors.push("License name should be at least 2 characters");
+            }
+        }
+        
+        return errors;
     };
 
     const removeLicense = (index: number) => {
@@ -42,22 +95,39 @@ export default function LicenseSection({ licenses, onChange }: LicenseSectionPro
     };
 
     const handleCustomLicense = (index: number) => {
+        // Convert to custom license format
+        const currentInfo = licenses[index];
+        const currentIdentifier = getLicenseIdentifier(currentInfo);
+        updateLicense(index, { name: currentIdentifier || "", url: currentInfo.url || "" });
         setCustomLicenseIndex(index);
     };
 
     const isCustomLicense = (index: number) => {
         if (!licenses[index]) return false;
-        const license = licenses[index].license;
-        // Check if it's not in SPDX list (simplified check)
-        const commonSpdxIds = ['MIT', 'Apache-2.0', 'GPL-3.0', 'GPL-2.0', 'BSD-3-Clause', 'BSD-2-Clause'];
-        return !commonSpdxIds.includes(license) && license;
+        const info = licenses[index];
+        
+        // If it has a 'name' property, it's a CustomCopyrightInfo
+        if ('name' in info) return true;
+        
+        // If it has a 'license' property, check if it's in SPDX list
+        if ('license' in info) {
+            const license = info.license;
+            if (!license || !license.trim()) return false;
+            
+            const spdxLicenseIds = spdxLicenses.licenses
+                .filter(l => !l.isDeprecatedLicenseId)
+                .map(l => l.licenseId);
+            return !spdxLicenseIds.includes(license);
+        }
+        
+        return false;
     };
 
     return (
         <>
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-end mb-4">
                 <button
-                    className="text-sm text-[#4f7b38] hover:text-[#6aa329] flex items-center gap-2 px-3 py-2 rounded-md hover:bg-[#f0f7e7] transition-colors"
+                    className="text-sm text-white bg-[#6aa329] hover:bg-[#4f7b38] flex items-center gap-2 px-3 py-2 rounded-md transition-colors"
                     onClick={addLicense}
                 >
                     <PlusIcon className="h-4 w-4" />
@@ -75,7 +145,7 @@ export default function LicenseSection({ licenses, onChange }: LicenseSectionPro
                     {licenses.map((info, index) => (
                         <div
                             key={index}
-                            className="p-4 bg-[#f0f7e7] rounded-md border border-[#e6f1d6] relative"
+                            className="p-4 bg-gray-50 rounded-md border border-gray-200 relative"
                         >
                             <button
                                 className="absolute top-3 right-3 text-red-400 hover:text-red-600 hover:bg-red-50 p-1 rounded transition-colors"
@@ -87,30 +157,37 @@ export default function LicenseSection({ licenses, onChange }: LicenseSectionPro
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pr-8">
                                 <FormField
-                                    label="License Identifier"
+                                    label={
+                                        <div className="flex items-center gap-2">
+                                            <span>License Identifier</span>
+                                            {isCustomLicense(index) && (
+                                                <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
+                                                    Custom
+                                                </span>
+                                            )}
+                                        </div>
+                                    }
                                     description={
                                         isCustomLicense(index)
-                                            ? "Custom license name"
-                                            : "SPDX license identifiers are preferred"
+                                            ? "Custom license name or identifier"
+                                            : "SPDX license identifiers are preferred for standardization"
                                     }
                                 >
                                     {customLicenseIndex === index ? (
                                         <div className="space-y-2">
                                             <Input
-                                                value={info.license}
+                                                value={getLicenseIdentifier(info)}
                                                 onChange={(e) =>
-                                                    updateLicense(index, {
-                                                        ...info,
-                                                        license: e.target.value,
-                                                    })
+                                                    updateLicense(index, setLicenseIdentifier(info, e.target.value))
                                                 }
-                                                placeholder="e.g., Proprietary, Custom License v1.0"
+                                                placeholder="e.g., Proprietary, Custom License v1.0, Company Internal License"
                                             />
                                             <div className="flex gap-2">
                                                 <button
                                                     type="button"
-                                                    className="text-xs px-2 py-1 bg-[#6aa329] text-white rounded hover:bg-[#4f7b38] transition-colors"
+                                                    className="text-xs px-2 py-1 bg-[#6aa329] text-white rounded hover:bg-[#4f7b38] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
                                                     onClick={() => setCustomLicenseIndex(null)}
+                                                    disabled={!getLicenseIdentifier(info)?.trim()}
                                                 >
                                                     Done
                                                 </button>
@@ -128,7 +205,7 @@ export default function LicenseSection({ licenses, onChange }: LicenseSectionPro
                                         </div>
                                     ) : (
                                         <LicenseDropdown
-                                            value={info.license}
+                                            value={getLicenseIdentifier(info)}
                                             onChange={(license, url) =>
                                                 handleLicenseChange(index, license, url)
                                             }
@@ -140,7 +217,7 @@ export default function LicenseSection({ licenses, onChange }: LicenseSectionPro
 
                                 <FormField
                                     label="License URL"
-                                    description="Link to the full license text"
+                                    description={isCustomLicense(index) ? "Link to your custom license text" : "Link to the full license text"}
                                 >
                                     <Input
                                         value={info.url}
@@ -150,10 +227,21 @@ export default function LicenseSection({ licenses, onChange }: LicenseSectionPro
                                                 url: e.target.value,
                                             })
                                         }
-                                        placeholder="https://opensource.org/licenses/MIT"
+                                        placeholder={isCustomLicense(index) ? "https://example.com/license.txt" : "https://opensource.org/licenses/MIT"}
                                     />
                                 </FormField>
                             </div>
+                            
+                            {/* Show validation errors */}
+                            {validateLicense(info).length > 0 && (
+                                <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-600">
+                                    <ul className="list-disc list-inside space-y-1">
+                                        {validateLicense(info).map((error, errorIndex) => (
+                                            <li key={errorIndex}>{error}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
                         </div>
                     ))}
                 </div>

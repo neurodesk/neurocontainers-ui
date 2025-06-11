@@ -1,9 +1,349 @@
 import { TrashIcon, DocumentDuplicateIcon } from "@heroicons/react/24/outline";
-import { useState } from "react";
-import { DirectiveContainer, FormField, Input } from "@/components/ui";
+import { useState, useEffect, useRef } from "react";
+import { DirectiveContainer, FormField, Input, ToggleButtonGroup, TagEditor } from "@/components/ui";
 import { Template } from "@/components/common";
 import { VariableComponent } from "@/components/directives/variable";
-import { registerDirective, DirectiveMetadata } from "./registry";
+import { registerDirective, DirectiveMetadata, getDirective } from "./registry";
+
+interface BaseNeuroDockerArgument {
+    name: string;
+    required: boolean;
+    description?: string;
+    advanced?: boolean;
+}
+
+export type NeuroDockerArgument = (BaseNeuroDockerArgument & {
+    type: "dropdown";
+    options: string[];
+}) | (BaseNeuroDockerArgument & {
+    type: "text";
+    defaultValue?: string;
+    multiline?: boolean;
+}) | (BaseNeuroDockerArgument & {
+    // the array is represented as space separated strings
+    type: "array";
+}) | (BaseNeuroDockerArgument & {
+    type: "boolean";
+    defaultValue?: boolean;
+});
+
+export interface NeuroDockerInstallInformation {
+    arguments: NeuroDockerArgument[];
+}
+
+export interface NeuroDockerTemplateInformation {
+    metadata: DirectiveMetadata;
+    name: string;
+    description?: string;
+    url: string;
+    source?: NeuroDockerInstallInformation;
+    binaries?: NeuroDockerInstallInformation;
+}
+
+function createNeuroDockerTemplateComponent(templateInfo: NeuroDockerTemplateInformation) {
+    return function NeuroDockerTemplateComponent({
+        template,
+        onChange
+    }: {
+        template: Template,
+        onChange: (template: Template) => void
+    }) {
+        const [showAdvanced, setShowAdvanced] = useState(false);
+
+        const updateParam = (key: string, value: unknown) => {
+            onChange({ ...template, [key]: value });
+        };
+
+        const renderArgument = (arg: NeuroDockerArgument) => {
+            const getDefaultValue = () => {
+                if (arg.type === 'boolean' && 'defaultValue' in arg) {
+                    return arg.defaultValue ?? false;
+                }
+                if (arg.type === 'text' && 'defaultValue' in arg) {
+                    return arg.defaultValue ?? '';
+                }
+                return '';
+            };
+
+            const currentValue = template[arg.name] ?? getDefaultValue();
+
+            if (arg.advanced && !showAdvanced) return null;
+
+            switch (arg.type) {
+                case 'dropdown':
+                    return (
+                        <FormField key={arg.name} label={arg.name} description={arg.description}>
+                            <select
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:border-transparent"
+                                value={String(currentValue)}
+                                onChange={(e) => updateParam(arg.name, e.target.value)}
+                            >
+                                {arg.options.map(option => (
+                                    <option key={option} value={option}>{option}</option>
+                                ))}
+                            </select>
+                        </FormField>
+                    );
+
+                case 'boolean':
+                    return (
+                        <FormField key={arg.name} label={arg.name} description={arg.description}>
+                            <ToggleButtonGroup
+                                options={[
+                                    { value: 'true', label: 'Yes' },
+                                    { value: 'false', label: 'No' }
+                                ]}
+                                value={String(currentValue)}
+                                onChange={(value) => updateParam(arg.name, value === 'true')}
+                            />
+                        </FormField>
+                    );
+
+                case 'array':
+                    const displayName = arg.name
+                        .replace(/_/g, ' ')
+                        .replace(/\b\w/g, l => l.toUpperCase());
+                    return (
+                        <FormField key={arg.name} label={arg.name} description={arg.description}>
+                            <TagEditor
+                                tags={Array.isArray(currentValue) ? currentValue : []}
+                                onChange={(tags) => updateParam(arg.name, tags)}
+                                placeholder={`Add ${displayName.toLowerCase()}...`}
+                                emptyMessage={`No ${displayName.toLowerCase()} added yet`}
+                            />
+                        </FormField>
+                    );
+
+                case 'text':
+                default:
+                    return (
+                        <FormField key={arg.name} label={arg.name} description={arg.description}>
+                            {arg.multiline ? (
+                                <textarea
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:border-transparent font-mono text-sm"
+                                    rows={6}
+                                    value={String(currentValue)}
+                                    onChange={(e) => updateParam(arg.name, e.target.value)}
+                                    placeholder={`Enter ${arg.name}`}
+                                />
+                            ) : (
+                                <Input
+                                    value={String(currentValue)}
+                                    onChange={(e) => updateParam(arg.name, e.target.value)}
+                                    placeholder={`Enter ${arg.name}`}
+                                    monospace
+                                />
+                            )}
+                        </FormField>
+                    );
+            }
+        };
+
+        const helpContent = (
+            <>
+                <h3 className="font-semibold text-[#0c0e0a] mb-2">
+                    {templateInfo.metadata.label} Template
+                </h3>
+                <div className="text-sm text-gray-600 space-y-2">
+                    <p>{templateInfo.description}</p>
+                    {templateInfo.url && (
+                        <p>
+                            <a
+                                href={templateInfo.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[#6aa329] hover:underline"
+                            >
+                                Documentation →
+                            </a>
+                        </p>
+                    )}
+                </div>
+            </>
+        );
+
+        const templateArgs = templateInfo.binaries?.arguments || templateInfo.source?.arguments || [];
+        const basicArgs = templateArgs.filter(arg => !arg.advanced);
+        const advancedArgs = templateArgs.filter(arg => arg.advanced);
+
+        // Ensure required arguments have default values set
+        const initializedRef = useRef(false);
+        useEffect(() => {
+            if (initializedRef.current) return;
+            
+            const updates: { [key: string]: unknown } = {};
+            templateArgs.forEach(arg => {
+                if (arg.required && !(arg.name in template)) {
+                    const defaultValue = (() => {
+                        if (arg.type === 'boolean' && 'defaultValue' in arg) {
+                            return arg.defaultValue ?? false;
+                        }
+                        if (arg.type === 'text' && 'defaultValue' in arg) {
+                            return arg.defaultValue ?? '';
+                        }
+                        if (arg.type === 'dropdown') {
+                            return arg.options[0];
+                        }
+                        if (arg.type === 'array') {
+                            return [];
+                        }
+                        return '';
+                    })();
+                    updates[arg.name] = defaultValue;
+                }
+            });
+            
+            if (Object.keys(updates).length > 0) {
+                onChange({ ...template, ...updates });
+                initializedRef.current = true;
+            }
+        });
+
+        return (
+            <DirectiveContainer title={templateInfo.metadata.label} helpContent={helpContent}>
+                <div className="space-y-4">
+                    {basicArgs.map(renderArgument)}
+                </div>
+
+                {advancedArgs.length > 0 && (
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h4 className="font-medium text-sm text-gray-700">Advanced Settings</h4>
+                            <button
+                                onClick={() => setShowAdvanced(!showAdvanced)}
+                                className="text-xs text-[#6aa329] hover:underline"
+                            >
+                                {showAdvanced ? 'Hide' : 'Show'} Advanced
+                            </button>
+                        </div>
+                        {showAdvanced && (
+                            <div className="space-y-4 border-l-4 border-[#d3e7b6] pl-4">
+                                {advancedArgs.map(renderArgument)}
+                            </div>
+                        )}
+                    </div>
+                )}
+            </DirectiveContainer>
+        );
+    };
+}
+
+function registerNeuroDockerTemplate(template: NeuroDockerTemplateInformation) {
+    const component = createNeuroDockerTemplateComponent(template);
+    const metadata = {
+        ...template.metadata,
+        component
+    };
+    registerDirective(metadata);
+}
+
+registerNeuroDockerTemplate({
+    metadata: {
+        key: "miniconda",
+        label: "Miniconda",
+        description: "Install Miniconda, a minimal conda installer",
+        icon: DocumentDuplicateIcon,
+        color: "bg-green-50 border-green-200 hover:bg-green-100",
+        iconColor: "text-green-600",
+        defaultValue: {
+            template: {
+                name: "miniconda",
+            }
+        },
+        keywords: ["conda", "miniconda", "python", "environment"],
+        component: TemplateDirectiveComponent,
+    },
+    name: "miniconda",
+    url: "https://docs.conda.io/projects/miniconda/en/latest/",
+    description: "Install Miniconda, a minimal conda installer",
+    binaries: {
+        arguments: [
+            {
+                name: "version",
+                type: "dropdown",
+                required: true,
+                options: ["latest"],
+                description: "Select the Miniconda version to install"
+            },
+            {
+                name: "install_path",
+                type: "text",
+                required: true,
+                defaultValue: "/opt/miniconda",
+                description: "Path where Miniconda will be installed"
+            },
+            {
+                name: "installed",
+                type: "boolean",
+                required: false,
+                defaultValue: false,
+                description: "Indicates if Miniconda is already installed",
+                advanced: true
+            },
+            {
+                name: "env_name",
+                type: "text",
+                required: false,
+                defaultValue: "base",
+                description: "Name of the conda environment to use",
+                advanced: true
+            },
+            {
+                name: "env_exists",
+                type: "boolean",
+                required: false,
+                defaultValue: true,
+                description: "Indicates if the conda environment already exists",
+                advanced: true
+            },
+            {
+                name: "conda_install",
+                type: "array",
+                required: false,
+                description: "Conda packages to install"
+            },
+            {
+                name: "pip_install",
+                type: "array",
+                required: false,
+                description: "Pip packages to install"
+            },
+            {
+                name: "conda_opts",
+                type: "text",
+                required: false,
+                defaultValue: "",
+                description: "Additional options for conda installation",
+                advanced: true
+            },
+            {
+                name: "pip_opts",
+                type: "text",
+                required: false,
+                defaultValue: "",
+                description: "Additional options for pip installation",
+                advanced: true
+            },
+            {
+                name: "yaml_file",
+                type: "text",
+                required: false,
+                defaultValue: "",
+                multiline: true,
+                description: "YAML Contents for conda environment setup",
+                advanced: true
+            },
+            {
+                name: "mamba",
+                type: "boolean",
+                required: false,
+                defaultValue: false,
+                description: "Use Mamba instead of Conda for faster package management",
+                advanced: true
+            }
+        ]
+    },
+})
 
 export default function TemplateDirectiveComponent({
     template,
@@ -13,6 +353,15 @@ export default function TemplateDirectiveComponent({
     onChange: (template: Template) => void
 }) {
     const [newParamKey, setNewParamKey] = useState("");
+
+    // Check if there's a special editor for this template name
+    const specialEditor = getDirective(template.name);
+    if (specialEditor && specialEditor.component !== TemplateDirectiveComponent) {
+        const SpecialComponent = specialEditor.component;
+        return <SpecialComponent template={template} onChange={onChange} />;
+    }
+
+    // Fall back to generic template editor
 
     const updateName = (name: string) => {
         onChange({ ...template, name });
@@ -80,7 +429,7 @@ export default function TemplateDirectiveComponent({
             {Object.entries(template).map(([key, value]) => {
                 if (key === 'name') return null;
                 return (
-                    <FormField 
+                    <FormField
                         key={key}
                         label={
                             <div className="flex justify-between items-center">

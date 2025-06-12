@@ -22,13 +22,17 @@ type BaseImageSource = "ubuntu" | "other" | "custom";
 interface BaseImageSelectorProps {
     baseImage: string;
     pkgManager: string;
+    addDefaultTemplate?: boolean;
     onChange: (baseImage: string, pkgManager: string) => void;
+    onAddDefaultTemplateChange?: (addDefaultTemplate: boolean) => void;
 }
 
 export default function BaseImageSelector({
     baseImage,
     pkgManager,
+    addDefaultTemplate = true,
     onChange,
+    onAddDefaultTemplateChange,
 }: BaseImageSelectorProps) {
     const [showBaseImageHelp, setShowBaseImageHelp] = useState(false);
     const [showPkgManagerHelp, setShowPkgManagerHelp] = useState(false);
@@ -334,6 +338,25 @@ export default function BaseImageSelector({
                                 <option value="yum">yum (RHEL/CentOS/Fedora)</option>
                             </select>
                         </div>
+                    </div>
+
+                    {/* Add Default Template Checkbox for Custom Images */}
+                    <div className="mt-4">
+                        <label className="flex items-center">
+                            <input
+                                type="checkbox"
+                                checked={addDefaultTemplate}
+                                onChange={(e) => onAddDefaultTemplateChange?.(e.target.checked)}
+                                className="mr-3 h-4 w-4 text-[#6aa329] focus:ring-[#6aa329] border-gray-300 rounded"
+                            />
+                            <span className="text-sm text-gray-700">
+                                Add default template (disable for old containers where APT doesn&apos;t work)
+                            </span>
+                        </label>
+                        <p className="text-xs text-gray-500 mt-1 ml-7">
+                            The default template includes common system updates and utilities. 
+                            Disable this for legacy base images with package manager issues.
+                        </p>
                     </div>
                 </div>
             )}

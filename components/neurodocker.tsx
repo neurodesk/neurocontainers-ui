@@ -20,6 +20,13 @@ export default function NeuroDockerBuildRecipeComponent({
         );
     };
 
+    const updateAddDefaultTemplate = (addDefaultTemplate: boolean) => {
+        onChangeWrapper(
+            { ...recipe, "add-default-template": addDefaultTemplate },
+            "updateAddDefaultTemplate"
+        );
+    };
+
     const updateDirective = (index: number, directive: Directive) => {
         const updatedDirectives = [...recipe.directives];
         updatedDirectives[index] = directive;
@@ -74,7 +81,9 @@ export default function NeuroDockerBuildRecipeComponent({
                     <BaseImageSelector
                         baseImage={recipe["base-image"]}
                         pkgManager={recipe["pkg-manager"]}
+                        addDefaultTemplate={recipe["add-default-template"]}
                         onChange={updateBaseImageAndPkgManager}
+                        onAddDefaultTemplateChange={updateAddDefaultTemplate}
                     />
                 </div>
 

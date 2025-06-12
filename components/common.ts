@@ -138,6 +138,8 @@ export interface NeuroDockerBuildRecipe {
     kind: "neurodocker";
     "base-image": string;
     "pkg-manager": string;
+    // Disable the default template from NeuroDocker. This is useful for old docker containers where APT doesn't work.
+    "add-default-template"?: boolean; // defaults to true
     directives: Directive[];
 }
 
@@ -184,7 +186,7 @@ export function convertStructuredReadmeToText(
         "",
         "----------------------------------"
     ];
-    
+
     return lines.join("\n");
 }
 

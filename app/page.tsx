@@ -84,8 +84,12 @@ function getNewContainerYAML(): ContainerRecipe {
         name: "",
         version: "",
         architectures: ["x86_64"],
-        readme: "",
-        readme_url: "",
+        structured_readme: {
+            description: "",
+            example: "",
+            documentation: "",
+            citation: "",
+        },
         build: {
             kind: "neurodocker",
             "base-image": "ubuntu:24.04",

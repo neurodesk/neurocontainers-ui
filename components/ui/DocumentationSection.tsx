@@ -3,12 +3,18 @@ import { DocumentTextIcon } from "@heroicons/react/24/outline";
 import ReactMarkdown from "react-markdown";
 import { FormField, Input, Textarea } from "./FormField";
 import ToggleButtonGroup from "./ToggleButtonGroup";
+import { StructuredReadmeEditor } from "./StructuredReadmeEditor";
+import { StructuredReadme } from "@/components/common";
 
 interface DocumentationSectionProps {
     readme?: string;
     readmeUrl?: string;
+    structuredReadme?: StructuredReadme;
+    containerName: string;
+    containerVersion: string;
     onReadmeChange: (readme: string) => void;
     onReadmeUrlChange: (url: string) => void;
+    onStructuredReadmeChange: (structured: StructuredReadme) => void;
     error?: string | null;
     showValidation?: boolean;
 }
@@ -16,28 +22,56 @@ interface DocumentationSectionProps {
 export default function DocumentationSection({
     readme,
     readmeUrl,
+    structuredReadme,
+    containerName,
+    containerVersion,
     onReadmeChange,
     onReadmeUrlChange,
+    onStructuredReadmeChange,
     error,
     showValidation = false,
 }: DocumentationSectionProps) {
     const [readmeContent, setReadmeContent] = useState(readme || "");
     const [showPreview, setShowPreview] = useState(false);
+    const [userSelectedMode, setUserSelectedMode] = useState<"structured" | "content" | "url" | null>(null);
 
-    const inputType = readme !== undefined ? "content" : readmeUrl !== undefined ? "url" : "content";
+    // Default structured readme
+    const defaultStructuredReadme: StructuredReadme = {
+        description: "",
+        example: `ml ${containerName}/${containerVersion}\n${containerName} --help`,
+        documentation: "",
+        citation: "",
+    };
+
+    const currentStructuredReadme = structuredReadme || defaultStructuredReadme;
+
+    // Determine input type based on user selection or data that exists
+    const inputType = userSelectedMode ||
+        (structuredReadme !== undefined ? "structured" :
+            readmeUrl !== undefined ? "url" :
+                readme !== undefined ? "content" : "structured");
 
     const updateReadme = (content: string) => {
         setReadmeContent(content);
         onReadmeChange(content);
     };
 
-    const toggleInputType = (type: "content" | "url") => {
+    const updateStructuredReadme = (structured: StructuredReadme) => {
+        onStructuredReadmeChange(structured);
+        // Note: The parent component handles generating the plain text readme
+    };
+
+    const toggleInputType = (type: "content" | "url" | "structured") => {
         if (type === inputType) return;
+
+        setUserSelectedMode(type);
 
         if (type === "content") {
             onReadmeChange(readmeContent);
-        } else {
+        } else if (type === "url") {
             onReadmeUrlChange(readmeUrl || "");
+        } else if (type === "structured") {
+            onStructuredReadmeChange(currentStructuredReadme);
         }
     };
 
@@ -46,20 +80,29 @@ export default function DocumentationSection({
             <FormField label="Documentation Input Type">
                 <ToggleButtonGroup
                     options={[
+                        { value: "structured", label: "Structured" },
                         { value: "content", label: "Enter Content" },
                         { value: "url", label: "Provide URL" },
                     ]}
                     value={inputType}
-                    onChange={(value) => toggleInputType(value as "content" | "url")}
+                    onChange={(value) => toggleInputType(value as "structured" | "content" | "url")}
                 />
             </FormField>
 
-            {inputType === "content" ? (
+            {inputType === "structured" ? (
+                <FormField label="Structured Documentation">
+                    <StructuredReadmeEditor
+                        value={currentStructuredReadme}
+                        onChange={updateStructuredReadme}
+                        containerName={containerName}
+                        containerVersion={containerVersion}
+                    />
+                </FormField>
+            ) : inputType === "content" ? (
                 <FormField label="Documentation Content">
                     <div
-                        className={`border rounded-lg overflow-hidden ${
-                            showValidation && error ? "border-red-300" : "border-gray-200"
-                        }`}
+                        className={`border rounded-lg overflow-hidden ${showValidation && error ? "border-red-300" : "border-gray-200"
+                            }`}
                     >
                         <div className="flex justify-between items-center px-4 py-3 bg-gray-50 border-b">
                             <div className="text-sm font-medium text-gray-700">

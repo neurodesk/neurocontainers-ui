@@ -1,5 +1,5 @@
 import { InformationCircleIcon, ExclamationTriangleIcon, PlusIcon } from "@heroicons/react/24/outline";
-import { ContainerRecipe, Architecture, CopyrightInfo } from "@/components/common";
+import { ContainerRecipe, Architecture, CopyrightInfo, StructuredReadme, convertStructuredReadmeToText } from "@/components/common";
 import { useState, useEffect } from "react";
 import {
     BasicInfoSection,
@@ -31,9 +31,15 @@ function validateVersion(version: string): string | null {
 function validateDocumentation(recipe: ContainerRecipe): string | null {
     const hasReadme = recipe.readme && recipe.readme.trim();
     const hasReadmeUrl = recipe.readme_url && recipe.readme_url.trim();
+    const hasStructuredReadme = recipe.structured_readme && (
+        recipe.structured_readme.description.trim() ||
+        recipe.structured_readme.example.trim() ||
+        recipe.structured_readme.documentation.trim() ||
+        recipe.structured_readme.citation.trim()
+    );
 
-    if (!hasReadme && !hasReadmeUrl) {
-        return "Documentation is required (either content or URL)";
+    if (!hasReadme && !hasReadmeUrl && !hasStructuredReadme) {
+        return "Documentation is required (either content, structured, or URL)";
     }
 
     if (hasReadmeUrl && !/^https?:\/\/.+/.test(recipe.readme_url!)) {
@@ -70,12 +76,13 @@ export default function ContainerMetadata({
     useEffect(() => {
         // Always show validation for required fields that are empty
         const hasRequiredEmptyFields = !recipe.name.trim() || !recipe.version.trim() || 
-            (!recipe.readme?.trim() && !recipe.readme_url?.trim()) || recipe.architectures.length === 0;
+            (!recipe.readme?.trim() && !recipe.readme_url?.trim() && !recipe.structured_readme) || 
+            recipe.architectures.length === 0;
         
-        if (recipe.name || recipe.version || recipe.readme || recipe.readme_url || hasRequiredEmptyFields) {
+        if (recipe.name || recipe.version || recipe.readme || recipe.readme_url || recipe.structured_readme || hasRequiredEmptyFields) {
             setShowValidation(true);
         }
-    }, [recipe.name, recipe.version, recipe.readme, recipe.readme_url, recipe.architectures]);
+    }, [recipe.name, recipe.version, recipe.readme, recipe.readme_url, recipe.structured_readme, recipe.architectures]);
 
     const updateName = (name: string) => {
         onChange({ ...recipe, name });
@@ -90,11 +97,22 @@ export default function ContainerMetadata({
     };
 
     const updateReadme = (readme: string) => {
-        onChange({ ...recipe, readme, readme_url: undefined });
+        onChange({ ...recipe, readme, readme_url: undefined, structured_readme: undefined });
     };
 
     const updateReadmeUrl = (readme_url: string) => {
-        onChange({ ...recipe, readme_url, readme: undefined });
+        onChange({ ...recipe, readme_url, readme: undefined, structured_readme: undefined });
+    };
+
+    const updateStructuredReadme = (structured_readme: StructuredReadme) => {
+        // Auto-generate plain text readme for builder
+        const plainTextReadme = convertStructuredReadmeToText(structured_readme, recipe.name, recipe.version);
+        onChange({ 
+            ...recipe, 
+            structured_readme, 
+            readme: plainTextReadme,
+            readme_url: undefined 
+        });
     };
 
     const updateCopyright = (copyright: CopyrightInfo[]) => {
@@ -205,11 +223,12 @@ export default function ContainerMetadata({
                 <div>
                     <strong>Options:</strong>
                     <ul className="list-disc list-inside mt-1 space-y-1">
+                        <li><strong>Structured (Recommended):</strong> Fill out structured fields that automatically generate a standardized README following NeuroContainers conventions</li>
                         <li><strong>Enter Content:</strong> Write documentation directly using Markdown syntax</li>
                         <li><strong>Provide URL:</strong> Link to external documentation (e.g., GitHub README)</li>
                     </ul>
                 </div>
-                <p>Good documentation helps users understand how to use your container effectively.</p>
+                <p>The structured option ensures consistency with existing NeuroContainers and includes all required sections (description, usage example, documentation link, and citation).</p>
             </div>
         </>
     );
@@ -334,8 +353,12 @@ export default function ContainerMetadata({
                         <DocumentationSection
                             readme={recipe.readme}
                             readmeUrl={recipe.readme_url}
+                            structuredReadme={recipe.structured_readme}
+                            containerName={recipe.name}
+                            containerVersion={recipe.version}
                             onReadmeChange={handleReadmeChange}
                             onReadmeUrlChange={handleReadmeUrlChange}
+                            onStructuredReadmeChange={updateStructuredReadme}
                             error={documentationError}
                             showValidation={showValidation}
                         />

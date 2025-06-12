@@ -13,6 +13,7 @@ export { default as ArchitectureSelector } from './ArchitectureSelector';
 export { default as DocumentationSection } from './DocumentationSection';
 export { default as LicenseDropdown } from './LicenseDropdown';
 export { default as LicenseSection } from './LicenseSection';
+export { StructuredReadmeEditor } from './StructuredReadmeEditor';
 export { default as ValidationSummary } from './ValidationSummary';
 
 // Neurodocker section components

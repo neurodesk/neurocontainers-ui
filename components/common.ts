@@ -14,6 +14,13 @@ export interface SPDXCopyrightInfo {
 
 export type CopyrightInfo = CustomCopyrightInfo | SPDXCopyrightInfo;
 
+export interface StructuredReadme {
+    description: string;
+    example: string;
+    documentation: string;
+    citation: string;
+}
+
 export type Condition = string;
 
 export interface BaseDirective {
@@ -143,10 +150,42 @@ export interface ContainerRecipe {
     architectures: Architecture[];
     readme?: string;
     readme_url?: string;
+    structured_readme?: StructuredReadme;
     build: BuildRecipe;
     files?: FileInfo[];
     deploy?: DeployInfo;
     tests?: TestInfo[];
+}
+
+export function convertStructuredReadmeToText(
+    structured: StructuredReadme,
+    name: string,
+    version: string
+): string {
+    const lines = [
+        "----------------------------------",
+        `## ${name}/${version} ##`,
+        "",
+        structured.description.trim(),
+        "",
+        "Example:",
+        "```",
+        structured.example.trim(),
+        "```",
+        "",
+        `More documentation can be found here: ${structured.documentation.trim()}`,
+        "",
+        "Citation:",
+        "```",
+        structured.citation.trim(),
+        "```",
+        "",
+        `To run container outside of this environment: ml ${name}/${version}`,
+        "",
+        "----------------------------------"
+    ];
+    
+    return lines.join("\n");
 }
 
 export function migrateLegacyRecipe(

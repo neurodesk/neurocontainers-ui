@@ -98,7 +98,7 @@ export function StructuredReadmeEditor({ value, onChange, containerName, contain
 
             <FormField
                 label="Citation"
-                description="Academic citation or reference for the tool"
+                description="Academic citation or reference for the tool. Citations containing Jinja2 syntax will be wrapped in raw blocks to prevent template processing conflicts."
             >
                 <textarea
                     value={value.citation}

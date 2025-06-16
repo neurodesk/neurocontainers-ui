@@ -159,11 +159,23 @@ export interface ContainerRecipe {
     tests?: TestInfo[];
 }
 
+function hasJinja2Syntax(text: string): boolean {
+    return /\{\{|\}\}|\{\%|\%\}/.test(text);
+}
+
+function wrapInRawBlock(text: string): string {
+    return `{% raw %}\n${text}\n{% endraw %}`;
+}
+
 export function convertStructuredReadmeToText(
     structured: StructuredReadme,
     name: string,
     version: string
 ): string {
+    const citationText = structured.citation.trim();
+    const needsRawBlock = hasJinja2Syntax(citationText);
+    const processedCitation = needsRawBlock ? wrapInRawBlock(citationText) : citationText;
+    
     const lines = [
         "----------------------------------",
         `## ${name}/${version} ##`,
@@ -179,8 +191,12 @@ export function convertStructuredReadmeToText(
         "",
         "Citation:",
         "```",
-        structured.citation.trim(),
+        processedCitation,
         "```",
+        ...(needsRawBlock ? [
+            "",
+            "Note: Citation content is wrapped in Jinja2 raw blocks to prevent template processing conflicts with BibTeX syntax."
+        ] : []),
         "",
         `To run container outside of this environment: ml ${name}/${version}`,
         "",

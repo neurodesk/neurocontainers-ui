@@ -20,6 +20,7 @@ import {
     CloudIcon,
     CheckIcon,
     ExclamationTriangleIcon,
+    RectangleStackIcon,
 } from "@heroicons/react/24/outline";
 import { ContainerRecipe, migrateLegacyRecipe } from "@/components/common";
 import BuildRecipeComponent from "@/components/recipe";
@@ -410,8 +411,8 @@ function SideNavigation({
                             className="w-full flex items-center space-x-2 px-3 py-2 text-sm font-medium text-[#1e2a16] hover:bg-[#e6f1d6] rounded-md transition-colors"
                             onClick={onNewContainer}
                         >
-                            <PlusIcon className="h-4 w-4" />
-                            <span>New Container</span>
+                            <RectangleStackIcon className="h-4 w-4" />
+                            <span>Container Library</span>
                         </button>
                         <button
                             className="w-full flex items-center space-x-2 px-3 py-2 text-sm font-medium text-[#1e2a16] hover:bg-[#e6f1d6] rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -419,7 +420,7 @@ function SideNavigation({
                             disabled={!yamlData}
                         >
                             <ArrowDownTrayIcon className="h-4 w-4" />
-                            <span>Export YAML</span>
+                            <span>Download YAML</span>
                         </button>
                         <button
                             className="w-full flex items-center space-x-2 px-3 py-2 text-sm font-medium text-[#1e2a16] hover:bg-[#e6f1d6] rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"

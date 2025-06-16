@@ -273,6 +273,7 @@ from pyodide.http import pyfetch
 import os
 
 # Install neurodocker
+await micropip.install("pyyaml")
 await micropip.install("neurodocker")
 
 # Create necessary directories
@@ -311,7 +312,6 @@ export async function loadBuilder(pyodide: PyodideInterface): Promise<Builder> {
     try {
         // Ensure Micropip and basics are available
         await pyodide.loadPackage("micropip");
-        await pyodide.loadPackage("pyyaml");
         await pyodide.loadPackage("jinja2");
 
         // Install requirements and download builder files

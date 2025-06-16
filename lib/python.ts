@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import type { loadPyodide, PyodideInterface } from "pyodide";
-import { PyProxy } from "pyodide/ffi";
+import type { PyProxy } from "pyodide/ffi";
 
 // Global state management
 let globalPyodide: PyodideInterface | undefined;
@@ -16,7 +16,7 @@ const loadPyodideScript = (): Promise<void> => {
         }
 
         const script = document.createElement("script");
-        script.src = "https://cdn.jsdelivr.net/pyodide/dev/full/pyodide.js";
+        script.src = "https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js";
         script.async = true;
         script.onload = () => {
             isScriptLoaded = true;
@@ -54,7 +54,7 @@ async function loadGlobalPyodide(): Promise<PyodideInterface> {
             }
 
             globalPyodide = await loadPyodideFunc({
-                indexURL: "https://cdn.jsdelivr.net/pyodide/dev/full/",
+                indexURL: "https://cdn.jsdelivr.net/pyodide/v0.27.7/full/",
             });
 
             return globalPyodide;

@@ -15,6 +15,7 @@ import {
     TrashIcon,
     EyeIcon,
     MagnifyingGlassIcon,
+    ArrowTopRightOnSquareIcon,
 } from '@heroicons/react/24/outline';
 import { mergeAdditionalFilesIntoRecipe, migrateLegacyRecipe, type ContainerRecipe } from '@/components/common';
 
@@ -152,7 +153,7 @@ export default function RecipesList({
                         <div className="flex gap-3">
                             <button
                                 onClick={refetch}
-                                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+                                className="flex items-center gap-2 px-4 py-2 bg-[#6aa329] text-white rounded-lg hover:bg-[#4f7b38] transition-colors font-medium"
                             >
                                 <ArrowPathIcon className="h-4 w-4" />
                                 Try Again
@@ -160,7 +161,7 @@ export default function RecipesList({
                             {showAsModal && onClose && (
                                 <button
                                     onClick={onClose}
-                                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors font-medium"
+                                    className="px-4 py-2 text-[#4f7b38] border border-[#d3e7b6] rounded-lg hover:bg-[#f0f7e7] transition-colors font-medium"
                                 >
                                     Close
                                 </button>
@@ -180,13 +181,46 @@ export default function RecipesList({
                 <div className="px-6 py-4 bg-gradient-to-r from-[#f8fdf5] to-[#f0f7e7]">
                     <div className="flex items-center justify-between">
                         <div className="flex-1 min-w-0">
-                            <h2 className="text-xl font-bold text-[#0c0e0a] mb-1">
-                                Container Recipes
-                            </h2>
-                            <div className="flex items-center gap-2 text-sm text-[#4f7b38]">
-                                <span>{owner}/{repo}</span>
-                                <span>•</span>
-                                <span className="font-medium">
+                            {/* Mobile Layout - Stacked */}
+                            <div className="block lg:hidden">
+                                <h2 className="text-xl font-bold text-[#0c0e0a] mb-2">
+                                    Container Recipes
+                                </h2>
+                                <div className="flex items-center gap-3 text-sm">
+                                    <a
+                                        href={`https://github.com/${owner}/${repo}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/80 border border-[#d3e7b6] rounded-lg text-[#4f7b38] hover:bg-white hover:border-[#6aa329] hover:text-[#6aa329] transition-all duration-200 text-sm font-medium shadow-sm"
+                                    >
+                                        <CodeBracketIcon className="h-4 w-4" />
+                                        {owner.toLowerCase()}/{repo.toLowerCase()}
+                                        <ArrowTopRightOnSquareIcon className="h-3 w-3" />
+                                    </a>
+                                    <span className="text-[#4f7b38]">•</span>
+                                    <span className="font-medium text-[#4f7b38]">
+                                        {files.length} recipe{files.length !== 1 ? 's' : ''}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Desktop Layout - Inline */}
+                            <div className="hidden lg:flex items-center gap-4">
+                                <h2 className="text-xl font-bold text-[#0c0e0a]">
+                                    Container Recipes
+                                </h2>
+                                <a
+                                    href={`https://github.com/${owner}/${repo}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/80 border border-[#d3e7b6] rounded-lg text-[#4f7b38] hover:bg-white hover:border-[#6aa329] hover:text-[#6aa329] transition-all duration-200 text-sm font-medium shadow-sm flex-shrink-0"
+                                >
+                                    <CodeBracketIcon className="h-4 w-4" />
+                                    {owner.toLowerCase()}/{repo.toLowerCase()}
+                                    <ArrowTopRightOnSquareIcon className="h-3 w-3" />
+                                </a>
+                                <span className="text-[#4f7b38]">•</span>
+                                <span className="font-medium text-[#4f7b38]">
                                     {files.length} recipe{files.length !== 1 ? 's' : ''}
                                 </span>
                             </div>
@@ -205,32 +239,32 @@ export default function RecipesList({
                 </div>
 
                 {/* Controls Bar */}
-                <div className="px-6 py-3 bg-gray-50/50">
-                    <div className="flex items-center gap-3">
-                        {/* Search - takes up available space */}
-                        <div className="relative flex-1 max-w-md">
+                <div className="px-6 py-4 bg-gray-50/50">
+                    <div className="flex items-center gap-4">
+                        {/* Search - fills available space */}
+                        <div className="relative flex-1">
                             <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                             <input
                                 type="text"
                                 placeholder="Search recipes..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:border-transparent text-sm"
+                                className="w-full pl-9 pr-3 py-2.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:border-transparent text-sm shadow-sm"
                             />
                         </div>
 
-                        {/* Fixed-width action buttons */}
-                        <div className="flex items-center gap-2">
+                        {/* Action buttons with better spacing */}
+                        <div className="flex items-center gap-3 flex-shrink-0">
                             <button
                                 onClick={refetch}
-                                className="flex items-center gap-1.5 px-3 py-2 bg-[#6aa329] text-white rounded-lg hover:bg-[#4f7b38] text-sm font-medium transition-colors"
+                                className="flex items-center gap-2 px-4 py-2.5 bg-[#6aa329] text-white rounded-lg hover:bg-[#4f7b38] text-sm font-medium transition-colors shadow-sm"
                             >
                                 <ArrowPathIcon className="h-4 w-4" />
                                 <span className="hidden sm:inline">Refresh</span>
                             </button>
                             <button
                                 onClick={clearCache}
-                                className="flex items-center gap-1.5 px-3 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 text-sm font-medium transition-colors"
+                                className="flex items-center gap-2 px-4 py-2.5 text-[#4f7b38] border border-[#d3e7b6] rounded-lg hover:bg-[#f0f7e7] text-sm font-medium transition-colors shadow-sm"
                             >
                                 <TrashIcon className="h-4 w-4" />
                                 <span className="hidden sm:inline">Clear</span>
@@ -316,23 +350,19 @@ export default function RecipesList({
                                     key={file.path}
                                     className="group border border-gray-200 rounded-lg p-4 hover:border-[#6aa329] hover:bg-[#fafdfb] transition-all duration-150 bg-white"
                                 >
-                                    <div className="flex items-center gap-4">
+                                    {/* Desktop Layout */}
+                                    <div className="hidden sm:flex items-center gap-4">
                                         {/* Recipe info - consistent width */}
                                         <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <h3 className="font-semibold text-[#0c0e0a] text-base truncate">
-                                                    {getRecipeName(file.path)}
-                                                </h3>
-                                                <span className="text-xs bg-[#e6f1d6] text-[#4f7b38] px-2 py-0.5 rounded-full font-medium flex-shrink-0">
-                                                    {file.path.split('/')[1] || 'recipes'}
-                                                </span>
-                                            </div>
+                                            <h3 className="font-semibold text-[#0c0e0a] text-base truncate mb-1">
+                                                {getRecipeName(file.path)}
+                                            </h3>
                                             <p className="text-sm text-gray-500 truncate font-mono">
                                                 {file.path}
                                             </p>
                                         </div>
 
-                                        {/* Fixed-width action buttons */}
+                                        {/* Desktop action buttons */}
                                         <div className="flex items-center gap-2 flex-shrink-0">
                                             {onLoadRecipe && file.downloadUrl && (
                                                 <button
@@ -345,7 +375,7 @@ export default function RecipesList({
                                                     ) : (
                                                         <>
                                                             <ArrowDownTrayIcon className="h-4 w-4" />
-                                                            <span className="hidden sm:inline">Load</span>
+                                                            Load
                                                         </>
                                                     )}
                                                 </button>
@@ -358,7 +388,50 @@ export default function RecipesList({
                                                 className="flex items-center gap-2 px-3 py-2 text-[#4f7b38] border border-[#d3e7b6] rounded-lg hover:bg-[#f0f7e7] text-sm font-medium transition-colors min-w-[70px] justify-center"
                                             >
                                                 <EyeIcon className="h-4 w-4" />
-                                                <span className="hidden sm:inline">View</span>
+                                                View
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                    {/* Mobile Layout */}
+                                    <div className="sm:hidden">
+                                        {/* Recipe info */}
+                                        <div className="mb-3">
+                                            <h3 className="font-semibold text-[#0c0e0a] text-base mb-1">
+                                                {getRecipeName(file.path)}
+                                            </h3>
+                                            <p className="text-sm text-gray-500 font-mono break-all">
+                                                {file.path}
+                                            </p>
+                                        </div>
+
+                                        {/* Mobile action buttons - full width stack */}
+                                        <div className="flex flex-col gap-2">
+                                            {onLoadRecipe && file.downloadUrl && (
+                                                <button
+                                                    onClick={() => handleLoadRecipe(file)}
+                                                    disabled={loadingRecipe === file.path}
+                                                    className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-[#6aa329] text-white rounded-lg hover:bg-[#4f7b38] text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                                >
+                                                    {loadingRecipe === file.path ? (
+                                                        <div className="animate-spin h-4 w-4 border border-white border-t-transparent rounded-full"></div>
+                                                    ) : (
+                                                        <>
+                                                            <ArrowDownTrayIcon className="h-4 w-4" />
+                                                            Load Recipe
+                                                        </>
+                                                    )}
+                                                </button>
+                                            )}
+
+                                            <a
+                                                href={file.htmlUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center justify-center gap-2 w-full px-4 py-3 text-[#4f7b38] border border-[#d3e7b6] rounded-lg hover:bg-[#f0f7e7] text-sm font-medium transition-colors"
+                                            >
+                                                <EyeIcon className="h-4 w-4" />
+                                                View on GitHub
                                             </a>
                                         </div>
                                     </div>

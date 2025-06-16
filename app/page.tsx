@@ -260,7 +260,7 @@ function SavedContainersPreview({
             </div>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
                 <p className="text-sm text-blue-800">
-                    <strong>Auto-save enabled:</strong> Your work is automatically saved to this browser only. 
+                    <strong>Auto-save enabled:</strong> Your work is automatically saved to this browser only.
                     These containers will be lost if you clear browser data or use a different device.
                 </p>
             </div>
@@ -301,14 +301,14 @@ function SavedContainersPreview({
                     </div>
                 ))}
             </div>
-            
+
             {savedContainers.length === 0 && (
                 <div className="text-center py-8 text-[#4f7b38]">
                     <ComputerDesktopIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
                     <p className="text-sm">No containers saved yet. Your work will appear here automatically.</p>
                 </div>
             )}
-            
+
             {/* Confirmation Dialog */}
             {confirmDeleteId && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -991,8 +991,8 @@ export default function Home() {
             {isRecipesModalOpen && (
                 <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
                     <RecipesList
-                        owner="NeuroDesk"
-                        repo="NeuroContainers"
+                        owner="neurodesk"
+                        repo="neurocontainers"
                         showAsModal={true}
                         onLoadRecipe={handleLoadRecipeFromList}
                         onClose={() => setIsRecipesModalOpen(false)}

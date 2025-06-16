@@ -19,6 +19,7 @@ import {
     ComputerDesktopIcon,
     CloudIcon,
     CheckIcon,
+    ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { ContainerRecipe, migrateLegacyRecipe } from "@/components/common";
 import BuildRecipeComponent from "@/components/recipe";
@@ -428,6 +429,15 @@ function SideNavigation({
                             <CloudArrowUpIcon className="h-4 w-4" />
                             <span>Publish to GitHub</span>
                         </button>
+                        <a
+                            href="https://github.com/neurodesk/neurocontainers-ui/issues/new"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full flex items-center space-x-2 px-3 py-2 text-sm font-medium text-[#1e2a16] hover:bg-[#e6f1d6] rounded-md transition-colors"
+                        >
+                            <ExclamationTriangleIcon className="h-4 w-4" />
+                            <span>Report an Issue</span>
+                        </a>
                     </div>
                 </div>
 

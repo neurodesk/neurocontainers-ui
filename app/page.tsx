@@ -1,11 +1,10 @@
 "use client";
 
 import { load as loadYAML, dump as dumpYAML } from "js-yaml";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
     ArrowUpTrayIcon,
     ChevronDownIcon,
-    DocumentTextIcon,
     InformationCircleIcon,
     CogIcon,
     CheckCircleIcon,
@@ -21,13 +20,18 @@ import {
     CheckIcon,
     ExclamationTriangleIcon,
     RectangleStackIcon,
+    ArrowPathIcon,
+    MagnifyingGlassIcon,
+    EyeIcon,
+    GlobeAltIcon,
+    CodeBracketIcon,
 } from "@heroicons/react/24/outline";
-import { ContainerRecipe, migrateLegacyRecipe } from "@/components/common";
+import { ContainerRecipe, migrateLegacyRecipe, mergeAdditionalFilesIntoRecipe } from "@/components/common";
 import BuildRecipeComponent from "@/components/recipe";
 import ContainerMetadata from "@/components/metadata";
 import ValidateRecipeComponent from "@/components/validate";
-import RecipesList from "@/components/githubRecipes";
 import GitHubModal from "@/components/githubExport";
+import { useGitHubFiles } from '@/lib/useGithub';
 
 enum Section {
     BasicInfo = "basic-info",
@@ -218,7 +222,7 @@ function SaveIndicator({ status }: { status: SaveStatus }) {
     );
 }
 
-function SavedContainersPreview({
+function LocalContainersList({
     onLoadContainer,
     onDeleteContainer
 }: {
@@ -227,10 +231,23 @@ function SavedContainersPreview({
 }) {
     const [savedContainers, setSavedContainers] = useState<SavedContainer[]>([]);
     const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
         setSavedContainers(getSavedContainers());
     }, []);
+
+    const filteredContainers = useMemo(() => {
+        if (!searchTerm) return savedContainers;
+
+        return savedContainers.filter(container => {
+            const name = container.name.toLowerCase();
+            const version = container.version.toLowerCase();
+            const search = searchTerm.toLowerCase();
+
+            return name.includes(search) || version.includes(search);
+        });
+    }, [savedContainers, searchTerm]);
 
     const handleDelete = (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
@@ -250,66 +267,109 @@ function SavedContainersPreview({
     };
 
     return (
-        <div className="mb-8">
-            <div className="flex items-center space-x-2 mb-4">
-                <ComputerDesktopIcon className="h-5 w-5 text-[#4f7b38]" />
-                <h2 className="text-lg font-semibold text-[#0c0e0a]">
-                    Saved Locally
-                </h2>
-                <div className="text-xs bg-[#e6f1d6] text-[#4f7b38] px-2 py-1 rounded-full">
-                    This Browser Only
+        <div className="bg-white rounded-xl border border-[#e6f1d6] h-fit">
+            {/* Header */}
+            <div className="border-b border-[#e6f1d6] p-4">
+                <div className="flex items-center space-x-2 mb-2">
+                    <ComputerDesktopIcon className="h-5 w-5 text-[#4f7b38]" />
+                    <h2 className="text-lg font-semibold text-[#0c0e0a]">
+                        Recent Containers
+                    </h2>
+                    <div className="text-xs bg-[#e6f1d6] text-[#4f7b38] px-2 py-1 rounded-full">
+                        Browser Only
+                    </div>
                 </div>
-            </div>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                <p className="text-sm text-blue-800">
-                    <strong>Auto-save enabled:</strong> Your work is automatically saved to this browser only.
-                    These containers will be lost if you clear browser data or use a different device.
+                <p className="text-sm text-[#4f7b38]">
+                    {savedContainers.length} container{savedContainers.length !== 1 ? 's' : ''} recently worked on
                 </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {savedContainers.map((container) => (
-                    <div
-                        key={container.id}
-                        className="group bg-white border border-[#e6f1d6] rounded-lg p-4 hover:border-[#6aa329] hover:shadow-md transition-all duration-200 cursor-pointer"
-                        onClick={() => onLoadContainer(container.data, container.id)}
-                    >
-                        <div className="flex items-start justify-between mb-2">
-                            <div className="flex-1 min-w-0">
-                                <h3 className={`font-medium truncate ${container.name === "Untitled" ? "text-gray-500 italic" : "text-[#0c0e0a]"}`}>
-                                    {container.name}
-                                </h3>
-                                <p className="text-sm text-[#4f7b38]">
-                                    v{container.version}
-                                </p>
-                            </div>
-                            <button
-                                onClick={(e) => handleDelete(container.id, e)}
-                                className="opacity-0 group-hover:opacity-100 p-1 text-red-500 hover:text-red-700 transition-all"
-                                title="Delete container"
-                            >
-                                <TrashIcon className="h-4 w-4" />
-                            </button>
-                        </div>
-
-                        <div className="flex items-center text-xs text-[#4f7b38] mt-2">
-                            <ClockIcon className="h-3 w-3 mr-1" />
-                            {formatTimeAgo(container.lastModified)}
-                        </div>
-
-                        <div className="mt-2 text-xs text-[#4f7b38]">
-                            {container.data.build.directives?.length || 0} build steps
-                        </div>
+            {/* Search */}
+            {savedContainers.length > 0 && (
+                <div className="p-4 border-b border-[#f0f7e7]">
+                    <div className="relative">
+                        <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <input
+                            type="text"
+                            placeholder="Search containers..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:border-transparent text-sm"
+                        />
                     </div>
-                ))}
-            </div>
-
-            {savedContainers.length === 0 && (
-                <div className="text-center py-8 text-[#4f7b38]">
-                    <ComputerDesktopIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                    <p className="text-sm">No containers saved yet. Your work will appear here automatically.</p>
+                    {searchTerm && (
+                        <p className="text-xs text-gray-500 mt-2">
+                            {filteredContainers.length} of {savedContainers.length} containers match
+                        </p>
+                    )}
                 </div>
             )}
+
+            {/* Container List */}
+            <div className="max-h-96 overflow-y-auto">
+                {savedContainers.length === 0 ? (
+                    <div className="text-center py-12 text-[#4f7b38]">
+                        <ComputerDesktopIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                        <p className="text-sm">No containers saved yet</p>
+                        <p className="text-xs text-gray-500 mt-1">Your work will appear here automatically</p>
+                    </div>
+                ) : filteredContainers.length === 0 ? (
+                    <div className="text-center py-12 text-[#4f7b38]">
+                        <ComputerDesktopIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                        <p className="text-sm">No matching containers found</p>
+                        <button
+                            onClick={() => setSearchTerm('')}
+                            className="mt-1 text-xs text-[#6aa329] hover:underline"
+                        >
+                            Clear search
+                        </button>
+                    </div>
+                ) : (
+                    <div className="divide-y divide-[#f0f7e7]">
+                        {filteredContainers.map((container) => (
+                            <div
+                                key={container.id}
+                                className="group p-4 hover:bg-[#fafdfb] transition-colors"
+                            >
+                                <div className="flex items-center justify-between">
+                                    <div className="flex-1 min-w-0 mr-3">
+                                        <h3 className={`font-medium text-sm truncate ${container.name === "Untitled" ? "text-gray-500 italic" : "text-[#0c0e0a]"}`}>
+                                            {container.name}
+                                        </h3>
+                                        <div className="flex items-center space-x-3 mt-1">
+                                            <span className="text-xs text-[#4f7b38]">
+                                                v{container.version || '0.0.0'}
+                                            </span>
+                                            <span className="text-xs text-gray-500 flex items-center">
+                                                <ClockIcon className="h-3 w-3 mr-1" />
+                                                {formatTimeAgo(container.lastModified)}
+                                            </span>
+                                        </div>
+                                        <div className="text-xs text-gray-500 mt-1">
+                                            {container.data.build.directives?.length || 0} build steps
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center space-x-2 flex-shrink-0">
+                                        <button
+                                            onClick={() => onLoadContainer(container.data, container.id)}
+                                            className="px-3 py-1.5 bg-[#6aa329] text-white rounded-lg text-xs font-medium hover:bg-[#4f7b38] transition-colors"
+                                        >
+                                            Open
+                                        </button>
+                                        <button
+                                            onClick={(e) => handleDelete(container.id, e)}
+                                            className="p-1.5 text-gray-400 hover:text-red-600 transition-colors"
+                                            title="Delete container"
+                                        >
+                                            <TrashIcon className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
 
             {/* Confirmation Dialog */}
             {confirmDeleteId && (
@@ -339,6 +399,279 @@ function SavedContainersPreview({
                 </div>
             )}
         </div>
+    );
+}
+
+function RemoteContainersList({
+    onLoadRecipe
+}: {
+    onLoadRecipe: (recipe: ContainerRecipe) => void;
+}) {
+    const { files, loading, error, refetch, clearCache } = useGitHubFiles("neurodesk", "neurocontainers", "main");
+    const [loadingRecipe, setLoadingRecipe] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const getRecipeName = (path: string) => {
+        const parts = path.split('/');
+        return parts[parts.length - 2] || 'Unknown Recipe';
+    };
+
+    const filteredFiles = useMemo(() => {
+        if (!searchTerm) return files; // Show all files by default
+
+        return files.filter(file => {
+            const recipeName = getRecipeName(file.path).toLowerCase();
+            const path = file.path.toLowerCase();
+            const search = searchTerm.toLowerCase();
+
+            return recipeName.includes(search) || path.includes(search);
+        });
+    }, [files, searchTerm]);
+
+    const handleLoadRecipe = async (file: {
+        path: string;
+        downloadUrl?: string;
+    }) => {
+        if (!file.downloadUrl || !onLoadRecipe) return;
+
+        setLoadingRecipe(file.path);
+        try {
+            const response = await fetch(file.downloadUrl);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch recipe: ${response.statusText}`);
+            }
+
+            const yamlText = await response.text();
+            let parsedRecipe = loadYAML(yamlText) as ContainerRecipe;
+
+            parsedRecipe = migrateLegacyRecipe(parsedRecipe);
+            parsedRecipe = await mergeAdditionalFilesIntoRecipe(
+                parsedRecipe,
+                async (filename: string) => {
+                    const fileResponse = await fetch(
+                        `${file.downloadUrl!.replace(/build\.yaml$/, '')}${filename}`
+                    );
+                    if (!fileResponse.ok) {
+                        throw new Error(
+                            `Failed to fetch additional file ${filename}: ${fileResponse.statusText}`
+                        );
+                    }
+                    return await fileResponse.text();
+                }
+            );
+
+            onLoadRecipe(parsedRecipe);
+        } catch (error) {
+            console.error('Error loading recipe:', error);
+        } finally {
+            setLoadingRecipe(null);
+        }
+    };
+
+    return (
+        <div className="bg-white rounded-xl border border-[#e6f1d6] h-fit">
+            {/* Header */}
+            <div className="border-b border-[#e6f1d6] p-4">
+                <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-2">
+                        <CloudIcon className="h-5 w-5 text-[#4f7b38]" />
+                        <h2 className="text-lg font-semibold text-[#0c0e0a]">
+                            Published Containers
+                        </h2>
+                        <div className="text-xs bg-[#f0f7e7] text-[#4f7b38] px-2 py-1 rounded-full">
+                            NeuroContainers
+                        </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <button
+                            onClick={refetch}
+                            disabled={loading}
+                            className="p-1.5 text-[#4f7b38] hover:text-[#6aa329] transition-colors disabled:opacity-50"
+                            title="Refresh recipes"
+                        >
+                            <ArrowPathIcon className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                        </button>
+                        <button
+                            onClick={clearCache}
+                            className="p-1.5 text-gray-400 hover:text-red-600 transition-colors"
+                            title="Clear cache"
+                        >
+                            <TrashIcon className="h-4 w-4" />
+                        </button>
+                    </div>
+                </div>
+                <div className="flex items-center justify-between">
+                    <p className="text-sm text-[#4f7b38]">
+                        {loading ? 'Loading...' : error ? 'Error loading recipes' : `${files.length} recipes available`}
+                    </p>
+                </div>
+            </div>
+
+            {/* Search */}
+            <div className="p-4 border-b border-[#f0f7e7]">
+                <div className="relative">
+                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <input
+                        type="text"
+                        placeholder="Search recipes..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:border-transparent text-sm"
+                    />
+                </div>
+                {searchTerm && (
+                    <p className="text-xs text-gray-500 mt-2">
+                        {filteredFiles.length} of {files.length} recipes match
+                    </p>
+                )}
+            </div>
+
+            {/* Recipe List */}
+            <div className="max-h-96 overflow-y-auto">
+                {loading ? (
+                    <div className="text-center py-12">
+                        <div className="animate-spin h-8 w-8 border-2 border-[#6aa329] border-t-transparent rounded-full mx-auto mb-3"></div>
+                        <p className="text-sm text-[#4f7b38]">Loading recipes...</p>
+                    </div>
+                ) : error ? (
+                    <div className="text-center py-12 text-red-600">
+                        <ExclamationTriangleIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                        <p className="text-sm">Failed to load recipes</p>
+                        <button
+                            onClick={refetch}
+                            className="mt-2 text-xs text-[#6aa329] hover:underline"
+                        >
+                            Try again
+                        </button>
+                    </div>
+                ) : filteredFiles.length === 0 ? (
+                    <div className="text-center py-12 text-[#4f7b38]">
+                        <CloudIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                        <p className="text-sm">
+                            {searchTerm ? 'No matching recipes found' : 'No recipes available'}
+                        </p>
+                        {searchTerm && (
+                            <button
+                                onClick={() => setSearchTerm('')}
+                                className="mt-1 text-xs text-[#6aa329] hover:underline"
+                            >
+                                Clear search
+                            </button>
+                        )}
+                    </div>
+                ) : (
+                    <div className="divide-y divide-[#f0f7e7]">
+                        {filteredFiles.map((file) => (
+                            <div
+                                key={file.path}
+                                className="group p-4 hover:bg-[#fafdfb] transition-colors"
+                            >
+                                <div className="flex items-center justify-between">
+                                    <div className="flex-1 min-w-0 mr-3">
+                                        <h3 className="font-medium text-sm truncate text-[#0c0e0a]">
+                                            {getRecipeName(file.path)}
+                                        </h3>
+                                        <div className="text-xs text-gray-500 mt-1 font-mono truncate">
+                                            {file.path}
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center space-x-2 flex-shrink-0">
+                                        <button
+                                            onClick={() => handleLoadRecipe(file)}
+                                            disabled={loadingRecipe === file.path}
+                                            className="px-3 py-1.5 bg-[#6aa329] text-white rounded-lg text-xs font-medium hover:bg-[#4f7b38] transition-colors disabled:opacity-50"
+                                        >
+                                            {loadingRecipe === file.path ? (
+                                                <div className="animate-spin h-3 w-3 border border-white border-t-transparent rounded-full"></div>
+                                            ) : (
+                                                'Load'
+                                            )}
+                                        </button>
+                                        <a
+                                            href={file.htmlUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="p-1.5 text-gray-400 hover:text-[#6aa329] transition-colors"
+                                            title="View on GitHub"
+                                        >
+                                            <EyeIcon className="h-4 w-4" />
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
+function Footer() {
+    return (
+        <footer className="bg-white border-t border-[#e6f1d6] mt-12">
+            <div className="max-w-6xl mx-auto px-6 py-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
+                    {/* Main Site */}
+                    <div>
+                        <h3 className="text-sm font-semibold text-[#0c0e0a] mb-3">Neurodesk</h3>
+                        <a
+                            href="https://neurodesk.org"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center space-x-2 text-sm text-[#4f7b38] hover:text-[#6aa329] transition-colors"
+                        >
+                            <GlobeAltIcon className="h-4 w-4" />
+                            <span>neurodesk.org</span>
+                        </a>
+                        <p className="text-xs text-gray-500 mt-2">
+                            A comprehensive neuroimaging environment
+                        </p>
+                    </div>
+
+                    {/* Containers Repository */}
+                    <div>
+                        <h3 className="text-sm font-semibold text-[#0c0e0a] mb-3">Containers</h3>
+                        <a
+                            href="https://github.com/neurodesk/neurocontainers"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center space-x-2 text-sm text-[#4f7b38] hover:text-[#6aa329] transition-colors"
+                        >
+                            <CodeBracketIcon className="h-4 w-4" />
+                            <span>neurodesk/neurocontainers</span>
+                        </a>
+                        <p className="text-xs text-gray-500 mt-2">
+                            Container recipes and configurations
+                        </p>
+                    </div>
+
+                    {/* UI Repository */}
+                    <div>
+                        <h3 className="text-sm font-semibold text-[#0c0e0a] mb-3">Builder UI</h3>
+                        <a
+                            href="https://github.com/neurodesk/neurocontainers-ui"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center space-x-2 text-sm text-[#4f7b38] hover:text-[#6aa329] transition-colors"
+                        >
+                            <CodeBracketIcon className="h-4 w-4" />
+                            <span>neurodesk/neurocontainers-ui</span>
+                        </a>
+                        <p className="text-xs text-gray-500 mt-2">
+                            This visual builder interface
+                        </p>
+                    </div>
+                </div>
+
+                {/* Bottom Bar */}
+                <div className="border-t border-[#f0f7e7] mt-8 pt-6 text-center">
+                    <p className="text-xs text-gray-500">
+                        Built for the neuroimaging community by the Neurodesk team.
+                    </p>
+                </div>
+            </div>
+        </footer>
     );
 }
 
@@ -612,7 +945,6 @@ export default function Home() {
     const [activeSection, setActiveSection] = useState(Section.BasicInfo);
     const [yamlText, setYamlText] = useState("");
     const [isGitHubModalOpen, setIsGitHubModalOpen] = useState(false);
-    const [isRecipesModalOpen, setIsRecipesModalOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [saveStatus, setSaveStatus] = useState<SaveStatus>(SaveStatus.Saved);
     const [currentContainerId, setCurrentContainerId] = useState<string | null>(null);
@@ -639,7 +971,6 @@ export default function Home() {
     const handleLoadRecipeFromList = (recipe: ContainerRecipe) => {
         setYamlData(recipe);
         setActiveSection(Section.BasicInfo);
-        setIsRecipesModalOpen(false);
         // Create new container ID for loaded recipes
         const id = saveContainer(recipe);
         setCurrentContainerId(id);
@@ -864,10 +1195,10 @@ export default function Home() {
                     </div>
                 </>
             ) : (
-                <div className="flex-1 flex items-center justify-center p-6 min-h-screen">
-                    <div className="max-w-4xl w-full">
+                <div className="flex-1 p-6 min-h-screen">
+                    <div className="max-w-6xl mx-auto">
                         {/* Hero Section */}
-                        <div className="text-center mb-12">
+                        <div className="text-center mb-8">
                             <div className="inline-flex items-center justify-center w-16 h-16 bg-[#6aa329] rounded-2xl mb-6">
                                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
@@ -876,22 +1207,16 @@ export default function Home() {
                             <h1 className="text-4xl font-bold text-[#0c0e0a] mb-4">
                                 Neurocontainers Builder
                             </h1>
-                            <p className="text-xl text-[#4f7b38] mb-6 max-w-2xl mx-auto">
+                            <p className="text-xl text-[#4f7b38] mb-8 max-w-2xl mx-auto">
                                 Create reproducible neuroimaging containers with ease. Build, validate, and publish
                                 containerized neuroimaging tools using our intuitive visual interface.
                             </p>
                         </div>
 
-                        {/* Saved Containers Preview */}
-                        <SavedContainersPreview
-                            onLoadContainer={handleLoadSavedContainer}
-                            onDeleteContainer={handleDeleteSavedContainer}
-                        />
-
-                        {/* Action Cards */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        {/* Action Cards at Top */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
                             <button
-                                className="group p-8 bg-white border-2 border-[#e6f1d6] rounded-2xl hover:border-[#6aa329] hover:shadow-lg transition-all duration-300 text-left"
+                                className="group p-6 bg-white border-2 border-[#e6f1d6] rounded-xl hover:border-[#6aa329] hover:shadow-lg transition-all duration-300 text-left"
                                 onClick={() => {
                                     const newContainer = getNewContainerYAML();
                                     setYamlData(newContainer);
@@ -900,34 +1225,23 @@ export default function Home() {
                                     setSaveStatus(SaveStatus.Unsaved);
                                 }}
                             >
-                                <div className="flex items-center justify-center w-12 h-12 bg-[#6aa329] rounded-xl mb-4 group-hover:scale-110 transition-transform">
-                                    <PlusIcon className="h-6 w-6 text-white" />
+                                <div className="flex items-center mb-4">
+                                    <div className="flex items-center justify-center w-10 h-10 bg-[#6aa329] rounded-lg mr-4 group-hover:scale-110 transition-transform">
+                                        <PlusIcon className="h-5 w-5 text-white" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-semibold text-[#0c0e0a]">
+                                            Create New Container
+                                        </h3>
+                                        <p className="text-[#4f7b38] text-sm">
+                                            Start from scratch with guided workflow
+                                        </p>
+                                    </div>
                                 </div>
-                                <h3 className="text-lg font-semibold text-[#0c0e0a] mb-2">
-                                    Create New Container
-                                </h3>
-                                <p className="text-[#4f7b38] text-sm leading-relaxed">
-                                    Start building a new neuroimaging container from scratch with our guided workflow.
-                                </p>
-                            </button>
-
-                            <button
-                                className="group p-8 bg-white border-2 border-[#e6f1d6] rounded-2xl hover:border-[#6aa329] hover:shadow-lg transition-all duration-300 text-left"
-                                onClick={() => setIsRecipesModalOpen(true)}
-                            >
-                                <div className="flex items-center justify-center w-12 h-12 bg-[#4f7b38] rounded-xl mb-4 group-hover:scale-110 transition-transform">
-                                    <DocumentTextIcon className="h-6 w-6 text-white" />
-                                </div>
-                                <h3 className="text-lg font-semibold text-[#0c0e0a] mb-2">
-                                    Browse Existing Recipes
-                                </h3>
-                                <p className="text-[#4f7b38] text-sm leading-relaxed">
-                                    Explore and customize pre-built container recipes from the NeuroContainers repository.
-                                </p>
                             </button>
 
                             <div
-                                className="group p-8 bg-white border-2 border-dashed border-[#e6f1d6] rounded-2xl hover:border-[#6aa329] hover:shadow-lg transition-all duration-300 cursor-pointer text-left"
+                                className="group p-6 bg-white border-2 border-dashed border-[#e6f1d6] rounded-xl hover:border-[#6aa329] hover:shadow-lg transition-all duration-300 cursor-pointer text-left"
                                 onClick={() => {
                                     const input = document.createElement("input");
                                     input.type = "file";
@@ -975,17 +1289,38 @@ export default function Home() {
                                     }
                                 }}
                             >
-                                <div className="flex items-center justify-center w-12 h-12 bg-[#1e2a16] rounded-xl mb-4 group-hover:scale-110 transition-transform">
-                                    <ArrowUpTrayIcon className="h-6 w-6 text-white" />
+                                <div className="flex items-center mb-4">
+                                    <div className="flex items-center justify-center w-10 h-10 bg-[#1e2a16] rounded-lg mr-4 group-hover:scale-110 transition-transform">
+                                        <ArrowUpTrayIcon className="h-5 w-5 text-white" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-semibold text-[#0c0e0a]">
+                                            Upload YAML Recipe
+                                        </h3>
+                                        <p className="text-[#4f7b38] text-sm">
+                                            Import existing recipe file or drag & drop
+                                        </p>
+                                    </div>
                                 </div>
-                                <h3 className="text-lg font-semibold text-[#0c0e0a] mb-2">
-                                    Upload YAML Recipe
-                                </h3>
-                                <p className="text-[#4f7b38] text-sm leading-relaxed">
-                                    Import an existing container recipe YAML file to continue editing.
-                                </p>
                             </div>
                         </div>
+
+                        {/* Local and Remote Containers */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            {/* Local Containers */}
+                            <LocalContainersList
+                                onLoadContainer={handleLoadSavedContainer}
+                                onDeleteContainer={handleDeleteSavedContainer}
+                            />
+
+                            {/* Remote Containers */}
+                            <RemoteContainersList
+                                onLoadRecipe={handleLoadRecipeFromList}
+                            />
+                        </div>
+
+                        {/* Footer */}
+                        <Footer />
                     </div>
                 </div>
             )}
@@ -998,18 +1333,6 @@ export default function Home() {
                 yamlText={yamlText}
             />
 
-            {/* Recipes Modal */}
-            {isRecipesModalOpen && (
-                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-                    <RecipesList
-                        owner="neurodesk"
-                        repo="neurocontainers"
-                        showAsModal={true}
-                        onLoadRecipe={handleLoadRecipeFromList}
-                        onClose={() => setIsRecipesModalOpen(false)}
-                    />
-                </div>
-            )}
         </div>
     );
 }

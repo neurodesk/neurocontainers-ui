@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DocumentTextIcon } from "@heroicons/react/24/outline";
 import ReactMarkdown from "react-markdown";
 import { FormField, Input, Textarea } from "./FormField";
@@ -34,6 +34,13 @@ export default function DocumentationSection({
     const [readmeContent, setReadmeContent] = useState(readme || "");
     const [showPreview, setShowPreview] = useState(false);
     const [userSelectedMode, setUserSelectedMode] = useState<"structured" | "content" | "url" | null>(null);
+
+    // Reset local state when container changes
+    useEffect(() => {
+        setReadmeContent(readme || "");
+        setUserSelectedMode(null);
+        setShowPreview(false);
+    }, [containerName, containerVersion, readme, readmeUrl, structuredReadme]);
 
     // Default structured readme
     const defaultStructuredReadme: StructuredReadme = {

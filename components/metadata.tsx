@@ -64,6 +64,17 @@ export default function ContainerMetadata({
     const [showDocumentationHelp, setShowDocumentationHelp] = useState(false);
     const [showLicenseHelp, setShowLicenseHelp] = useState(false);
 
+    // Reset state when recipe changes (different container loaded)
+    useEffect(() => {
+        setShowInputTypeWarning(false);
+        setPendingInputType(null);
+        setShowValidation(false);
+        setShowBasicInfoHelp(false);
+        setShowArchitectureHelp(false);
+        setShowDocumentationHelp(false);
+        setShowLicenseHelp(false);
+    }, [recipe.name, recipe.version, recipe.readme, recipe.readme_url, recipe.structured_readme]); // Reset when container or documentation changes
+
     // Validation states
     const nameError = validateName(recipe.name);
     const versionError = validateVersion(recipe.version);

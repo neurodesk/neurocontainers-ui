@@ -224,10 +224,12 @@ function SaveIndicator({ status }: { status: SaveStatus }) {
 
 function LocalContainersList({
     onLoadContainer,
-    onDeleteContainer
+    onDeleteContainer,
+    githubFiles = []
 }: {
     onLoadContainer: (container: ContainerRecipe, id: string) => void;
     onDeleteContainer: (id: string) => void;
+    githubFiles?: { path: string; downloadUrl?: string; htmlUrl?: string }[];
 }) {
     const [savedContainers, setSavedContainers] = useState<SavedContainer[]>([]);
     const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -236,6 +238,14 @@ function LocalContainersList({
     useEffect(() => {
         setSavedContainers(getSavedContainers());
     }, []);
+
+    const isPublishedContainer = (containerName: string) => {
+        return githubFiles.some(file => {
+            const parts = file.path.split('/');
+            const recipeName = parts[parts.length - 2] || '';
+            return recipeName.toLowerCase() === containerName.toLowerCase();
+        });
+    };
 
     const filteredContainers = useMemo(() => {
         if (!searchTerm) return savedContainers;
@@ -345,8 +355,15 @@ function LocalContainersList({
                                                 {formatTimeAgo(container.lastModified)}
                                             </span>
                                         </div>
-                                        <div className="text-xs text-gray-500 mt-1">
-                                            {container.data.build.directives?.length || 0} build steps
+                                        <div className="flex items-center space-x-2 mt-1">
+                                            <span className="text-xs text-gray-500">
+                                                {container.data.build.directives?.length || 0} build steps
+                                            </span>
+                                            {!isPublishedContainer(container.data.name) && (
+                                                <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full">
+                                                    Unpublished
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="flex items-center space-x-2 flex-shrink-0">
@@ -685,6 +702,9 @@ function SideNavigation({
     onExportYAML,
     onOpenGitHub,
     saveStatus,
+    isPublished,
+    githubUrl,
+    isModified,
 }: {
     activeSection: Section;
     onSectionChange: (section: Section) => void;
@@ -695,6 +715,9 @@ function SideNavigation({
     onExportYAML: () => void;
     onOpenGitHub: () => void;
     saveStatus: SaveStatus;
+    isPublished?: boolean;
+    githubUrl?: string;
+    isModified?: boolean;
 }) {
     return (
         <>
@@ -755,14 +778,26 @@ function SideNavigation({
                             <ArrowDownTrayIcon className="h-4 w-4" />
                             <span>Download YAML</span>
                         </button>
-                        <button
-                            className="w-full flex items-center space-x-2 px-3 py-2 text-sm font-medium text-[#1e2a16] hover:bg-[#e6f1d6] rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            onClick={onOpenGitHub}
-                            disabled={!yamlData}
-                        >
-                            <CloudArrowUpIcon className="h-4 w-4" />
-                            <span>Publish to GitHub</span>
-                        </button>
+                        {isPublished && githubUrl ? (
+                            <a
+                                href={githubUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full flex items-center space-x-2 px-3 py-2 text-sm font-medium text-[#1e2a16] hover:bg-[#e6f1d6] rounded-md transition-colors"
+                            >
+                                <EyeIcon className="h-4 w-4" />
+                                <span>View on GitHub</span>
+                            </a>
+                        ) : (
+                            <button
+                                className="w-full flex items-center space-x-2 px-3 py-2 text-sm font-medium text-[#1e2a16] hover:bg-[#e6f1d6] rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                onClick={onOpenGitHub}
+                                disabled={!yamlData}
+                            >
+                                <CloudArrowUpIcon className="h-4 w-4" />
+                                <span>Publish to GitHub</span>
+                            </button>
+                        )}
                         <a
                             href="https://github.com/neurodesk/neurocontainers-ui/issues/new"
                             target="_blank"
@@ -774,6 +809,36 @@ function SideNavigation({
                         </a>
                     </div>
                 </div>
+
+                {/* Unpublished Warning */}
+                {yamlData && !isPublished && (
+                    <div className="p-3 border-b border-[#e6f1d6] bg-orange-50">
+                        <div className="flex items-start space-x-2">
+                            <ExclamationTriangleIcon className="h-4 w-4 text-orange-600 flex-shrink-0 mt-0.5" />
+                            <div>
+                                <p className="text-xs font-medium text-orange-800">Unpublished Container</p>
+                                <p className="text-xs text-orange-700 mt-1">
+                                    This container is not available in the public repository. Consider publishing it to make it accessible to others.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Modified Warning */}
+                {yamlData && isPublished && isModified && (
+                    <div className="p-3 border-b border-[#e6f1d6] bg-yellow-50">
+                        <div className="flex items-start space-x-2">
+                            <ExclamationTriangleIcon className="h-4 w-4 text-yellow-600 flex-shrink-0 mt-0.5" />
+                            <div>
+                                <p className="text-xs font-medium text-yellow-800">Modified Container</p>
+                                <p className="text-xs text-yellow-700 mt-1">
+                                    This container has been modified from the published version. Your changes are only saved locally.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Build Steps Header */}
                 <div className="p-3 border-b border-[#e6f1d6]">
@@ -942,14 +1007,236 @@ function SectionHeader({
 export default function Home() {
     const [yamlData, setYamlData] = useState<ContainerRecipe | null>(null);
     const [loading, setLoading] = useState(true);
+    const [loadingContainer, setLoadingContainer] = useState<string | null>(null);
+    const [containerError, setContainerError] = useState<string | null>(null);
     const [activeSection, setActiveSection] = useState(Section.BasicInfo);
     const [yamlText, setYamlText] = useState("");
     const [isGitHubModalOpen, setIsGitHubModalOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [saveStatus, setSaveStatus] = useState<SaveStatus>(SaveStatus.Saved);
     const [currentContainerId, setCurrentContainerId] = useState<string | null>(null);
+    const [currentRoute, setCurrentRoute] = useState<string>("");
+    const [isPublishedContainer, setIsPublishedContainer] = useState<boolean>(false);
+    const [isModifiedFromGithub, setIsModifiedFromGithub] = useState<boolean>(false);
+    const [originalGithubYaml, setOriginalGithubYaml] = useState<string>("");
 
     const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const { files } = useGitHubFiles("neurodesk", "neurocontainers", "main");
+
+    // Helper function to normalize YAML for comparison (ignore whitespace differences)
+    const normalizeYamlForComparison = useCallback((yamlString: string): string => {
+        try {
+            // Parse and re-dump to normalize formatting
+            const parsed = loadYAML(yamlString);
+            return dumpYAML(parsed, {
+                indent: 2,
+                lineWidth: -1,
+                noRefs: true,
+                sortKeys: true
+            }).trim();
+        } catch {
+            // If parsing fails, just trim whitespace
+            return yamlString.trim();
+        }
+    }, []);
+
+    // Check if current container is modified from GitHub version
+    const checkIfModifiedFromGithub = useCallback(async (recipe: ContainerRecipe): Promise<boolean> => {
+        if (!isPublishedContainer || !originalGithubYaml) {
+            return false;
+        }
+
+        try {
+            // Convert current recipe to YAML
+            const currentYaml = dumpYAML(recipe, {
+                indent: 2,
+                lineWidth: -1,
+                noRefs: true,
+                sortKeys: true
+            });
+
+            // Normalize both for comparison
+            const normalizedCurrent = normalizeYamlForComparison(currentYaml);
+            const normalizedOriginal = normalizeYamlForComparison(originalGithubYaml);
+
+            return normalizedCurrent !== normalizedOriginal;
+        } catch (err) {
+            console.error('Error comparing YAML:', err);
+            return false;
+        }
+    }, [isPublishedContainer, originalGithubYaml, normalizeYamlForComparison]);
+
+    // Helper function to get container name for URL
+    const getContainerUrlName = (recipe: ContainerRecipe) => {
+        if (recipe.name && recipe.name.trim()) {
+            return recipe.name.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-');
+        }
+        return `untitled-${new Date().toISOString().split('T')[0]}`;
+    };
+
+    // Helper function to find GitHub file by container name
+    const findGithubFileByName = useCallback((containerName: string) => {
+        return files.find(file => {
+            const parts = file.path.split('/');
+            const recipeName = parts[parts.length - 2] || '';
+            return recipeName.toLowerCase() === containerName.toLowerCase();
+        });
+    }, [files]);
+
+    // Update URL based on current container
+    const updateUrl = useCallback((recipe: ContainerRecipe | null) => {
+        if (recipe) {
+            const urlName = getContainerUrlName(recipe);
+            const newHash = `#/${urlName}`;
+            if (window.location.hash !== newHash) {
+                window.history.pushState(null, '', newHash);
+                setCurrentRoute(urlName);
+            }
+        } else {
+            if (window.location.hash !== '') {
+                window.history.pushState(null, '', window.location.pathname);
+                setCurrentRoute('');
+            }
+        }
+    }, []);
+
+    // Load container by name from local storage or GitHub
+    const loadContainerByName = useCallback(async (containerName: string) => {
+        setLoadingContainer(containerName);
+        setContainerError(null);
+
+        try {
+            // First try to find in local storage
+            const savedContainers = getSavedContainers();
+            const localContainer = savedContainers.find(container => {
+                const urlName = getContainerUrlName(container.data);
+                return urlName === containerName.toLowerCase();
+            });
+
+            if (localContainer) {
+                setYamlData(localContainer.data);
+                setCurrentContainerId(localContainer.id);
+                setSaveStatus(SaveStatus.Saved);
+                const isPublished = !!findGithubFileByName(localContainer.data.name);
+                setIsPublishedContainer(isPublished);
+                
+                // If published, fetch original GitHub YAML to compare for modifications
+                if (isPublished) {
+                    const githubFile = findGithubFileByName(localContainer.data.name);
+                    if (githubFile?.downloadUrl) {
+                        fetch(githubFile.downloadUrl)
+                            .then(response => response.text())
+                            .then(yamlText => {
+                                setOriginalGithubYaml(yamlText);
+                                checkIfModifiedFromGithub(localContainer.data).then(setIsModifiedFromGithub);
+                            })
+                            .catch(err => console.error('Error fetching GitHub YAML for comparison:', err));
+                    }
+                } else {
+                    setOriginalGithubYaml("");
+                    setIsModifiedFromGithub(false);
+                }
+                setLoadingContainer(null);
+                return;
+            }
+
+            // If not found locally, try to load from GitHub
+            const githubFile = findGithubFileByName(containerName);
+            if (githubFile && githubFile.downloadUrl) {
+                const response = await fetch(githubFile.downloadUrl);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch recipe: ${response.statusText}`);
+                }
+
+                const yamlText = await response.text();
+                let parsedRecipe = loadYAML(yamlText) as ContainerRecipe;
+
+                parsedRecipe = migrateLegacyRecipe(parsedRecipe);
+                parsedRecipe = await mergeAdditionalFilesIntoRecipe(
+                    parsedRecipe,
+                    async (filename: string) => {
+                        const fileResponse = await fetch(
+                            `${githubFile.downloadUrl!.replace(/build\.yaml$/, '')}${filename}`
+                        );
+                        if (!fileResponse.ok) {
+                            throw new Error(
+                                `Failed to fetch additional file ${filename}: ${fileResponse.statusText}`
+                            );
+                        }
+                        return await fileResponse.text();
+                    }
+                );
+
+                setYamlData(parsedRecipe);
+                setCurrentContainerId(null);
+                setSaveStatus(SaveStatus.Unsaved);
+                setIsPublishedContainer(true);
+                setOriginalGithubYaml(yamlText);
+                setIsModifiedFromGithub(false); // Just loaded from GitHub, so not modified
+                setLoadingContainer(null);
+            } else {
+                // Container not found locally or on GitHub
+                throw new Error(`Container "${containerName}" not found. It may not exist in the repository or your saved containers.`);
+            }
+        } catch (error) {
+            console.error('Error loading container:', error);
+            setContainerError(error instanceof Error ? error.message : 'Unknown error occurred while loading container');
+            setLoadingContainer(null);
+            // Don't automatically redirect on error, let user see the error message
+        }
+    }, [findGithubFileByName, checkIfModifiedFromGithub]);
+
+    // Handle browser back/forward buttons
+    const handlePopState = useCallback(() => {
+        const hash = window.location.hash;
+        if (hash.startsWith('#/')) {
+            const containerName = hash.substring(2);
+            if (containerName && containerName !== currentRoute) {
+                setCurrentRoute(containerName);
+                setContainerError(null); // Clear any previous errors
+                loadContainerByName(containerName);
+            }
+        } else {
+            setCurrentRoute('');
+            setYamlData(null);
+            setCurrentContainerId(null);
+            setIsPublishedContainer(false);
+            setSaveStatus(SaveStatus.Saved);
+            setIsModifiedFromGithub(false);
+            setOriginalGithubYaml("");
+            setContainerError(null); // Clear errors when going home
+            setLoadingContainer(null); // Clear loading state
+        }
+    }, [currentRoute, loadContainerByName]);
+
+    // Initialize routing
+    useEffect(() => {
+        window.addEventListener('popstate', handlePopState);
+        
+        // Check initial URL
+        const hash = window.location.hash;
+        if (hash.startsWith('#/')) {
+            const containerName = hash.substring(2);
+            setCurrentRoute(containerName);
+            if (files.length > 0) {
+                loadContainerByName(containerName);
+            }
+        }
+
+        return () => {
+            window.removeEventListener('popstate', handlePopState);
+        };
+    }, [files, handlePopState, loadContainerByName]);
+
+    // Load container from URL when files are available
+    useEffect(() => {
+        // If we have a route but no data yet, try to load it
+        const hash = window.location.hash;
+        if (hash.startsWith('#/') && !yamlData && files.length > 0) {
+            const containerName = hash.substring(2);
+            loadContainerByName(containerName);
+        }
+    }, [files, yamlData, loadContainerByName]);
 
     // Debounced save function
     const debouncedSave = useCallback((data: ContainerRecipe) => {
@@ -975,6 +1262,23 @@ export default function Home() {
         const id = saveContainer(recipe);
         setCurrentContainerId(id);
         setSaveStatus(SaveStatus.Saved);
+        setIsPublishedContainer(true);
+        setContainerError(null);
+        setLoadingContainer(null);
+        
+        // Store original GitHub YAML for comparison
+        const githubFile = findGithubFileByName(recipe.name);
+        if (githubFile?.downloadUrl) {
+            fetch(githubFile.downloadUrl)
+                .then(response => response.text())
+                .then(yamlText => {
+                    setOriginalGithubYaml(yamlText);
+                    setIsModifiedFromGithub(false); // Just loaded from GitHub
+                })
+                .catch(err => console.error('Error fetching GitHub YAML for comparison:', err));
+        }
+        
+        updateUrl(recipe);
     };
 
     const handleLoadSavedContainer = (recipe: ContainerRecipe, id: string) => {
@@ -982,6 +1286,27 @@ export default function Home() {
         setActiveSection(Section.BasicInfo);
         setCurrentContainerId(id);
         setSaveStatus(SaveStatus.Saved);
+        const isPublished = !!findGithubFileByName(recipe.name);
+        setIsPublishedContainer(isPublished);
+        
+        // If published, fetch original GitHub YAML to compare for modifications
+        if (isPublished) {
+            const githubFile = findGithubFileByName(recipe.name);
+            if (githubFile?.downloadUrl) {
+                fetch(githubFile.downloadUrl)
+                    .then(response => response.text())
+                    .then(yamlText => {
+                        setOriginalGithubYaml(yamlText);
+                        checkIfModifiedFromGithub(recipe).then(setIsModifiedFromGithub);
+                    })
+                    .catch(err => console.error('Error fetching GitHub YAML for comparison:', err));
+            }
+        } else {
+            setOriginalGithubYaml("");
+            setIsModifiedFromGithub(false);
+        }
+        
+        updateUrl(recipe);
     };
 
     const handleDeleteSavedContainer = (id: string) => {
@@ -997,8 +1322,15 @@ export default function Home() {
         if (yamlData) {
             setSaveStatus(SaveStatus.Unsaved);
             debouncedSave(yamlData);
+            updateUrl(yamlData);
+            // Check if container is published when data changes
+            setIsPublishedContainer(!!findGithubFileByName(yamlData.name));
+            // Check if container is modified from GitHub version
+            if (originalGithubYaml) {
+                checkIfModifiedFromGithub(yamlData).then(setIsModifiedFromGithub);
+            }
         }
-    }, [yamlData, debouncedSave]);
+    }, [yamlData, debouncedSave, findGithubFileByName, updateUrl, originalGithubYaml, checkIfModifiedFromGithub]);
 
     // Cleanup timeout on unmount
     useEffect(() => {
@@ -1051,6 +1383,12 @@ export default function Home() {
         setYamlData(null);
         setCurrentContainerId(null);
         setSaveStatus(SaveStatus.Saved);
+        setIsPublishedContainer(false);
+        setIsModifiedFromGithub(false);
+        setContainerError(null);
+        setLoadingContainer(null);
+        setOriginalGithubYaml("");
+        updateUrl(null);
     };
 
     // Update yamlData from YAML text
@@ -1088,6 +1426,61 @@ export default function Home() {
                         </div>
                     </div>
                 </div>
+            ) : loadingContainer ? (
+                <div className="flex-1 flex items-center justify-center">
+                    <div className="bg-white rounded-lg shadow-md p-8 text-center max-w-md">
+                        <div className="animate-spin h-12 w-12 border-4 border-[#6aa329] border-t-transparent rounded-full mx-auto mb-4"></div>
+                        <h2 className="text-lg font-semibold text-[#0c0e0a] mb-2">Loading Container</h2>
+                        <p className="text-[#4f7b38]">
+                            Loading &ldquo;{loadingContainer}&rdquo; from repository...
+                        </p>
+                    </div>
+                </div>
+            ) : containerError ? (
+                <div className="flex-1 flex items-center justify-center">
+                    <div className="bg-white rounded-lg shadow-md p-8 text-center max-w-md">
+                        <ExclamationTriangleIcon className="h-16 w-16 text-red-500 mx-auto mb-4" />
+                        <h2 className="text-lg font-semibold text-[#0c0e0a] mb-2">Container Not Found</h2>
+                        <p className="text-red-600 mb-6">
+                            {containerError}
+                        </p>
+                        <div className="space-y-3">
+                            {currentRoute && (
+                                <button
+                                    onClick={() => {
+                                        const newContainer = getNewContainerYAML();
+                                        // Convert URL format back to container name (remove hyphens, keep lowercase)
+                                        newContainer.name = currentRoute.replace(/-/g, '').toLowerCase();
+                                        setYamlData(newContainer);
+                                        setActiveSection(Section.BasicInfo);
+                                        setCurrentContainerId(null);
+                                        setSaveStatus(SaveStatus.Unsaved);
+                                        setIsPublishedContainer(false);
+                                        setIsModifiedFromGithub(false);
+                                        setOriginalGithubYaml("");
+                                        setContainerError(null);
+                                        setLoadingContainer(null);
+                                        updateUrl(newContainer);
+                                    }}
+                                    className="w-full bg-[#6aa329] text-white px-4 py-2 rounded-md hover:bg-[#5a8f23] transition-colors font-medium"
+                                >
+                                    Create New Container &ldquo;{currentRoute}&rdquo;
+                                </button>
+                            )}
+                            <button
+                                onClick={() => {
+                                    window.history.pushState(null, '', window.location.pathname);
+                                    setCurrentRoute('');
+                                    setContainerError(null);
+                                    setYamlData(null);
+                                }}
+                                className="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors font-medium"
+                            >
+                                Go to Homepage
+                            </button>
+                        </div>
+                    </div>
+                </div>
             ) : yamlData ? (
                 <>
                     {/* Sidebar Navigation */}
@@ -1101,6 +1494,9 @@ export default function Home() {
                         onExportYAML={exportYAML}
                         onOpenGitHub={() => setIsGitHubModalOpen(true)}
                         saveStatus={saveStatus}
+                        isPublished={isPublishedContainer}
+                        githubUrl={isPublishedContainer ? findGithubFileByName(yamlData?.name || '')?.htmlUrl : undefined}
+                        isModified={isModifiedFromGithub}
                     />
 
                     {/* Main Content */}
@@ -1223,6 +1619,12 @@ export default function Home() {
                                     setActiveSection(Section.BasicInfo);
                                     setCurrentContainerId(null);
                                     setSaveStatus(SaveStatus.Unsaved);
+                                    setIsPublishedContainer(false);
+                                    setIsModifiedFromGithub(false);
+                                    setOriginalGithubYaml("");
+                                    setContainerError(null);
+                                    setLoadingContainer(null);
+                                    updateUrl(newContainer);
                                 }}
                             >
                                 <div className="flex items-center mb-4">
@@ -1258,6 +1660,10 @@ export default function Home() {
                                                     setYamlData(parsed);
                                                     setCurrentContainerId(null);
                                                     setSaveStatus(SaveStatus.Unsaved);
+                                                    setIsPublishedContainer(!!findGithubFileByName(parsed.name));
+                                                    setIsModifiedFromGithub(false);
+                                                    setOriginalGithubYaml("");
+                                                    updateUrl(parsed);
                                                 } catch (err) {
                                                     console.error("Error parsing YAML:", err);
                                                 }
@@ -1281,6 +1687,10 @@ export default function Home() {
                                                 setYamlData(parsed);
                                                 setCurrentContainerId(null);
                                                 setSaveStatus(SaveStatus.Unsaved);
+                                                setIsPublishedContainer(!!findGithubFileByName(parsed.name));
+                                                setIsModifiedFromGithub(false);
+                                                setOriginalGithubYaml("");
+                                                updateUrl(parsed);
                                             } catch (err) {
                                                 console.error("Error parsing YAML:", err);
                                             }
@@ -1311,6 +1721,7 @@ export default function Home() {
                             <LocalContainersList
                                 onLoadContainer={handleLoadSavedContainer}
                                 onDeleteContainer={handleDeleteSavedContainer}
+                                githubFiles={files}
                             />
 
                             {/* Remote Containers */}

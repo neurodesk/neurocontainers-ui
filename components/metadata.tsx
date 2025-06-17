@@ -52,9 +52,13 @@ function validateDocumentation(recipe: ContainerRecipe): string | null {
 export default function ContainerMetadata({
     recipe,
     onChange,
+    onNameEditStart,
+    onNameEditFinish,
 }: {
     recipe: ContainerRecipe;
     onChange: (recipe: ContainerRecipe) => void;
+    onNameEditStart?: () => void;
+    onNameEditFinish?: () => void;
 }) {
     const [showInputTypeWarning, setShowInputTypeWarning] = useState(false);
     const [pendingInputType, setPendingInputType] = useState<"content" | "url" | null>(null);
@@ -302,6 +306,8 @@ export default function ContainerMetadata({
                             nameError={nameError}
                             versionError={versionError}
                             showValidation={showValidation}
+                            onNameEditStart={onNameEditStart}
+                            onNameEditFinish={onNameEditFinish}
                         />
                     </div>
 

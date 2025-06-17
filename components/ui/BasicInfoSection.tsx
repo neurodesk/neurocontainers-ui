@@ -8,6 +8,8 @@ interface BasicInfoSectionProps {
     nameError?: string | null;
     versionError?: string | null;
     showValidation?: boolean;
+    onNameEditStart?: () => void;
+    onNameEditFinish?: () => void;
 }
 
 export default function BasicInfoSection({
@@ -18,6 +20,8 @@ export default function BasicInfoSection({
     nameError,
     versionError,
     showValidation = false,
+    onNameEditStart,
+    onNameEditFinish,
 }: BasicInfoSectionProps) {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
@@ -32,6 +36,8 @@ export default function BasicInfoSection({
                 <Input
                     value={name}
                     onChange={(e) => onNameChange(e.target.value)}
+                    onFocus={() => onNameEditStart?.()}
+                    onBlur={() => onNameEditFinish?.()}
                     placeholder="e.g., fsl"
                     className={
                         showValidation && nameError

@@ -1019,6 +1019,8 @@ export default function Home() {
     const [isPublishedContainer, setIsPublishedContainer] = useState<boolean>(false);
     const [isModifiedFromGithub, setIsModifiedFromGithub] = useState<boolean>(false);
     const [originalGithubYaml, setOriginalGithubYaml] = useState<string>("");
+    const [isEditingName, setIsEditingName] = useState<boolean>(false);
+    const [isUpdatingUrl, setIsUpdatingUrl] = useState<boolean>(false);
 
     const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const { files } = useGitHubFiles("neurodesk", "neurocontainers", "main");
@@ -1102,6 +1104,15 @@ export default function Home() {
 
     // Load container by name from local storage or GitHub
     const loadContainerByName = useCallback(async (containerName: string) => {
+        // Don't load if we're editing or updating URL, or if we already have matching data
+        if (isEditingName || isUpdatingUrl) return;
+        
+        // If we already have data and the URL name matches what we'd generate, don't load
+        if (yamlData && getContainerUrlName(yamlData) === containerName) {
+            setCurrentRoute(containerName);
+            return;
+        }
+        
         setLoadingContainer(containerName);
         setContainerError(null);
 
@@ -1184,10 +1195,13 @@ export default function Home() {
             setLoadingContainer(null);
             // Don't automatically redirect on error, let user see the error message
         }
-    }, [findGithubFileByName, checkIfModifiedFromGithub]);
+    }, [findGithubFileByName, checkIfModifiedFromGithub, isEditingName, isUpdatingUrl, yamlData]);
 
     // Handle browser back/forward buttons
     const handlePopState = useCallback(() => {
+        // Don't handle navigation if we're editing the name or updating URL (to prevent race condition)
+        if (isEditingName || isUpdatingUrl) return;
+        
         const hash = window.location.hash;
         if (hash.startsWith('#/')) {
             const containerName = hash.substring(2);
@@ -1207,7 +1221,7 @@ export default function Home() {
             setContainerError(null); // Clear errors when going home
             setLoadingContainer(null); // Clear loading state
         }
-    }, [currentRoute, loadContainerByName]);
+    }, [currentRoute, loadContainerByName, isEditingName, isUpdatingUrl]);
 
     // Initialize routing
     useEffect(() => {
@@ -1231,12 +1245,13 @@ export default function Home() {
     // Load container from URL when files are available
     useEffect(() => {
         // If we have a route but no data yet, try to load it
+        // Don't load if we're currently editing the name (to prevent race condition)
         const hash = window.location.hash;
-        if (hash.startsWith('#/') && !yamlData && files.length > 0) {
+        if (hash.startsWith('#/') && !yamlData && files.length > 0 && !isEditingName && !isUpdatingUrl) {
             const containerName = hash.substring(2);
             loadContainerByName(containerName);
         }
-    }, [files, yamlData, loadContainerByName]);
+    }, [files, yamlData, loadContainerByName, isEditingName, isUpdatingUrl]);
 
     // Debounced save function
     const debouncedSave = useCallback((data: ContainerRecipe) => {
@@ -1254,6 +1269,32 @@ export default function Home() {
             setSaveStatus(SaveStatus.Saved);
         }, 1000); // 1 second debounce
     }, [currentContainerId]);
+
+    // Handle name editing finished - update URL and container ID if needed
+    const handleNameEditingFinished = useCallback((recipe: ContainerRecipe) => {
+        if (!recipe) return;
+        
+        const newUrlName = getContainerUrlName(recipe);
+        if (currentContainerId && currentRoute && currentRoute !== newUrlName) {
+            // Name change affects URL - need to create new container to avoid URL mismatch
+            setCurrentContainerId(null);
+        }
+        
+        // Set flags to prevent race condition
+        setIsUpdatingUrl(true);
+        setIsEditingName(false);
+        
+        // Update URL and route directly without triggering load
+        const urlName = getContainerUrlName(recipe);
+        const newHash = `#/${urlName}`;
+        if (window.location.hash !== newHash) {
+            window.history.pushState(null, '', newHash);
+            setCurrentRoute(urlName);
+        }
+        
+        // Clear the updating flag after a brief delay
+        setTimeout(() => setIsUpdatingUrl(false), 100);
+    }, [currentContainerId, currentRoute]);
 
     const handleLoadRecipeFromList = (recipe: ContainerRecipe) => {
         setYamlData(recipe);
@@ -1322,7 +1363,6 @@ export default function Home() {
         if (yamlData) {
             setSaveStatus(SaveStatus.Unsaved);
             debouncedSave(yamlData);
-            updateUrl(yamlData);
             // Check if container is published when data changes
             setIsPublishedContainer(!!findGithubFileByName(yamlData.name));
             // Check if container is modified from GitHub version
@@ -1330,7 +1370,7 @@ export default function Home() {
                 checkIfModifiedFromGithub(yamlData).then(setIsModifiedFromGithub);
             }
         }
-    }, [yamlData, debouncedSave, findGithubFileByName, updateUrl, originalGithubYaml, checkIfModifiedFromGithub]);
+    }, [yamlData, debouncedSave, findGithubFileByName, originalGithubYaml, checkIfModifiedFromGithub]);
 
     // Cleanup timeout on unmount
     useEffect(() => {
@@ -1436,7 +1476,7 @@ export default function Home() {
                         </p>
                     </div>
                 </div>
-            ) : containerError ? (
+            ) : containerError && !isEditingName && !isUpdatingUrl ? (
                 <div className="flex-1 flex items-center justify-center">
                     <div className="bg-white rounded-lg shadow-md p-8 text-center max-w-md">
                         <ExclamationTriangleIcon className="h-16 w-16 text-red-500 mx-auto mb-4" />
@@ -1525,6 +1565,8 @@ export default function Home() {
                                     <ContainerMetadata
                                         recipe={yamlData}
                                         onChange={(updated) => setYamlData(updated)}
+                                        onNameEditStart={() => setIsEditingName(true)}
+                                        onNameEditFinish={() => handleNameEditingFinished(yamlData)}
                                     />
                                 </section>
 

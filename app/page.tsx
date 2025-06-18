@@ -788,16 +788,16 @@ function SideNavigation({
                                 <EyeIcon className="h-4 w-4" />
                                 <span>View on GitHub</span>
                             </a>
-                        ) : (
-                            <button
-                                className="w-full flex items-center space-x-2 px-3 py-2 text-sm font-medium text-[#1e2a16] hover:bg-[#e6f1d6] rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                onClick={onOpenGitHub}
-                                disabled={!yamlData}
-                            >
-                                <CloudArrowUpIcon className="h-4 w-4" />
-                                <span>Publish to GitHub</span>
-                            </button>
-                        )}
+
+                        ) : (<></>)}
+                        <button
+                            className="w-full flex items-center space-x-2 px-3 py-2 text-sm font-medium text-[#1e2a16] hover:bg-[#e6f1d6] rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            onClick={onOpenGitHub}
+                            disabled={!yamlData}
+                        >
+                            <CloudArrowUpIcon className="h-4 w-4" />
+                            <span>Publish to GitHub</span>
+                        </button>
                         <a
                             href="https://github.com/neurodesk/neurocontainers-ui/issues/new"
                             target="_blank"
@@ -1106,13 +1106,13 @@ export default function Home() {
     const loadContainerByName = useCallback(async (containerName: string) => {
         // Don't load if we're editing or updating URL, or if we already have matching data
         if (isEditingName || isUpdatingUrl) return;
-        
+
         // If we already have data and the URL name matches what we'd generate, don't load
         if (yamlData && getContainerUrlName(yamlData) === containerName) {
             setCurrentRoute(containerName);
             return;
         }
-        
+
         setLoadingContainer(containerName);
         setContainerError(null);
 
@@ -1130,7 +1130,7 @@ export default function Home() {
                 setSaveStatus(SaveStatus.Saved);
                 const isPublished = !!findGithubFileByName(localContainer.data.name);
                 setIsPublishedContainer(isPublished);
-                
+
                 // If published, fetch original GitHub YAML to compare for modifications
                 if (isPublished) {
                     const githubFile = findGithubFileByName(localContainer.data.name);
@@ -1201,7 +1201,7 @@ export default function Home() {
     const handlePopState = useCallback(() => {
         // Don't handle navigation if we're editing the name or updating URL (to prevent race condition)
         if (isEditingName || isUpdatingUrl) return;
-        
+
         const hash = window.location.hash;
         if (hash.startsWith('#/')) {
             const containerName = hash.substring(2);
@@ -1226,7 +1226,7 @@ export default function Home() {
     // Initialize routing
     useEffect(() => {
         window.addEventListener('popstate', handlePopState);
-        
+
         // Check initial URL
         const hash = window.location.hash;
         if (hash.startsWith('#/')) {
@@ -1273,17 +1273,17 @@ export default function Home() {
     // Handle name editing finished - update URL and container ID if needed
     const handleNameEditingFinished = useCallback((recipe: ContainerRecipe) => {
         if (!recipe) return;
-        
+
         const newUrlName = getContainerUrlName(recipe);
         if (currentContainerId && currentRoute && currentRoute !== newUrlName) {
             // Name change affects URL - need to create new container to avoid URL mismatch
             setCurrentContainerId(null);
         }
-        
+
         // Set flags to prevent race condition
         setIsUpdatingUrl(true);
         setIsEditingName(false);
-        
+
         // Update URL and route directly without triggering load
         const urlName = getContainerUrlName(recipe);
         const newHash = `#/${urlName}`;
@@ -1291,7 +1291,7 @@ export default function Home() {
             window.history.pushState(null, '', newHash);
             setCurrentRoute(urlName);
         }
-        
+
         // Clear the updating flag after a brief delay
         setTimeout(() => setIsUpdatingUrl(false), 100);
     }, [currentContainerId, currentRoute]);
@@ -1306,7 +1306,7 @@ export default function Home() {
         setIsPublishedContainer(true);
         setContainerError(null);
         setLoadingContainer(null);
-        
+
         // Store original GitHub YAML for comparison
         const githubFile = findGithubFileByName(recipe.name);
         if (githubFile?.downloadUrl) {
@@ -1318,7 +1318,7 @@ export default function Home() {
                 })
                 .catch(err => console.error('Error fetching GitHub YAML for comparison:', err));
         }
-        
+
         updateUrl(recipe);
     };
 
@@ -1329,7 +1329,7 @@ export default function Home() {
         setSaveStatus(SaveStatus.Saved);
         const isPublished = !!findGithubFileByName(recipe.name);
         setIsPublishedContainer(isPublished);
-        
+
         // If published, fetch original GitHub YAML to compare for modifications
         if (isPublished) {
             const githubFile = findGithubFileByName(recipe.name);
@@ -1346,7 +1346,7 @@ export default function Home() {
             setOriginalGithubYaml("");
             setIsModifiedFromGithub(false);
         }
-        
+
         updateUrl(recipe);
     };
 

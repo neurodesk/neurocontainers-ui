@@ -1,9 +1,10 @@
 import { InformationCircleIcon, ExclamationTriangleIcon, PlusIcon } from "@heroicons/react/24/outline";
-import { ContainerRecipe, Architecture, CopyrightInfo, StructuredReadme, convertStructuredReadmeToText } from "@/components/common";
+import { ContainerRecipe, Architecture, CopyrightInfo, StructuredReadme, convertStructuredReadmeToText, CATEGORIES } from "@/components/common";
 import { useState, useEffect } from "react";
 import {
     BasicInfoSection,
     ArchitectureSelector,
+    CategorySelector,
     DocumentationSection,
     LicenseSection,
     ValidationSummary,
@@ -67,6 +68,7 @@ export default function ContainerMetadata({
     const [showArchitectureHelp, setShowArchitectureHelp] = useState(false);
     const [showDocumentationHelp, setShowDocumentationHelp] = useState(false);
     const [showLicenseHelp, setShowLicenseHelp] = useState(false);
+    const [showCategoryHelp, setShowCategoryHelp] = useState(false);
 
     // Reset state when recipe changes (different container loaded)
     useEffect(() => {
@@ -77,6 +79,7 @@ export default function ContainerMetadata({
         setShowArchitectureHelp(false);
         setShowDocumentationHelp(false);
         setShowLicenseHelp(false);
+        setShowCategoryHelp(false);
     }, [recipe.name, recipe.version, recipe.readme, recipe.readme_url, recipe.structured_readme]); // Reset when container or documentation changes
 
     // Validation states
@@ -84,20 +87,21 @@ export default function ContainerMetadata({
     const versionError = validateVersion(recipe.version);
     const documentationError = validateDocumentation(recipe);
     const architectureError = recipe.architectures.length === 0 ? "At least one architecture must be selected" : null;
+    const categoryError = !recipe.categories || recipe.categories.length === 0 ? "At least one category must be selected" : null;
 
-    const hasErrors = !!(nameError || versionError || documentationError || architectureError);
+    const hasErrors = !!(nameError || versionError || documentationError || architectureError || categoryError);
 
     // Show validation after user has interacted with the form
     useEffect(() => {
         // Always show validation for required fields that are empty
         const hasRequiredEmptyFields = !recipe.name.trim() || !recipe.version.trim() || 
             (!recipe.readme?.trim() && !recipe.readme_url?.trim() && !recipe.structured_readme) || 
-            recipe.architectures.length === 0;
+            recipe.architectures.length === 0 || !recipe.categories || recipe.categories.length === 0;
         
         if (recipe.name || recipe.version || recipe.readme || recipe.readme_url || recipe.structured_readme || hasRequiredEmptyFields) {
             setShowValidation(true);
         }
-    }, [recipe.name, recipe.version, recipe.readme, recipe.readme_url, recipe.structured_readme, recipe.architectures]);
+    }, [recipe.name, recipe.version, recipe.readme, recipe.readme_url, recipe.structured_readme, recipe.architectures, recipe.categories]);
 
     const updateName = (name: string) => {
         onChange({ ...recipe, name });
@@ -109,6 +113,10 @@ export default function ContainerMetadata({
 
     const updateArchitectures = (architectures: Architecture[]) => {
         onChange({ ...recipe, architectures });
+    };
+
+    const updateCategories = (categories: (keyof typeof CATEGORIES)[]) => {
+        onChange({ ...recipe, categories });
     };
 
     const updateReadme = (readme: string) => {
@@ -270,7 +278,7 @@ export default function ContainerMetadata({
         <>
             <div className="bg-white rounded-lg shadow-md border border-[#d3e7b6] mb-6">
                 <ValidationSummary
-                    errors={[nameError, versionError, documentationError, architectureError]}
+                    errors={[nameError, versionError, documentationError, architectureError, categoryError]}
                     show={showValidation && hasErrors}
                 />
 
@@ -340,6 +348,47 @@ export default function ContainerMetadata({
                             selectedArchitectures={recipe.architectures}
                             onChange={updateArchitectures}
                             error={architectureError}
+                            showValidation={showValidation}
+                        />
+                    </div>
+
+                    {/* Category Section */}
+                    <div className="mb-8">
+                        <div className="flex items-center gap-2 mb-4">
+                            <h3 className="text-lg font-medium text-[#0c0e0a]">
+                                Categories *
+                            </h3>
+                            <button
+                                type="button"
+                                className={`text-[#4f7b38] hover:text-[#6aa329] p-1 transition-colors ${showCategoryHelp ? 'text-[#6aa329]' : ''}`}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setShowCategoryHelp(!showCategoryHelp);
+                                }}
+                                title={showCategoryHelp ? "Hide documentation" : "Show documentation"}
+                            >
+                                <InformationCircleIcon className="h-4 w-4" />
+                            </button>
+                        </div>
+
+                        {showCategoryHelp && (
+                            <div className="mb-4 px-4 py-3 bg-[#fafcf7] border border-[#e6f1d6] rounded-md">
+                                <h4 className="font-semibold text-[#0c0e0a] mb-2">Container Categories</h4>
+                                <div className="text-sm text-gray-600 space-y-2">
+                                    <p>Select one or more categories that best describe your container&apos;s functionality:</p>
+                                    <ul className="list-disc list-inside mt-1 space-y-1">
+                                        <li>Categories help users discover and understand your container</li>
+                                        <li>Choose all categories that apply to your tool</li>
+                                        <li>At least one category is required</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        )}
+
+                        <CategorySelector
+                            selectedCategories={recipe.categories || []}
+                            onChange={updateCategories}
+                            error={categoryError}
                             showValidation={showValidation}
                         />
                     </div>

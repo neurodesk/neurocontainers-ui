@@ -10,6 +10,7 @@ export { default as ToggleButtonGroup } from './ToggleButtonGroup';
 // Metadata section components
 export { default as BasicInfoSection } from './BasicInfoSection';
 export { default as ArchitectureSelector } from './ArchitectureSelector';
+export { CategorySelector } from './CategorySelector';
 export { default as DocumentationSection } from './DocumentationSection';
 export { default as LicenseDropdown } from './LicenseDropdown';
 export { default as LicenseSection } from './LicenseSection';

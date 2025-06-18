@@ -145,6 +145,34 @@ export interface NeuroDockerBuildRecipe {
 
 export type BuildRecipe = NeuroDockerBuildRecipe;
 
+export const CATEGORIES = {
+    "functional imaging": "fMRI analysis tools",
+    "structural imaging": "Anatomical image processing  ",
+    "diffusion imaging": "DTI/DWI analysis",
+    "image segmentation": "Segmentation tools",
+    "image registration": "Registration/alignment tools",
+    "electrophysiology": "EEG/MEG analysis",
+    "workflows": "Pipeline tools (fmriprep, mriqc)",
+    "data organisation": "BIDS tools, converters",
+    "visualization": "Viewing and display tools",
+    "programming": "Development environments",
+    "quantitative imaging": "Quantitative analysis",
+    "phase processing": "Phase/QSM processing",
+    "spectroscopy": "MRS analysis",
+    "machine learning": "ML/AI tools",
+    "quality control": "QC tools",
+    "bids apps": "BIDS-compatible applications",
+    "cryo EM": "Cryo-electron microscopy",
+    "molecular biology": "Structural biology tools",
+    "rodent imaging": "Small animal imaging",
+    "spine": "Spinal cord analysis",
+    "hippocampus": "Hippocampal analysis",
+    "body": "Body imaging tools",
+    "shape analysis": "Shape analysis tools",
+    "statistics": "Statistical analysis",
+    "image reconstruction": "Reconstruction tools",
+};
+
 export interface ContainerRecipe {
     name: string;
     version: string;
@@ -157,6 +185,7 @@ export interface ContainerRecipe {
     files?: FileInfo[];
     deploy?: DeployInfo;
     tests?: TestInfo[];
+    categories?: (keyof typeof CATEGORIES)[];
 }
 
 function hasJinja2Syntax(text: string): boolean {
@@ -175,7 +204,7 @@ export function convertStructuredReadmeToText(
     const citationText = structured.citation.trim();
     const needsRawBlock = hasJinja2Syntax(citationText);
     const processedCitation = needsRawBlock ? wrapInRawBlock(citationText) : citationText;
-    
+
     const lines = [
         "----------------------------------",
         `## ${name}/${version} ##`,

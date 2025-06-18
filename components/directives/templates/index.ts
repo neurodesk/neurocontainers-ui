@@ -12,6 +12,7 @@ export * from './fsl';
 export * from './jq';
 export * from './matlabmcr';
 export * from './minc';
+export * from './miniconda';
 export * from './mricron';
 export * from './mrtrix3';
 export * from './ndfreeze';

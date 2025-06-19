@@ -1613,7 +1613,7 @@ export default function Home() {
 
                                     <div id="yaml-preview" className="hidden p-4">
                                         <textarea
-                                            className="w-full h-64 px-3 py-2 font-mono text-sm bg-[#1e2a16] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6aa329] resize-none"
+                                            className="w-full h-64 px-3 py-2 font-mono text-sm bg-[#1e2a16] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6aa329]"
                                             value={yamlText}
                                             onChange={(e) => setYamlText(e.target.value)}
                                             onBlur={updateFromYamlText}

@@ -57,57 +57,57 @@ export function StructuredReadmeEditor({ value, onChange, containerName, contain
                 </div>
             ) : (
                 <div className="space-y-4">
-            <FormField
-                label="Description *"
-                description="Brief description of the tool and its capabilities (2-3 paragraphs)"
-            >
-                <textarea
-                    value={value.description}
-                    onChange={(e) => updateField("description", e.target.value)}
-                    placeholder="Enter a description of the neuroimaging tool..."
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6aa329] focus:border-[#6aa329] sm:text-sm resize-none"
-                    rows={4}
-                />
-            </FormField>
+                    <FormField
+                        label="Description *"
+                        description="Brief description of the tool and its capabilities (2-3 paragraphs)"
+                    >
+                        <textarea
+                            value={value.description}
+                            onChange={(e) => updateField("description", e.target.value)}
+                            placeholder="Enter a description of the neuroimaging tool..."
+                            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6aa329] focus:border-[#6aa329] sm:text-sm"
+                            rows={4}
+                        />
+                    </FormField>
 
-            <FormField
-                label="Usage Example *"
-                description="Basic usage commands and examples"
-            >
-                <textarea
-                    value={value.example}
-                    onChange={(e) => updateField("example", e.target.value)}
-                    placeholder="ml toolname/version&#10;toolname --help"
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6aa329] focus:border-[#6aa329] sm:text-sm font-mono resize-none"
-                    rows={3}
-                />
-            </FormField>
+                    <FormField
+                        label="Usage Example *"
+                        description="Basic usage commands and examples"
+                    >
+                        <textarea
+                            value={value.example}
+                            onChange={(e) => updateField("example", e.target.value)}
+                            placeholder="ml toolname/version&#10;toolname --help"
+                            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6aa329] focus:border-[#6aa329] sm:text-sm font-mono"
+                            rows={3}
+                        />
+                    </FormField>
 
-            <FormField
-                label="Documentation URL *"
-                description="Link to official documentation or project website"
-            >
-                <input
-                    type="url"
-                    value={value.documentation}
-                    onChange={(e) => updateField("documentation", e.target.value)}
-                    placeholder="https://..."
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6aa329] focus:border-[#6aa329] sm:text-sm"
-                />
-            </FormField>
+                    <FormField
+                        label="Documentation URL *"
+                        description="Link to official documentation or project website"
+                    >
+                        <input
+                            type="url"
+                            value={value.documentation}
+                            onChange={(e) => updateField("documentation", e.target.value)}
+                            placeholder="https://..."
+                            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6aa329] focus:border-[#6aa329] sm:text-sm"
+                        />
+                    </FormField>
 
-            <FormField
-                label="Citation"
-                description="Academic citation or reference for the tool. Citations containing Jinja2 syntax will be wrapped in raw blocks to prevent template processing conflicts."
-            >
-                <textarea
-                    value={value.citation}
-                    onChange={(e) => updateField("citation", e.target.value)}
-                    placeholder="Author et al. (Year). Title. Journal. DOI: ..."
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6aa329] focus:border-[#6aa329] sm:text-sm resize-none"
-                    rows={2}
-                />
-            </FormField>
+                    <FormField
+                        label="Citation"
+                        description="Academic citation or reference for the tool. Citations containing Jinja2 syntax will be wrapped in raw blocks to prevent template processing conflicts."
+                    >
+                        <textarea
+                            value={value.citation}
+                            onChange={(e) => updateField("citation", e.target.value)}
+                            placeholder="Author et al. (Year). Title. Journal. DOI: ..."
+                            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6aa329] focus:border-[#6aa329] sm:text-sm"
+                            rows={4}
+                        />
+                    </FormField>
                 </div>
             )}
         </div>

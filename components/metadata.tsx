@@ -1,4 +1,4 @@
-import { InformationCircleIcon, ExclamationTriangleIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { InformationCircleIcon, ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import { ContainerRecipe, Architecture, CopyrightInfo, StructuredReadme, convertStructuredReadmeToText, CATEGORIES } from "@/components/common";
 import { useState, useEffect } from "react";
 import {
@@ -142,9 +142,30 @@ export default function ContainerMetadata({
         onChange({ ...recipe, copyright });
     };
 
-    const addLicense = () => {
+    const addLicense = (index?: number) => {
         const newLicense = { license: "", url: "" };
-        updateCopyright([...(recipe.copyright || []), newLicense]);
+        const licenses = [...(recipe.copyright || [])];
+        if (index !== undefined) {
+            licenses.splice(index, 0, newLicense);
+        } else {
+            licenses.push(newLicense);
+        }
+        updateCopyright(licenses);
+    };
+
+    const moveLicense = (index: number, direction: "up" | "down") => {
+        const newIndex = direction === "up" ? index - 1 : index + 1;
+        if (newIndex < 0 || newIndex >= (recipe.copyright || []).length) return;
+
+        const updatedLicenses = [...(recipe.copyright || [])];
+        const temp = updatedLicenses[index];
+        updatedLicenses[index] = updatedLicenses[newIndex];
+        updatedLicenses[newIndex] = temp;
+        updateCopyright(updatedLicenses);
+    };
+
+    const reorderLicenses = (licenses: CopyrightInfo[]) => {
+        updateCopyright(licenses);
     };
 
     // Input type switching with warning
@@ -432,27 +453,18 @@ export default function ContainerMetadata({
 
                     {/* License Section */}
                     <div>
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-2">
-                                <h3 className="text-lg font-medium text-[#0c0e0a]">License Information</h3>
-                                <button
-                                    type="button"
-                                    className={`text-[#4f7b38] hover:text-[#6aa329] p-1 transition-colors ${showLicenseHelp ? 'text-[#6aa329]' : ''}`}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setShowLicenseHelp(!showLicenseHelp);
-                                    }}
-                                    title={showLicenseHelp ? "Hide documentation" : "Show documentation"}
-                                >
-                                    <InformationCircleIcon className="h-4 w-4" />
-                                </button>
-                            </div>
+                        <div className="flex items-center gap-2 mb-4">
+                            <h3 className="text-lg font-medium text-[#0c0e0a]">License Information</h3>
                             <button
-                                className="text-sm text-white bg-[#6aa329] hover:bg-[#4f7b38] flex items-center gap-2 px-3 py-2 rounded-md transition-colors"
-                                onClick={addLicense}
+                                type="button"
+                                className={`text-[#4f7b38] hover:text-[#6aa329] p-1 transition-colors ${showLicenseHelp ? 'text-[#6aa329]' : ''}`}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setShowLicenseHelp(!showLicenseHelp);
+                                }}
+                                title={showLicenseHelp ? "Hide documentation" : "Show documentation"}
                             >
-                                <PlusIcon className="h-4 w-4" />
-                                Add License
+                                <InformationCircleIcon className="h-4 w-4" />
                             </button>
                         </div>
 
@@ -465,7 +477,10 @@ export default function ContainerMetadata({
                         <LicenseSection
                             licenses={recipe.copyright || []}
                             onChange={updateCopyright}
+                            onAddLicense={addLicense}
                             showAddButton={false}
+                            onMoveLicense={moveLicense}
+                            onReorderLicenses={reorderLicenses}
                         />
                     </div>
                 </div>

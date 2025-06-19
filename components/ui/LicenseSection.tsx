@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { 
+    PlusIcon, 
+    TrashIcon, 
+    ChevronUpIcon, 
+    ChevronDownIcon, 
+    Bars3Icon 
+} from "@heroicons/react/24/outline";
 import { CopyrightInfo } from "@/components/common";
 import { FormField, Input } from "./FormField";
 import LicenseDropdown from "./LicenseDropdown";
@@ -8,13 +14,26 @@ import spdxLicenses from "./licenses.json";
 interface LicenseSectionProps {
     licenses: CopyrightInfo[];
     onChange: (licenses: CopyrightInfo[]) => void;
+    onAddLicense?: (index?: number) => void;
     showAddButton?: boolean;
     renderAddButton?: (addLicense: () => void) => React.ReactNode;
+    onMoveLicense?: (index: number, direction: "up" | "down") => void;
+    onReorderLicenses?: (licenses: CopyrightInfo[]) => void;
 }
 
-export default function LicenseSection({ licenses, onChange, showAddButton = true, renderAddButton }: LicenseSectionProps) {
+export default function LicenseSection({ 
+    licenses, 
+    onChange,
+    onAddLicense, 
+    showAddButton = true, 
+    renderAddButton,
+    onMoveLicense,
+    onReorderLicenses 
+}: LicenseSectionProps) {
     const [deleteConfirmIndex, setDeleteConfirmIndex] = useState<number | null>(null);
     const [customLicenseIndex, setCustomLicenseIndex] = useState<number | null>(null);
+    const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+    const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
     const updateLicense = (index: number, info: CopyrightInfo) => {
         const updated = [...licenses];
@@ -34,9 +53,19 @@ export default function LicenseSection({ licenses, onChange, showAddButton = tru
         }
     };
 
-    const addLicense = () => {
-        const newLicense = { license: "", url: "" };
-        onChange([...licenses, newLicense]);
+    const addLicense = (index?: number) => {
+        if (onAddLicense) {
+            onAddLicense(index);
+        } else {
+            const newLicense = { license: "", url: "" };
+            const updatedLicenses = [...licenses];
+            if (index !== undefined) {
+                updatedLicenses.splice(index, 0, newLicense);
+            } else {
+                updatedLicenses.push(newLicense);
+            }
+            onChange(updatedLicenses);
+        }
     };
 
     const validateLicense = (info: CopyrightInfo): string[] => {
@@ -125,14 +154,98 @@ export default function LicenseSection({ licenses, onChange, showAddButton = tru
         return false;
     };
 
+    // Drag and drop handlers
+    const handleDragStart = (e: React.DragEvent, index: number) => {
+        setDraggedIndex(index);
+        e.dataTransfer.effectAllowed = "move";
+    };
+
+    const handleDragOver = (e: React.DragEvent, index: number) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+        setDragOverIndex(index);
+    };
+
+    const handleDragLeave = () => {
+        setDragOverIndex(null);
+    };
+
+    const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+        e.preventDefault();
+
+        if (draggedIndex === null || draggedIndex === dropIndex) {
+            setDraggedIndex(null);
+            setDragOverIndex(null);
+            return;
+        }
+
+        const updatedLicenses = [...licenses];
+        const draggedItem = updatedLicenses[draggedIndex];
+
+        // Remove the dragged item
+        updatedLicenses.splice(draggedIndex, 1);
+
+        // Insert at the new position
+        const insertIndex = draggedIndex < dropIndex ? dropIndex - 1 : dropIndex;
+        updatedLicenses.splice(insertIndex, 0, draggedItem);
+
+        if (onReorderLicenses) {
+            onReorderLicenses(updatedLicenses);
+        } else {
+            onChange(updatedLicenses);
+        }
+        setDraggedIndex(null);
+        setDragOverIndex(null);
+    };
+
+    const handleDragEnd = () => {
+        setDraggedIndex(null);
+        setDragOverIndex(null);
+    };
+
+    const handleMoveLicense = (index: number, direction: "up" | "down") => {
+        if (onMoveLicense) {
+            onMoveLicense(index, direction);
+        } else {
+            // Fallback implementation if onMoveLicense is not provided
+            const newIndex = direction === "up" ? index - 1 : index + 1;
+            if (newIndex < 0 || newIndex >= licenses.length) return;
+
+            const updatedLicenses = [...licenses];
+            const temp = updatedLicenses[index];
+            updatedLicenses[index] = updatedLicenses[newIndex];
+            updatedLicenses[newIndex] = temp;
+            onChange(updatedLicenses);
+        }
+    };
+
     const AddLicenseButton = () => (
         <button
             className="text-sm text-white bg-[#6aa329] hover:bg-[#4f7b38] flex items-center gap-2 px-3 py-2 rounded-md transition-colors"
-            onClick={addLicense}
+            onClick={() => addLicense()}
         >
             <PlusIcon className="h-4 w-4" />
             Add License
         </button>
+    );
+
+    const InlineAddButton = ({ index }: { index: number }) => (
+        <div className="py-1">
+            <button
+                type="button"
+                onClick={() => addLicense(index)}
+                className="
+                    group flex items-center justify-center gap-2 w-full py-1.5 
+                    text-gray-400 hover:text-[#6aa329] hover:bg-[#f8fdf2]
+                    border border-dashed border-gray-300 hover:border-[#6aa329]
+                    rounded-md transition-all duration-200
+                    opacity-50 hover:opacity-100
+                "
+            >
+                <PlusIcon className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                <span className="text-xs font-medium hidden sm:inline text-gray-500 group-hover:text-[#6aa329]">Add license</span>
+            </button>
+        </div>
     );
 
     return (
@@ -144,26 +257,137 @@ export default function LicenseSection({ licenses, onChange, showAddButton = tru
             )}
 
             {licenses.length === 0 ? (
-                <div className="text-center py-6 text-gray-500 border-2 border-dashed border-gray-200 rounded-lg">
-                    <p className="mb-2">No licenses specified</p>
-                    <p className="text-sm">Click &quot;Add License&quot; to specify licensing information</p>
-                </div>
+                <button
+                    onClick={() => addLicense(0)}
+                    className="
+                        group w-full text-center py-8 text-gray-500 
+                        border-2 border-dashed border-gray-200 hover:border-[#6aa329] 
+                        rounded-lg hover:bg-[#f8fdf2] transition-all duration-200
+                        focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:ring-offset-1
+                    "
+                >
+                    <p className="mb-2 group-hover:text-[#6aa329]">No licenses specified</p>
+                    <p className="text-sm group-hover:text-[#6aa329]">Click here to add licensing information</p>
+                </button>
             ) : (
-                <div className="space-y-4">
+                <>
+                    {/* First add button - only shows when there are licenses */}
+                    <InlineAddButton index={0} />
+                    
                     {licenses.map((info, index) => (
-                        <div
-                            key={index}
-                            className="p-4 bg-gray-50 rounded-md border border-gray-200 relative"
+                        <div key={`license-${index}`}>
+                            {/* License */}
+                            <div
+                                className={`flex flex-col sm:flex-row gap-3 transition-all duration-200 ${
+                                draggedIndex === index ? "opacity-50" : ""
+                            } ${
+                                dragOverIndex === index ? "border-t-2 border-[#6aa329] pt-2" : ""
+                            }`}
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, index)}
+                            onDragOver={(e) => handleDragOver(e, index)}
+                            onDragLeave={handleDragLeave}
+                            onDrop={(e) => handleDrop(e, index)}
+                            onDragEnd={handleDragEnd}
                         >
-                            <button
-                                className="absolute top-3 right-3 text-red-400 hover:text-red-600 hover:bg-red-50 p-1 rounded transition-colors"
-                                onClick={() => handleDeleteClick(index)}
-                                title="Delete license"
-                            >
-                                <TrashIcon className="h-4 w-4" />
-                            </button>
+                            {/* Mobile: Horizontal Controls */}
+                            <div className="flex sm:hidden items-center justify-between bg-gray-50 p-2 rounded-md border">
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        className="text-gray-400 hover:text-[#6aa329] cursor-grab active:cursor-grabbing"
+                                        onMouseDown={(e) => e.stopPropagation()}
+                                    >
+                                        <Bars3Icon className="h-4 w-4" />
+                                    </button>
+                                    <span className="text-xs font-medium text-gray-600">
+                                        License {index + 1}
+                                    </span>
+                                    <div className="flex gap-1">
+                                        <button
+                                            className={`p-1.5 rounded ${
+                                                index === 0
+                                                    ? "text-gray-300 cursor-not-allowed"
+                                                    : "text-gray-600 hover:text-[#6aa329] hover:bg-white"
+                                            } transition-colors`}
+                                            onClick={() => handleMoveLicense(index, "up")}
+                                            disabled={index === 0}
+                                            title="Move up"
+                                        >
+                                            <ChevronUpIcon className="h-4 w-4" />
+                                        </button>
+                                        <button
+                                            className={`p-1.5 rounded ${
+                                                index === licenses.length - 1
+                                                    ? "text-gray-300 cursor-not-allowed"
+                                                    : "text-gray-600 hover:text-[#6aa329] hover:bg-white"
+                                            } transition-colors`}
+                                            onClick={() => handleMoveLicense(index, "down")}
+                                            disabled={index === licenses.length - 1}
+                                            title="Move down"
+                                        >
+                                            <ChevronDownIcon className="h-4 w-4" />
+                                        </button>
+                                        <button
+                                            className="text-red-400 hover:text-red-600 transition-colors p-1.5 rounded hover:bg-white"
+                                            onClick={() => handleDeleteClick(index)}
+                                            title="Delete license"
+                                        >
+                                            <TrashIcon className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pr-8">
+                            {/* Desktop: Vertical Controls */}
+                            <div className="hidden sm:flex flex-col items-center pt-3 flex-shrink-0">
+                                <div className="flex flex-col bg-white border border-gray-300 rounded-md shadow-sm">
+                                    <button
+                                        className="p-2 border-b border-gray-200 text-gray-400 hover:text-[#6aa329] cursor-grab active:cursor-grabbing transition-colors"
+                                        onMouseDown={(e) => e.stopPropagation()}
+                                        title="Drag to reorder"
+                                    >
+                                        <Bars3Icon className="h-5 w-5" />
+                                    </button>
+                                    <button
+                                        className={`p-2 border-b border-gray-200 ${
+                                            index === 0
+                                                ? "text-gray-300 cursor-not-allowed"
+                                                : "text-gray-600 hover:text-[#6aa329] hover:bg-[#f0f7e7]"
+                                        } transition-colors`}
+                                        onClick={() => handleMoveLicense(index, "up")}
+                                        disabled={index === 0}
+                                        title="Move up"
+                                    >
+                                        <ChevronUpIcon className="h-5 w-5" />
+                                    </button>
+                                    <button
+                                        className={`p-2 border-b border-gray-200 ${
+                                            index === licenses.length - 1
+                                                ? "text-gray-300 cursor-not-allowed"
+                                                : "text-gray-600 hover:text-[#6aa329] hover:bg-[#f0f7e7]"
+                                        } transition-colors`}
+                                        onClick={() => handleMoveLicense(index, "down")}
+                                        disabled={index === licenses.length - 1}
+                                        title="Move down"
+                                    >
+                                        <ChevronDownIcon className="h-5 w-5" />
+                                    </button>
+                                    <button
+                                        className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                                        onClick={() => handleDeleteClick(index)}
+                                        title="Delete license"
+                                    >
+                                        <TrashIcon className="h-5 w-5" />
+                                    </button>
+                                </div>
+                                <div className="mt-2 text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                    {index + 1}
+                                </div>
+                            </div>
+
+                            {/* License Content */}
+                            <div className="flex-1 min-w-0 p-4 bg-gray-50 rounded-md border border-gray-200">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <FormField
                                     label={
                                         <div className="flex items-center gap-2">
@@ -223,36 +447,41 @@ export default function LicenseSection({ licenses, onChange, showAddButton = tru
                                     )}
                                 </FormField>
 
-                                <FormField
-                                    label="License URL"
-                                    description={isCustomLicense(index) ? "Link to your custom license text" : "Link to the full license text"}
-                                >
-                                    <Input
-                                        value={info.url}
-                                        onChange={(e) =>
-                                            updateLicense(index, {
-                                                ...info,
-                                                url: e.target.value,
-                                            })
-                                        }
-                                        placeholder={isCustomLicense(index) ? "https://example.com/license.txt" : "https://opensource.org/licenses/MIT"}
-                                    />
-                                </FormField>
-                            </div>
-                            
-                            {/* Show validation errors */}
-                            {validateLicense(info).length > 0 && (
-                                <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-600">
-                                    <ul className="list-disc list-inside space-y-1">
-                                        {validateLicense(info).map((error, errorIndex) => (
-                                            <li key={errorIndex}>{error}</li>
-                                        ))}
-                                    </ul>
+                                    <FormField
+                                        label="License URL"
+                                        description={isCustomLicense(index) ? "Link to your custom license text" : "Link to the full license text"}
+                                    >
+                                        <Input
+                                            value={info.url}
+                                            onChange={(e) =>
+                                                updateLicense(index, {
+                                                    ...info,
+                                                    url: e.target.value,
+                                                })
+                                            }
+                                            placeholder={isCustomLicense(index) ? "https://example.com/license.txt" : "https://opensource.org/licenses/MIT"}
+                                        />
+                                    </FormField>
                                 </div>
-                            )}
+                                
+                                {/* Show validation errors */}
+                                {validateLicense(info).length > 0 && (
+                                    <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-600">
+                                        <ul className="list-disc list-inside space-y-1">
+                                            {validateLicense(info).map((error, errorIndex) => (
+                                                <li key={errorIndex}>{error}</li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                    ))}
-                </div>
+                        
+                        {/* Add button after this license */}
+                        <InlineAddButton index={index + 1} />
+                    </div>
+                ))}
+                </>
             )}
 
             {/* Delete Confirmation Modal */}

@@ -2,6 +2,7 @@ import { ExclamationCircleIcon, PencilIcon, PlusIcon } from "@heroicons/react/24
 import { useRef, useState, useEffect } from "react";
 import { ContainerRecipe, NEUROCONTAINERS_REPO } from "./common";
 import { useGitHubFiles } from '@/lib/useGithub';
+import * as pako from "pako";
 
 // GitHub modal component
 export default function GitHubModal({
@@ -18,24 +19,22 @@ export default function GitHubModal({
     const modalRef = useRef(null);
     const [clipboardContent, setClipboardContent] = useState("");
     const [isCopied, setIsCopied] = useState(false);
-    
+
     // Check if container exists in repo
     const { files } = useGitHubFiles('neurodesk', 'neurocontainers', 'main');
-    const containerExists = yamlData ? files.some(file => 
+    const containerExists = yamlData ? files.some(file =>
         file.path === `recipes/${yamlData.name}/build.yaml`
     ) : false;
 
-    // Escape YAML content for GitHub issue body
-    const escapeForMarkdown = (text: string) => {
-        // Escape backticks that could break the code block
-        // Also escape any other markdown that might interfere
-        return text
-            .replace(/```/g, '\\`\\`\\`')
-            .replace(/`([^`])/g, '\\`$1')  // Escape standalone backticks
-            .replace(/([^`])`/g, '$1\\`'); // Escape trailing backticks
+    // Compress YAML content to base64 deflate
+    const compressToBase64 = (text: string): string => {
+        const textEncoder = new TextEncoder();
+        const compressed = pako.deflate(textEncoder.encode(text));
+        return Buffer.from(compressed).toString('base64');
     };
 
     // GitHub issues have URL length limits, so we need to handle large YAML content
+    const compressedYaml = yamlText ? compressToBase64(yamlText) : '';
     const issueBodyWithYaml = yamlData ? `### ${containerExists ? 'Update' : 'Add'} Container Request
 
 **Container Name:** ${yamlData.name}
@@ -43,8 +42,8 @@ export default function GitHubModal({
 
 This is an automated contribution request to ${containerExists ? 'update' : 'add'} the container recipe.
 
-\`\`\`yaml
-${escapeForMarkdown(yamlText)}
+\`\`\`base64
+${compressedYaml}
 \`\`\`
 
 ---
@@ -54,9 +53,9 @@ ${escapeForMarkdown(yamlText)}
 
     useEffect(() => {
         if (isContentTooLarge && yamlData) {
-            setClipboardContent(yamlText);
+            setClipboardContent(compressedYaml);
         }
-    }, [isContentTooLarge, yamlText, yamlData]);
+    }, [isContentTooLarge, compressedYaml, yamlData]);
 
     const copyToClipboard = () => {
         navigator.clipboard.writeText(clipboardContent).then(() => {
@@ -70,7 +69,7 @@ ${escapeForMarkdown(yamlText)}
 
         const action = isUpdate ? 'Update' : 'Add';
         const issueTitle = `[CONTRIBUTION] ${action} ${yamlData.name} container`;
-        
+
         let issueBody;
         if (isContentTooLarge) {
             issueBody = `### ${action} Container Request
@@ -80,10 +79,10 @@ ${escapeForMarkdown(yamlText)}
 
 This is an automated contribution request to ${isUpdate ? 'update' : 'add'} the container recipe.
 
-Please paste the YAML content from your clipboard below:
+Please paste the compressed YAML content from your clipboard below:
 
-\`\`\`yaml
-# Paste YAML content here
+\`\`\`base64
+# Paste base64 deflate compressed YAML content here
 \`\`\`
 
 ---
@@ -120,11 +119,11 @@ Please paste the YAML content from your clipboard below:
                         </p>
                         {isContentTooLarge ? (
                             <p className="text-[#1e2a16] text-sm">
-                                Your YAML content is too large to include in the URL. You&apos;ll need to copy it to your clipboard and paste it into the GitHub issue after clicking the button.
+                                Your YAML content is too large to include in the URL. You&apos;ll need to copy the compressed content to your clipboard and paste it into the GitHub issue after clicking the button.
                             </p>
                         ) : (
                             <p className="text-[#1e2a16] text-sm">
-                                This will create a GitHub issue with your container recipe that contributors can review and accept.
+                                This will create a GitHub issue with your container recipe (base64 deflate compressed) that contributors can review and accept.
                             </p>
                         )}
                     </div>
@@ -147,7 +146,7 @@ Please paste the YAML content from your clipboard below:
                                 }`}
                             onClick={copyToClipboard}
                         >
-                            {isCopied ? "Copied!" : "Copy YAML to Clipboard"}
+                            {isCopied ? "Copied!" : "Copy Compressed YAML to Clipboard"}
                         </button>
                     </div>
                 )}

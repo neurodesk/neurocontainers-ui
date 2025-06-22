@@ -31,7 +31,9 @@ import BuildRecipeComponent from "@/components/recipe";
 import ContainerMetadata from "@/components/metadata";
 import ValidateRecipeComponent from "@/components/validate";
 import GitHubModal from "@/components/githubExport";
+import LocalFilesystem from "@/components/localFilesystem";
 import { useGitHubFiles } from '@/lib/useGithub';
+import { filesystemService } from "@/lib/filesystem";
 
 enum Section {
     BasicInfo = "basic-info",
@@ -180,11 +182,13 @@ function formatTimeAgo(timestamp: number): string {
     return 'Just now';
 }
 
-function SaveIndicator({ status }: { status: SaveStatus }) {
+function SaveIndicator({ status, mode }: { status: SaveStatus; mode?: 'local' | 'remote' }) {
     const getIcon = () => {
         switch (status) {
             case SaveStatus.Saved:
-                return <CheckIcon className="h-4 w-4 text-green-600" />;
+                return mode === 'local' ?
+                    <ComputerDesktopIcon className="h-4 w-4 text-green-600" /> :
+                    <CheckIcon className="h-4 w-4 text-green-600" />;
             case SaveStatus.Saving:
                 return <CloudIcon className="h-4 w-4 text-blue-500 animate-pulse" />;
             case SaveStatus.Unsaved:
@@ -195,11 +199,11 @@ function SaveIndicator({ status }: { status: SaveStatus }) {
     const getText = () => {
         switch (status) {
             case SaveStatus.Saved:
-                return "Saved Locally";
+                return mode === 'local' ? "Saved to Filesystem" : "Saved Locally";
             case SaveStatus.Saving:
-                return "Saving...";
+                return mode === 'local' ? "Saving to Filesystem..." : "Saving...";
             case SaveStatus.Unsaved:
-                return "Unsaved changes";
+                return mode === 'local' ? "Press Ctrl+S to save" : "Unsaved changes";
         }
     };
 
@@ -210,7 +214,7 @@ function SaveIndicator({ status }: { status: SaveStatus }) {
             case SaveStatus.Saving:
                 return "text-blue-500";
             case SaveStatus.Unsaved:
-                return "text-orange-600";
+                return mode === 'local' ? "text-blue-600" : "text-orange-600";
         }
     };
 
@@ -420,9 +424,15 @@ function LocalContainersList({
 }
 
 function RemoteContainersList({
-    onLoadRecipe
+    onLoadRecipe,
+    onLoadLocalRecipe,
+    filesystemMode,
+    onFilesystemModeChange
 }: {
     onLoadRecipe: (recipe: ContainerRecipe) => void;
+    onLoadLocalRecipe: (content: string, filename: string) => void;
+    filesystemMode: 'local' | 'remote';
+    onFilesystemModeChange: (mode: 'local' | 'remote') => void;
 }) {
     const { files, loading, error, refetch, clearCache } = useGitHubFiles("neurodesk", "neurocontainers", "main");
     const [loadingRecipe, setLoadingRecipe] = useState<string | null>(null);
@@ -491,135 +501,180 @@ function RemoteContainersList({
             <div className="border-b border-[#e6f1d6] p-4">
                 <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center space-x-2">
-                        <CloudIcon className="h-5 w-5 text-[#4f7b38]" />
+                        {filesystemMode === 'remote' ? (
+                            <CloudIcon className="h-5 w-5 text-[#4f7b38]" />
+                        ) : (
+                            <ComputerDesktopIcon className="h-5 w-5 text-[#4f7b38]" />
+                        )}
                         <h2 className="text-lg font-semibold text-[#0c0e0a]">
-                            Published Containers
+                            {filesystemMode === 'remote' ? 'Published Containers' : 'Local Repository'}
                         </h2>
                         <div className="text-xs bg-[#f0f7e7] text-[#4f7b38] px-2 py-1 rounded-full">
-                            NeuroContainers
+                            {filesystemMode === 'remote' ? 'NeuroContainers' : 'Local Files'}
                         </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                        <button
-                            onClick={refetch}
-                            disabled={loading}
-                            className="p-1.5 text-[#4f7b38] hover:text-[#6aa329] transition-colors disabled:opacity-50"
-                            title="Refresh recipes"
-                        >
-                            <ArrowPathIcon className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                        </button>
-                        <button
-                            onClick={clearCache}
-                            className="p-1.5 text-gray-400 hover:text-red-600 transition-colors"
-                            title="Clear cache"
-                        >
-                            <TrashIcon className="h-4 w-4" />
-                        </button>
+                        {filesystemMode === 'remote' && (
+                            <>
+                                <button
+                                    onClick={refetch}
+                                    disabled={loading}
+                                    className="p-1.5 text-[#4f7b38] hover:text-[#6aa329] transition-colors disabled:opacity-50"
+                                    title="Refresh recipes"
+                                >
+                                    <ArrowPathIcon className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                                </button>
+                                <button
+                                    onClick={clearCache}
+                                    className="p-1.5 text-gray-400 hover:text-red-600 transition-colors"
+                                    title="Clear cache"
+                                >
+                                    <TrashIcon className="h-4 w-4" />
+                                </button>
+                            </>
+                        )}
                     </div>
                 </div>
                 <div className="flex items-center justify-between">
                     <p className="text-sm text-[#4f7b38]">
-                        {loading ? 'Loading...' : error ? 'Error loading recipes' : `${files.length} recipes available`}
+                        {filesystemMode === 'remote'
+                            ? (loading ? 'Loading...' : error ? 'Error loading recipes' : `${files.length} recipes available`)
+                            : 'Browse local neurocontainers repository'
+                        }
                     </p>
-                </div>
-            </div>
-
-            {/* Search */}
-            <div className="p-4 border-b border-[#f0f7e7]">
-                <div className="relative">
-                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <input
-                        type="text"
-                        placeholder="Search recipes..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:border-transparent text-sm"
-                    />
-                </div>
-                {searchTerm && (
-                    <p className="text-xs text-gray-500 mt-2">
-                        {filteredFiles.length} of {files.length} recipes match
-                    </p>
-                )}
-            </div>
-
-            {/* Recipe List */}
-            <div className="max-h-96 overflow-y-auto">
-                {loading ? (
-                    <div className="text-center py-12">
-                        <div className="animate-spin h-8 w-8 border-2 border-[#6aa329] border-t-transparent rounded-full mx-auto mb-3"></div>
-                        <p className="text-sm text-[#4f7b38]">Loading recipes...</p>
-                    </div>
-                ) : error ? (
-                    <div className="text-center py-12 text-red-600">
-                        <ExclamationTriangleIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                        <p className="text-sm">Failed to load recipes</p>
+                    {/* Mode Toggle Switch */}
+                    <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
                         <button
-                            onClick={refetch}
-                            className="mt-2 text-xs text-[#6aa329] hover:underline"
+                            onClick={() => onFilesystemModeChange('remote')}
+                            className={`flex items-center px-2 py-1 rounded text-xs font-medium transition-colors ${filesystemMode === 'remote'
+                                ? 'bg-white text-[#6aa329] shadow-sm'
+                                : 'text-gray-600 hover:text-gray-900'
+                                }`}
                         >
-                            Try again
+                            <CloudIcon className="h-3 w-3 mr-1" />
+                            GitHub
+                        </button>
+                        <button
+                            onClick={() => onFilesystemModeChange('local')}
+                            className={`flex items-center px-2 py-1 rounded text-xs font-medium transition-colors ${filesystemMode === 'local'
+                                ? 'bg-white text-[#6aa329] shadow-sm'
+                                : 'text-gray-600 hover:text-gray-900'
+                                }`}
+                        >
+                            <ComputerDesktopIcon className="h-3 w-3 mr-1" />
+                            Local
                         </button>
                     </div>
-                ) : filteredFiles.length === 0 ? (
-                    <div className="text-center py-12 text-[#4f7b38]">
-                        <CloudIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                        <p className="text-sm">
-                            {searchTerm ? 'No matching recipes found' : 'No recipes available'}
-                        </p>
+                </div>
+            </div>
+
+            {filesystemMode === 'remote' ? (
+                <>
+                    {/* Search */}
+                    <div className="p-4 border-b border-[#f0f7e7]">
+                        <div className="relative">
+                            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <input
+                                type="text"
+                                placeholder="Search recipes..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:border-transparent text-sm"
+                            />
+                        </div>
                         {searchTerm && (
-                            <button
-                                onClick={() => setSearchTerm('')}
-                                className="mt-1 text-xs text-[#6aa329] hover:underline"
-                            >
-                                Clear search
-                            </button>
+                            <p className="text-xs text-gray-500 mt-2">
+                                {filteredFiles.length} of {files.length} recipes match
+                            </p>
                         )}
                     </div>
-                ) : (
-                    <div className="divide-y divide-[#f0f7e7]">
-                        {filteredFiles.map((file) => (
-                            <div
-                                key={file.path}
-                                className="group p-4 hover:bg-[#fafdfb] transition-colors"
-                            >
-                                <div className="flex items-center justify-between">
-                                    <div className="flex-1 min-w-0 mr-3">
-                                        <h3 className="font-medium text-sm truncate text-[#0c0e0a]">
-                                            {getRecipeName(file.path)}
-                                        </h3>
-                                        <div className="text-xs text-gray-500 mt-1 font-mono truncate">
-                                            {file.path}
+
+                    {/* Recipe List */}
+                    <div className="max-h-96 overflow-y-auto">
+                        {loading ? (
+                            <div className="text-center py-12">
+                                <div className="animate-spin h-8 w-8 border-2 border-[#6aa329] border-t-transparent rounded-full mx-auto mb-3"></div>
+                                <p className="text-sm text-[#4f7b38]">Loading recipes...</p>
+                            </div>
+                        ) : error ? (
+                            <div className="text-center py-12 text-red-600">
+                                <ExclamationTriangleIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                                <p className="text-sm">Failed to load recipes</p>
+                                <button
+                                    onClick={refetch}
+                                    className="mt-2 text-xs text-[#6aa329] hover:underline"
+                                >
+                                    Try again
+                                </button>
+                            </div>
+                        ) : filteredFiles.length === 0 ? (
+                            <div className="text-center py-12 text-[#4f7b38]">
+                                <CloudIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                                <p className="text-sm">
+                                    {searchTerm ? 'No matching recipes found' : 'No recipes available'}
+                                </p>
+                                {searchTerm && (
+                                    <button
+                                        onClick={() => setSearchTerm('')}
+                                        className="mt-1 text-xs text-[#6aa329] hover:underline"
+                                    >
+                                        Clear search
+                                    </button>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="divide-y divide-[#f0f7e7]">
+                                {filteredFiles.map((file) => (
+                                    <div
+                                        key={file.path}
+                                        className="group p-4 hover:bg-[#fafdfb] transition-colors"
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex-1 min-w-0 mr-3">
+                                                <h3 className="font-medium text-sm truncate text-[#0c0e0a]">
+                                                    {getRecipeName(file.path)}
+                                                </h3>
+                                                <div className="text-xs text-gray-500 mt-1 font-mono truncate">
+                                                    {file.path}
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center space-x-2 flex-shrink-0">
+                                                <button
+                                                    onClick={() => handleLoadRecipe(file)}
+                                                    disabled={loadingRecipe === file.path}
+                                                    className="px-3 py-1.5 bg-[#6aa329] text-white rounded-lg text-xs font-medium hover:bg-[#4f7b38] transition-colors disabled:opacity-50"
+                                                >
+                                                    {loadingRecipe === file.path ? (
+                                                        <div className="animate-spin h-3 w-3 border border-white border-t-transparent rounded-full"></div>
+                                                    ) : (
+                                                        'Load'
+                                                    )}
+                                                </button>
+                                                <a
+                                                    href={file.htmlUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="p-1.5 text-gray-400 hover:text-[#6aa329] transition-colors"
+                                                    title="View on GitHub"
+                                                >
+                                                    <EyeIcon className="h-4 w-4" />
+                                                </a>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="flex items-center space-x-2 flex-shrink-0">
-                                        <button
-                                            onClick={() => handleLoadRecipe(file)}
-                                            disabled={loadingRecipe === file.path}
-                                            className="px-3 py-1.5 bg-[#6aa329] text-white rounded-lg text-xs font-medium hover:bg-[#4f7b38] transition-colors disabled:opacity-50"
-                                        >
-                                            {loadingRecipe === file.path ? (
-                                                <div className="animate-spin h-3 w-3 border border-white border-t-transparent rounded-full"></div>
-                                            ) : (
-                                                'Load'
-                                            )}
-                                        </button>
-                                        <a
-                                            href={file.htmlUrl}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="p-1.5 text-gray-400 hover:text-[#6aa329] transition-colors"
-                                            title="View on GitHub"
-                                        >
-                                            <EyeIcon className="h-4 w-4" />
-                                        </a>
-                                    </div>
-                                </div>
+                                ))}
                             </div>
-                        ))}
+                        )}
                     </div>
-                )}
-            </div>
+                </>
+            ) : (
+                /* Local Filesystem Mode */
+                <div className="flex-1">
+                    <LocalFilesystem
+                        onRecipeSelect={onLoadLocalRecipe}
+                    />
+                </div>
+            )}
         </div>
     );
 }
@@ -705,6 +760,9 @@ function SideNavigation({
     isPublished,
     githubUrl,
     isModified,
+    filesystemMode,
+    isLocalFilesystemConnected,
+    onSaveToLocalFilesystem,
 }: {
     activeSection: Section;
     onSectionChange: (section: Section) => void;
@@ -718,6 +776,9 @@ function SideNavigation({
     isPublished?: boolean;
     githubUrl?: string;
     isModified?: boolean;
+    filesystemMode?: 'local' | 'remote';
+    isLocalFilesystemConnected?: boolean;
+    onSaveToLocalFilesystem?: () => void;
 }) {
     return (
         <>
@@ -755,7 +816,7 @@ function SideNavigation({
                     {/* Save Status */}
                     {yamlData && (
                         <div className="mt-2">
-                            <SaveIndicator status={saveStatus} />
+                            <SaveIndicator status={saveStatus} mode={filesystemMode} />
                         </div>
                     )}
                 </div>
@@ -790,6 +851,19 @@ function SideNavigation({
                             </a>
 
                         ) : (<></>)}
+                        {filesystemMode === 'local' && isLocalFilesystemConnected && (
+                            <button
+                                className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-[#1e2a16] hover:bg-[#e6f1d6] rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                onClick={onSaveToLocalFilesystem}
+                                disabled={!yamlData}
+                            >
+                                <div className="flex items-center space-x-2">
+                                    <ComputerDesktopIcon className="h-4 w-4" />
+                                    <span>Save to Local Filesystem</span>
+                                </div>
+                                <span className="text-xs text-gray-500">Ctrl+S</span>
+                            </button>
+                        )}
                         <button
                             className="w-full flex items-center space-x-2 px-3 py-2 text-sm font-medium text-[#1e2a16] hover:bg-[#e6f1d6] rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             onClick={onOpenGitHub}
@@ -927,6 +1001,7 @@ function TopNavigation({
     onNewContainer,
     onOpenGitHub,
     saveStatus,
+    filesystemMode,
 }: {
     activeSection: Section;
     onSectionChange: (section: Section) => void;
@@ -935,6 +1010,7 @@ function TopNavigation({
     onNewContainer: () => void;
     onOpenGitHub: () => void;
     saveStatus: SaveStatus;
+    filesystemMode?: 'local' | 'remote';
 }) {
     return (
         <div className="fixed top-0 left-0 right-0 bg-[#0c0e0a] border-b border-[#1e2a16] p-3 lg:hidden z-30">
@@ -952,7 +1028,7 @@ function TopNavigation({
                             Neurocontainers Builder
                         </h1>
                         {yamlData && (
-                            <SaveIndicator status={saveStatus} />
+                            <SaveIndicator status={saveStatus} mode={filesystemMode} />
                         )}
                     </div>
                 </div>
@@ -1021,6 +1097,8 @@ export default function Home() {
     const [originalGithubYaml, setOriginalGithubYaml] = useState<string>("");
     const [isEditingName, setIsEditingName] = useState<boolean>(false);
     const [isUpdatingUrl, setIsUpdatingUrl] = useState<boolean>(false);
+    const [filesystemMode, setFilesystemMode] = useState<'local' | 'remote'>('remote');
+    const [isLocalFilesystemConnected, setIsLocalFilesystemConnected] = useState<boolean>(false);
 
     const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const { files } = useGitHubFiles("neurodesk", "neurocontainers", "main");
@@ -1358,6 +1436,77 @@ export default function Home() {
         }
     };
 
+    // Local filesystem handlers
+    const handleLoadLocalRecipe = useCallback(async (content: string, filename: string) => {
+        try {
+            setLoadingContainer(filename);
+            setContainerError(null);
+
+            const parsed = loadYAML(content) as ContainerRecipe;
+            const migrated = migrateLegacyRecipe(parsed);
+
+            // Try to merge additional files if available
+            let finalRecipe = migrated;
+            try {
+                if (filesystemService.isDirectoryOpen()) {
+                    finalRecipe = await mergeAdditionalFilesIntoRecipe(
+                        migrated,
+                        async (relativePath: string) => {
+                            const content = await filesystemService.readAdditionalFile(filename, relativePath);
+                            return content || '';
+                        }
+                    );
+                }
+            } catch (error) {
+                console.warn('Failed to merge additional files:', error);
+            }
+
+            setYamlData(finalRecipe);
+            setSaveStatus(SaveStatus.Saved);
+            setCurrentContainerId(null); // Not a saved container, it's a local file
+            setIsPublishedContainer(false);
+            setIsModifiedFromGithub(false);
+            setOriginalGithubYaml("");
+
+            // Keep filesystem mode as 'local' since we loaded from local
+            setFilesystemMode('local');
+            setIsLocalFilesystemConnected(true);
+
+            // Update URL
+            updateUrl(finalRecipe);
+        } catch (error) {
+            console.error('Error loading local recipe:', error);
+            setContainerError(`Failed to load recipe: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        } finally {
+            setLoadingContainer(null);
+        }
+    }, [updateUrl]);
+
+    const handleSaveToLocalFilesystem = useCallback(async () => {
+        if (!yamlData || !filesystemService.isDirectoryOpen()) {
+            console.warn('Cannot save: no data or filesystem not connected');
+            return;
+        }
+
+        try {
+            setSaveStatus(SaveStatus.Saving);
+            await filesystemService.saveRecipeFile(yamlData.name, yamlText);
+            setSaveStatus(SaveStatus.Saved);
+        } catch (error) {
+            console.error('Error saving to local filesystem:', error);
+            setSaveStatus(SaveStatus.Unsaved);
+        }
+    }, [yamlData, yamlText]);
+
+    const handleFilesystemModeChange = useCallback((mode: 'local' | 'remote') => {
+        setFilesystemMode(mode);
+        if (mode === 'local') {
+            setIsLocalFilesystemConnected(filesystemService.isDirectoryOpen());
+        }
+    }, []);
+
+    // Removed auto-save for local filesystem - now requires explicit save
+
     // Handle yamlData changes with debounced save
     useEffect(() => {
         if (yamlData) {
@@ -1404,6 +1553,24 @@ export default function Home() {
             }
         }
     }, [yamlData]);
+
+    // Keyboard shortcut for saving to local filesystem
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Check for Ctrl+S or Cmd+S
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault(); // Prevent browser save dialog
+
+                // Only save if we're in local filesystem mode and connected
+                if (filesystemMode === 'local' && filesystemService.isDirectoryOpen() && yamlData) {
+                    handleSaveToLocalFilesystem();
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [filesystemMode, yamlData, handleSaveToLocalFilesystem]);
 
     const exportYAML = () => {
         if (!yamlData) return;
@@ -1537,6 +1704,9 @@ export default function Home() {
                         isPublished={isPublishedContainer}
                         githubUrl={isPublishedContainer ? findGithubFileByName(yamlData?.name || '')?.htmlUrl : undefined}
                         isModified={isModifiedFromGithub}
+                        filesystemMode={filesystemMode}
+                        isLocalFilesystemConnected={isLocalFilesystemConnected}
+                        onSaveToLocalFilesystem={handleSaveToLocalFilesystem}
                     />
 
                     {/* Main Content */}
@@ -1550,6 +1720,7 @@ export default function Home() {
                             onNewContainer={handleNewContainer}
                             onOpenGitHub={() => setIsGitHubModalOpen(true)}
                             saveStatus={saveStatus}
+                            filesystemMode={filesystemMode}
                         />
 
                         <div className="max-w-5xl mx-auto px-4 py-6 pt-24 lg:pt-6">
@@ -1769,6 +1940,9 @@ export default function Home() {
                             {/* Remote Containers */}
                             <RemoteContainersList
                                 onLoadRecipe={handleLoadRecipeFromList}
+                                onLoadLocalRecipe={handleLoadLocalRecipe}
+                                filesystemMode={filesystemMode}
+                                onFilesystemModeChange={handleFilesystemModeChange}
                             />
                         </div>
 

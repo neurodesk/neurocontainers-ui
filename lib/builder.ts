@@ -1,5 +1,6 @@
 import { ContainerRecipe } from "@/components/common";
 import type { PyodideInterface } from "pyodide";
+import { filesystemService } from "@/lib/filesystem";
 
 const REPO_URL = "https://raw.githubusercontent.com/NeuroDesk/neurocontainers";
 
@@ -267,7 +268,67 @@ export class NeuroDockerBuilder {
     }
 }
 
-const LOADER_SCRIPT = `
+/**
+ * Generate the loader script for Pyodide with local filesystem support
+ */
+async function createLoaderScript(): Promise<string> {
+    // Check if we have local builder script available
+    const localBuilderScript = await filesystemService.getLocalBuilderScript();
+    
+    if (localBuilderScript) {
+        console.log('Using local builder/build.py from filesystem');
+        return `
+import micropip
+import os
+
+# Install neurodocker
+await micropip.install("pyyaml")
+await micropip.install("neurodocker")
+
+# Create necessary directories
+os.makedirs("/repo", exist_ok=True)
+os.makedirs("/recipe", exist_ok=True)
+os.makedirs("/tmp", exist_ok=True)
+os.makedirs("builder", exist_ok=True)
+
+print("Using local builder/build.py from filesystem")
+
+# Write local builder script
+# Use base64 encoding to avoid quote escaping issues
+import base64
+builder_content = base64.b64decode('''${Buffer.from(localBuilderScript).toString('base64')}''').decode('utf-8')
+with open("builder/build.py", "w", encoding="utf-8") as f:
+    f.write(builder_content)
+
+# Still need to download licenses.json from remote (unless we add it to local fs support)
+from pyodide.http import pyfetch
+base = "${REPO_URL}/${MAIN_REF}/"
+
+# Download licenses.json
+response = await pyfetch(base + "builder/licenses.json")
+if response.ok:
+    content = await response.bytes()
+    print("Downloading builder/licenses.json")
+    with open("builder/licenses.json", "wb") as f:
+        f.write(content)
+else:
+    raise Exception("Failed to download builder/licenses.json")
+
+# Download Repo files
+for url in ${JSON.stringify(REPO_FILES)}:
+    response = await pyfetch(base + url)
+    if response.ok:
+        content = await response.bytes()
+        print(f"Downloading to {url}")
+        os.makedirs("/repo/" + os.path.dirname(url), exist_ok=True)
+        with open("/repo/" + url, "wb") as f:
+            f.write(content)
+    else:
+        raise Exception(f"Failed to download {url}")
+`;
+    } else {
+        console.log('Using remote builder/build.py from GitHub');
+        return `
 import micropip
 from pyodide.http import pyfetch
 import os
@@ -282,6 +343,8 @@ os.makedirs("/recipe", exist_ok=True)
 os.makedirs("/tmp", exist_ok=True)
 
 base = "${REPO_URL}/${MAIN_REF}/"
+
+print("Using remote builder/build.py from GitHub")
 
 # Download required files
 for url in ${JSON.stringify(REQUIRED_FILES)}:
@@ -306,7 +369,9 @@ for url in ${JSON.stringify(REPO_FILES)}:
             f.write(content)
     else:
         raise Exception(f"Failed to download {url}")
-`
+`;
+    }
+}
 
 export async function loadBuilder(pyodide: PyodideInterface): Promise<Builder> {
     try {
@@ -314,8 +379,11 @@ export async function loadBuilder(pyodide: PyodideInterface): Promise<Builder> {
         await pyodide.loadPackage("micropip");
         await pyodide.loadPackage("jinja2");
 
-        // Install requirements and download builder files
-        await pyodide.runPythonAsync(LOADER_SCRIPT);
+        // Generate the loader script (local or remote)
+        const loaderScript = await createLoaderScript();
+
+        // Install requirements and download/load builder files
+        await pyodide.runPythonAsync(loaderScript);
 
         // Import the builder module
         const pyBuilder = pyodide.pyimport("builder.build");

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
+import { presets, iconStyles, textStyles, cn, HELP_SECTION } from "@/lib/styles";
 
 const UBUNTU_VERSIONS = [
     { value: "ubuntu:24.04", label: "Ubuntu 24.04 LTS (Noble Numbat)" },
@@ -80,8 +81,8 @@ export default function BaseImageSelector({
 
     const baseImageHelpContent = (
         <>
-            <h4 className="font-semibold text-[#0c0e0a] mb-2">Base Image</h4>
-            <div className="text-sm text-gray-600 space-y-2">
+            <h4 className={HELP_SECTION.title}>Base Image</h4>
+            <div className={cn(HELP_SECTION.text, "space-y-2")}>
                 <p>The Docker base image that your container will be built upon.</p>
                 <div>
                     <strong>Options:</strong>
@@ -98,8 +99,8 @@ export default function BaseImageSelector({
 
     const pkgManagerHelpContent = (
         <>
-            <h4 className="font-semibold text-[#0c0e0a] mb-2">Package Manager</h4>
-            <div className="text-sm text-gray-600 space-y-2">
+            <h4 className={HELP_SECTION.title}>Package Manager</h4>
+            <div className={cn(HELP_SECTION.text, "space-y-2")}>
                 <p>The package management system used by your base image:</p>
                 <ul className="list-disc list-inside space-y-1">
                     <li><strong>apt:</strong> Used by Debian/Ubuntu systems for installing packages</li>
@@ -113,19 +114,24 @@ export default function BaseImageSelector({
     return (
         <div className="w-full">
             <div className="flex items-center gap-2 mb-4">
-                <label className="block font-medium text-[#1e2a16]">Base Image</label>
+                <label className={presets.formLabel}>Base Image</label>
                 <button
                     type="button"
-                    className={`text-[#4f7b38] hover:text-[#6aa329] p-1 transition-colors ${showBaseImageHelp ? 'text-[#6aa329]' : ''}`}
+                    className={cn(
+                        "p-1 transition-colors",
+                        iconStyles('sm', 'primary'),
+                        "hover:text-[#6aa329]",
+                        showBaseImageHelp && "text-[#6aa329]"
+                    )}
                     onClick={() => setShowBaseImageHelp(!showBaseImageHelp)}
                     title={showBaseImageHelp ? "Hide documentation" : "Show documentation"}
                 >
-                    <InformationCircleIcon className="h-4 w-4" />
+                    <InformationCircleIcon className={iconStyles('sm')} />
                 </button>
             </div>
 
             {showBaseImageHelp && (
-                <div className="mb-6 px-4 py-3 bg-[#fafcf7] border border-[#e6f1d6] rounded-md">
+                <div className={cn(HELP_SECTION.container, "mb-6")}>
                     {baseImageHelpContent}
                 </div>
             )}
@@ -162,8 +168,8 @@ export default function BaseImageSelector({
                                     )}
                                 </div>
                                 <div>
-                                    <div className="font-semibold text-[#0c0e0a] mb-1">Ubuntu LTS</div>
-                                    <div className="text-xs text-gray-600 leading-relaxed">
+                                    <div className={textStyles({ size: 'sm', weight: 'semibold', color: 'primary' })}>Ubuntu LTS</div>
+                                    <div className={textStyles({ size: 'xs', color: 'muted' })}>
                                         Long-term support
                                         <br />
                                         <span className="text-[#6aa329] font-medium">(Recommended)</span>
@@ -202,8 +208,8 @@ export default function BaseImageSelector({
                                     )}
                                 </div>
                                 <div>
-                                    <div className="font-semibold text-[#0c0e0a] mb-1">Other Distros</div>
-                                    <div className="text-xs text-gray-600 leading-relaxed">
+                                    <div className={textStyles({ size: 'sm', weight: 'semibold', color: 'primary' })}>Other Distros</div>
+                                    <div className={textStyles({ size: 'xs', color: 'muted' })}>
                                         Debian, CentOS
                                         <br />
                                         Fedora
@@ -242,8 +248,8 @@ export default function BaseImageSelector({
                                     )}
                                 </div>
                                 <div>
-                                    <div className="font-semibold text-[#0c0e0a] mb-1">Custom Image</div>
-                                    <div className="text-xs text-gray-600 leading-relaxed">
+                                    <div className={textStyles({ size: 'sm', weight: 'semibold', color: 'primary' })}>Custom Image</div>
+                                    <div className={textStyles({ size: 'xs', color: 'muted' })}>
                                         Any Docker Hub
                                         <br />
                                         image
@@ -258,9 +264,9 @@ export default function BaseImageSelector({
             {/* Conditional Base Image Selection */}
             {baseImageSource === "ubuntu" && (
                 <div className="mb-4">
-                    <label className="text-sm font-semibold text-gray-700 mb-3 block">Ubuntu Version</label>
+                    <label className={cn(presets.formLabel, "block")}>Ubuntu Version</label>
                     <select
-                        className="w-full px-4 py-3 border border-gray-200 rounded-lg text-[#0c0e0a] bg-white focus:outline-none focus:ring-2 focus:ring-[#6aa329]/20 focus:border-[#6aa329] transition-all"
+                        className={cn(presets.input, "bg-white px-4 py-3 rounded-lg")}
                         value={baseImage}
                         onChange={(e) => handleBaseImageSelect(e.target.value)}
                     >
@@ -275,9 +281,9 @@ export default function BaseImageSelector({
 
             {baseImageSource === "other" && (
                 <div className="mb-4">
-                    <label className="text-sm font-semibold text-gray-700 mb-3 block">Distribution</label>
+                    <label className={cn(presets.formLabel, "block")}>Distribution</label>
                     <select
-                        className="w-full px-4 py-3 border border-gray-200 rounded-lg text-[#0c0e0a] bg-white focus:outline-none focus:ring-2 focus:ring-[#6aa329]/20 focus:border-[#6aa329] transition-all"
+                        className={cn(presets.input, "bg-white px-4 py-3 rounded-lg")}
                         value={baseImage}
                         onChange={(e) => handleBaseImageSelect(e.target.value)}
                     >
@@ -294,43 +300,48 @@ export default function BaseImageSelector({
                 <div className="mb-4">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <div>
-                            <label className="text-sm font-semibold text-gray-700 mb-3 block">
+                            <label className={cn(presets.formLabel, "block")}>
                                 Custom Image
                             </label>
                             <input
-                                className="w-full px-4 py-3 border border-gray-200 rounded-lg text-[#0c0e0a] focus:outline-none focus:ring-2 focus:ring-[#6aa329]/20 focus:border-[#6aa329] transition-all"
+                                className={cn(presets.input, "px-4 py-3 rounded-lg")}
                                 value={baseImage}
                                 onChange={(e) => handleCustomBaseImageChange(e.target.value)}
                                 placeholder="e.g. neurodebian:sid"
                             />
-                            <p className="text-xs text-gray-500 mt-2">
+                            <p className={textStyles({ size: 'xs', color: 'muted' })}>
                                 Enter any valid Docker image name and tag
                             </p>
                         </div>
 
                         <div>
                             <div className="flex items-center gap-2 mb-3">
-                                <label className="text-sm font-semibold text-gray-700 block">
+                                <label className={presets.formLabel}>
                                     Package Manager
                                 </label>
                                 <button
                                     type="button"
-                                    className={`text-[#4f7b38] hover:text-[#6aa329] p-1 transition-colors ${showPkgManagerHelp ? 'text-[#6aa329]' : ''}`}
+                                    className={cn(
+                                        "p-1 transition-colors",
+                                        iconStyles('sm', 'primary'),
+                                        "hover:text-[#6aa329]",
+                                        showPkgManagerHelp && "text-[#6aa329]"
+                                    )}
                                     onClick={() => setShowPkgManagerHelp(!showPkgManagerHelp)}
                                     title={showPkgManagerHelp ? "Hide documentation" : "Show documentation"}
                                 >
-                                    <InformationCircleIcon className="h-4 w-4" />
+                                    <InformationCircleIcon className={iconStyles('sm')} />
                                 </button>
                             </div>
 
                             {showPkgManagerHelp && (
-                                <div className="mb-4 px-4 py-3 bg-[#fafcf7] border border-[#e6f1d6] rounded-md">
+                                <div className={cn(HELP_SECTION.container, "mb-4")}>
                                     {pkgManagerHelpContent}
                                 </div>
                             )}
 
                             <select
-                                className="w-full px-4 py-3 border border-gray-200 rounded-lg text-[#0c0e0a] bg-white focus:outline-none focus:ring-2 focus:ring-[#6aa329]/20 focus:border-[#6aa329] transition-all"
+                                className={cn(presets.input, "bg-white px-4 py-3 rounded-lg")}
                                 value={pkgManager}
                                 onChange={(e) => onChange(baseImage, e.target.value)}
                             >
@@ -349,11 +360,11 @@ export default function BaseImageSelector({
                                 onChange={(e) => onAddDefaultTemplateChange?.(e.target.checked)}
                                 className="mr-3 h-4 w-4 text-[#6aa329] focus:ring-[#6aa329] border-gray-300 rounded"
                             />
-                            <span className="text-sm text-gray-700">
+                            <span className={textStyles({ size: 'sm', color: 'muted' })}>
                                 Add default template (disable for old containers where APT doesn&apos;t work)
                             </span>
                         </label>
-                        <p className="text-xs text-gray-500 mt-1 ml-7">
+                        <p className={cn(textStyles({ size: 'xs', color: 'muted' }), "mt-1 ml-7")}>
                             The default template includes common system updates and utilities. 
                             Disable this for legacy base images with package manager issues.
                         </p>

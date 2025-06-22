@@ -1,4 +1,5 @@
 import { Directive, GroupDirective } from "@/components/common";
+import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
 
 import CopyDirectiveComponent from "./copy";
 import DeployDirectiveComponent from "./deploy";
@@ -33,10 +34,16 @@ function getDirectiveMetadata(directive: Directive) {
     return undefined;
 }
 
-export default function DirectiveComponent({ directive, baseImage, onChange }: {
+export default function DirectiveComponent({
+    directive,
+    baseImage,
+    onChange,
+    controllers,
+}: {
     directive: Directive;
     baseImage: string;
     onChange: (directive: Directive) => void;
+    controllers: DirectiveControllers;
 }) {
     // Get metadata for styling
     const metadata = getDirectiveMetadata(directive);
@@ -62,6 +69,9 @@ export default function DirectiveComponent({ directive, baseImage, onChange }: {
         iconColor: metadata.iconColor,
         icon: metadata.icon,
     } : {};
+
+    // Pass controllers directly
+    const controllerProps = { controllers };
 
     if ('group' in directive) {
         // Check if this is a custom group that should use a special editor
@@ -95,6 +105,7 @@ export default function DirectiveComponent({ directive, baseImage, onChange }: {
                                 onChange({ group: directive.group, customParams });
                             }
                         }}
+                        controllers={controllers}
                     />
                 );
             }
@@ -108,6 +119,7 @@ export default function DirectiveComponent({ directive, baseImage, onChange }: {
                 condition={directive.condition}
                 onConditionChange={conditionProps.onConditionChange}
                 {...styleProps}
+                {...controllerProps}
             />
         );
     } else if ('environment' in directive) {
@@ -118,6 +130,7 @@ export default function DirectiveComponent({ directive, baseImage, onChange }: {
                 condition={directive.condition}
                 onConditionChange={conditionProps.onConditionChange}
                 {...styleProps}
+                {...controllerProps}
             />
         );
     } else if ('install' in directive) {
@@ -129,6 +142,7 @@ export default function DirectiveComponent({ directive, baseImage, onChange }: {
                 condition={directive.condition}
                 onConditionChange={conditionProps.onConditionChange}
                 {...styleProps}
+                {...controllerProps}
             />
         );
     } else if ('workdir' in directive) {
@@ -139,6 +153,7 @@ export default function DirectiveComponent({ directive, baseImage, onChange }: {
                 condition={directive.condition}
                 onConditionChange={conditionProps.onConditionChange}
                 {...styleProps}
+                {...controllerProps}
             />
         );
     } else if ('run' in directive) {
@@ -149,6 +164,7 @@ export default function DirectiveComponent({ directive, baseImage, onChange }: {
                 condition={directive.condition}
                 onConditionChange={conditionProps.onConditionChange}
                 {...styleProps}
+                {...controllerProps}
             />
         );
     } else if ('variables' in directive) {
@@ -159,6 +175,7 @@ export default function DirectiveComponent({ directive, baseImage, onChange }: {
                 condition={directive.condition}
                 onConditionChange={conditionProps.onConditionChange}
                 {...styleProps}
+                {...controllerProps}
             />
         );
     } else if ('template' in directive) {
@@ -169,6 +186,7 @@ export default function DirectiveComponent({ directive, baseImage, onChange }: {
                 condition={directive.condition}
                 onConditionChange={conditionProps.onConditionChange}
                 {...styleProps}
+                {...controllerProps}
             />
         );
     } else if ('deploy' in directive) {
@@ -179,6 +197,7 @@ export default function DirectiveComponent({ directive, baseImage, onChange }: {
                 condition={directive.condition}
                 onConditionChange={conditionProps.onConditionChange}
                 {...styleProps}
+                {...controllerProps}
             />
         );
     } else if ('user' in directive) {
@@ -189,6 +208,7 @@ export default function DirectiveComponent({ directive, baseImage, onChange }: {
                 condition={directive.condition}
                 onConditionChange={conditionProps.onConditionChange}
                 {...styleProps}
+                {...controllerProps}
             />
         );
     } else if ('copy' in directive) {
@@ -199,6 +219,7 @@ export default function DirectiveComponent({ directive, baseImage, onChange }: {
                 condition={directive.condition}
                 onConditionChange={conditionProps.onConditionChange}
                 {...styleProps}
+                {...controllerProps}
             />
         );
     } else if ('file' in directive) {
@@ -209,6 +230,7 @@ export default function DirectiveComponent({ directive, baseImage, onChange }: {
                 condition={directive.condition}
                 onConditionChange={conditionProps.onConditionChange}
                 {...styleProps}
+                {...controllerProps}
             />
         );
     } else if ('test' in directive) {
@@ -219,6 +241,7 @@ export default function DirectiveComponent({ directive, baseImage, onChange }: {
                 condition={directive.condition}
                 onConditionChange={conditionProps.onConditionChange}
                 {...styleProps}
+                {...controllerProps}
             />
         );
     } else if ('include' in directive) {
@@ -228,6 +251,7 @@ export default function DirectiveComponent({ directive, baseImage, onChange }: {
             condition={directive.condition}
             onConditionChange={conditionProps.onConditionChange}
             {...styleProps}
+            {...controllerProps}
         />;
     } else {
         return (

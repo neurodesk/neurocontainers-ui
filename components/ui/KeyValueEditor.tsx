@@ -1,5 +1,6 @@
 import { TrashIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { Input } from "./FormField";
+import { iconStyles, textStyles, cn } from "@/lib/styles";
 
 interface KeyValueEditorProps {
     data: { [key: string]: string };
@@ -52,15 +53,15 @@ export default function KeyValueEditor({
         return (
             <div>
                 <div className="mb-4 p-4 bg-gray-50 rounded-md border border-gray-200">
-                    <p className="text-sm text-gray-600 text-center">
+                    <p className={cn(textStyles({ size: 'sm', color: 'muted' }), "text-center")}>
                         {emptyMessage}
                     </p>
                 </div>
                 <button
-                    className="flex items-center text-sm text-[#4f7b38] hover:text-[#6aa329]"
+                    className={cn("flex items-center", textStyles({ size: 'sm', color: 'secondary' }), "hover:text-[#6aa329]")}
                     onClick={addItem}
                 >
-                    <PlusIcon className="h-4 w-4 mr-1" />
+                    <PlusIcon className={cn(iconStyles('sm'), "mr-1")} />
                     {addButtonText}
                 </button>
             </div>
@@ -71,7 +72,7 @@ export default function KeyValueEditor({
         <div>
             {entries.length > 0 && (
                 <div className="mb-4">
-                    <div className="grid grid-cols-12 gap-2 mb-2 font-medium text-sm text-[#1e2a16]">
+                    <div className={cn("grid grid-cols-12 gap-2 mb-2", textStyles({ size: 'sm', weight: 'medium', color: 'primary' }))}>
                         <div className="col-span-5">{keyLabel}</div>
                         <div className="col-span-6">{valueLabel}</div>
                         <div className="col-span-1"></div>
@@ -97,7 +98,7 @@ export default function KeyValueEditor({
                                 className="col-span-1 flex justify-center items-center text-gray-400 hover:text-[#6aa329]"
                                 onClick={() => removeItem(key)}
                             >
-                                <TrashIcon className="h-5 w-5" />
+                                <TrashIcon className={iconStyles('md')} />
                             </button>
                         </div>
                     ))}
@@ -105,10 +106,10 @@ export default function KeyValueEditor({
             )}
 
             <button
-                className="flex items-center text-sm text-[#4f7b38] hover:text-[#6aa329]"
+                className={cn("flex items-center", textStyles({ size: 'sm', color: 'secondary' }), "hover:text-[#6aa329]")}
                 onClick={addItem}
             >
-                <PlusIcon className="h-4 w-4 mr-1" />
+                <PlusIcon className={cn(iconStyles('sm'), "mr-1")} />
                 {addButtonText}
             </button>
         </div>

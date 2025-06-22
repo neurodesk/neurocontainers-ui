@@ -1,7 +1,9 @@
 import { useRef, useEffect, useState } from "react";
 import { DirectiveContainer, ListEditor, Textarea } from "@/components/ui";
+import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
 import { PlayIcon } from "@heroicons/react/24/outline";
 import { registerDirective, DirectiveMetadata } from "./registry";
+import { HELP_SECTION, textStyles, cn } from "@/lib/styles";
 
 export default function RunCommandDirectiveComponent({
     run,
@@ -11,7 +13,8 @@ export default function RunCommandDirectiveComponent({
     headerColor,
     borderColor,
     iconColor,
-    icon
+    icon,
+    controllers,
 }: {
     run: string[];
     onChange: (run: string[]) => void;
@@ -21,6 +24,7 @@ export default function RunCommandDirectiveComponent({
     borderColor?: string;
     iconColor?: string;
     icon?: React.ComponentType<{ className?: string }>;
+    controllers: DirectiveControllers;
 }) {
     const textareaRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
     const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
@@ -79,11 +83,11 @@ export default function RunCommandDirectiveComponent({
     }, [run]);
 
     const helpContent = (
-        <>
-            <h3 className="font-semibold text-[#0c0e0a] mb-2">
+        <div className={HELP_SECTION.container}>
+            <h3 className={HELP_SECTION.title}>
                 RUN Directive
             </h3>
-            <div className="text-sm text-gray-600 space-y-2">
+            <div className={HELP_SECTION.text}>
                 <p>
                     The RUN instruction executes commands in a new layer on top
                     of the current image and commits the results.
@@ -99,17 +103,17 @@ export default function RunCommandDirectiveComponent({
                 </div>
                 <div>
                     <strong>Examples:</strong>
-                    <pre className="bg-gray-100 p-2 rounded text-xs mt-1 whitespace-pre-wrap">
+                    <pre className={HELP_SECTION.code}>
                         {`mkdir -p /app/data`}
                     </pre>
                 </div>
             </div>
-        </>
+        </div>
     );
 
     return (
-        <DirectiveContainer 
-            title="Run Commands" 
+        <DirectiveContainer
+            title="Run Commands"
             helpContent={helpContent}
             condition={condition}
             onConditionChange={onConditionChange}
@@ -117,6 +121,7 @@ export default function RunCommandDirectiveComponent({
             borderColor={borderColor}
             iconColor={iconColor}
             icon={icon}
+            controllers={controllers}
         >
             <ListEditor
                 items={run}
@@ -129,7 +134,10 @@ export default function RunCommandDirectiveComponent({
                 renderItem={(command, index, onChangeCommand) => (
                     <Textarea
                         ref={(el) => { (textareaRefs.current[index] = el) }}
-                        className="w-full px-3 py-2 border-0 rounded-none text-[#0c0e0a] focus:outline-none focus:ring-0 focus:border-transparent resize-none overflow-hidden leading-5"
+                        className={cn(
+                            "w-full px-3 py-2 border-0 rounded-none focus:outline-none focus:ring-0 focus:border-transparent resize-none overflow-hidden leading-5",
+                            textStyles({ color: 'primary' })
+                        )}
                         value={command}
                         onChange={(e) => handleTextareaChange(e, index, onChangeCommand)}
                         onKeyDown={(e) => handleKeyDown(e, index)}

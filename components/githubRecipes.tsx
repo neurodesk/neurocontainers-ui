@@ -18,6 +18,7 @@ import {
     ArrowTopRightOnSquareIcon,
 } from '@heroicons/react/24/outline';
 import { mergeAdditionalFilesIntoRecipe, migrateLegacyRecipe, type ContainerRecipe } from '@/components/common';
+import { BUTTONS, iconStyles, textStyles, inputStyles, cn } from '@/lib/styles';
 
 interface RecipesListProps {
     owner: string;
@@ -130,7 +131,9 @@ export default function RecipesList({
                     <div className="p-8 text-center">
                         <div className="flex flex-col items-center gap-4">
                             <div className="animate-spin h-8 w-8 border-2 border-[#6aa329] border-t-transparent rounded-full"></div>
-                            <div className="text-[#4f7b38] text-lg font-medium">
+                            <div className={cn(
+                                textStyles({ size: 'lg', weight: 'medium', color: 'secondary' })
+                            )}>
                                 Loading recipes...
                             </div>
                         </div>
@@ -146,22 +149,22 @@ export default function RecipesList({
                 <div className={modalClasses}>
                     <div className="p-6">
                         <div className="flex items-center gap-3 text-red-600 mb-4">
-                            <ExclamationTriangleIcon className="h-6 w-6 flex-shrink-0" />
-                            <h3 className="font-semibold text-lg">Error loading recipes</h3>
+                            <ExclamationTriangleIcon className={cn(iconStyles('lg'), "flex-shrink-0")} />
+                            <h3 className={textStyles({ size: 'lg', weight: 'semibold' })}>Error loading recipes</h3>
                         </div>
-                        <p className="text-red-600 mb-6">{error}</p>
+                        <p className={cn(textStyles({ color: 'muted' }), "text-red-600 mb-6")}>{error}</p>
                         <div className="flex gap-3">
                             <button
                                 onClick={refetch}
-                                className="flex items-center gap-2 px-4 py-2 bg-[#6aa329] text-white rounded-lg hover:bg-[#4f7b38] transition-colors font-medium"
+                                className={cn(BUTTONS.primary, "gap-2")}
                             >
-                                <ArrowPathIcon className="h-4 w-4" />
+                                <ArrowPathIcon className={iconStyles('sm')} />
                                 Try Again
                             </button>
                             {showAsModal && onClose && (
                                 <button
                                     onClick={onClose}
-                                    className="px-4 py-2 text-[#4f7b38] border border-[#d3e7b6] rounded-lg hover:bg-[#f0f7e7] transition-colors font-medium"
+                                    className={BUTTONS.secondary}
                                 >
                                     Close
                                 </button>
@@ -183,22 +186,31 @@ export default function RecipesList({
                         <div className="flex-1 min-w-0">
                             {/* Mobile Layout - Stacked */}
                             <div className="block lg:hidden">
-                                <h2 className="text-xl font-bold text-[#0c0e0a] mb-2">
+                                <h2 className={cn(
+                                    textStyles({ size: 'xl', weight: 'bold', color: 'primary' }),
+                                    "mb-2"
+                                )}>
                                     Container Recipes
                                 </h2>
-                                <div className="flex items-center gap-3 text-sm">
+                                <div className={cn("flex items-center gap-3", textStyles({ size: 'sm' }))}>
                                     <a
                                         href={`https://github.com/${owner}/${repo}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/80 border border-[#d3e7b6] rounded-lg text-[#4f7b38] hover:bg-white hover:border-[#6aa329] hover:text-[#6aa329] transition-all duration-200 text-sm font-medium shadow-sm"
+                                        className={cn(
+                                            "inline-flex items-center gap-2 px-3 py-1.5",
+                                            "bg-white/80 border border-[#d3e7b6] rounded-lg",
+                                            "text-[#4f7b38] hover:bg-white hover:border-[#6aa329] hover:text-[#6aa329]",
+                                            "transition-all duration-200 font-medium shadow-sm",
+                                            textStyles({ size: 'sm' })
+                                        )}
                                     >
-                                        <CodeBracketIcon className="h-4 w-4" />
+                                        <CodeBracketIcon className={iconStyles('sm')} />
                                         {owner.toLowerCase()}/{repo.toLowerCase()}
                                         <ArrowTopRightOnSquareIcon className="h-3 w-3" />
                                     </a>
                                     <span className="text-[#4f7b38]">•</span>
-                                    <span className="font-medium text-[#4f7b38]">
+                                    <span className={cn(textStyles({ weight: 'medium', color: 'secondary' }))}>
                                         {files.length} recipe{files.length !== 1 ? 's' : ''}
                                     </span>
                                 </div>
@@ -206,21 +218,27 @@ export default function RecipesList({
 
                             {/* Desktop Layout - Inline */}
                             <div className="hidden lg:flex items-center gap-4">
-                                <h2 className="text-xl font-bold text-[#0c0e0a]">
+                                <h2 className={textStyles({ size: 'xl', weight: 'bold', color: 'primary' })}>
                                     Container Recipes
                                 </h2>
                                 <a
                                     href={`https://github.com/${owner}/${repo}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/80 border border-[#d3e7b6] rounded-lg text-[#4f7b38] hover:bg-white hover:border-[#6aa329] hover:text-[#6aa329] transition-all duration-200 text-sm font-medium shadow-sm flex-shrink-0"
+                                    className={cn(
+                                        "inline-flex items-center gap-2 px-3 py-1.5",
+                                        "bg-white/80 border border-[#d3e7b6] rounded-lg",
+                                        "text-[#4f7b38] hover:bg-white hover:border-[#6aa329] hover:text-[#6aa329]",
+                                        "transition-all duration-200 font-medium shadow-sm flex-shrink-0",
+                                        textStyles({ size: 'sm' })
+                                    )}
                                 >
-                                    <CodeBracketIcon className="h-4 w-4" />
+                                    <CodeBracketIcon className={iconStyles('sm')} />
                                     {owner.toLowerCase()}/{repo.toLowerCase()}
                                     <ArrowTopRightOnSquareIcon className="h-3 w-3" />
                                 </a>
                                 <span className="text-[#4f7b38]">•</span>
-                                <span className="font-medium text-[#4f7b38]">
+                                <span className={cn(textStyles({ weight: 'medium', color: 'secondary' }))}>
                                     {files.length} recipe{files.length !== 1 ? 's' : ''}
                                 </span>
                             </div>
@@ -243,13 +261,20 @@ export default function RecipesList({
                     <div className="flex items-center gap-4">
                         {/* Search - fills available space */}
                         <div className="relative flex-1">
-                            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <MagnifyingGlassIcon className={cn(
+                                iconStyles('sm', 'muted'),
+                                "absolute left-3 top-1/2 transform -translate-y-1/2"
+                            )} />
                             <input
                                 type="text"
                                 placeholder="Search recipes..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-9 pr-3 py-2.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:border-transparent text-sm shadow-sm"
+                                className={cn(
+                                    inputStyles(),
+                                    "w-full pl-9 pr-3 py-2.5 shadow-sm",
+                                    "focus:ring-2 focus:ring-[#6aa329] focus:border-transparent"
+                                )}
                             />
                         </div>
 
@@ -257,16 +282,16 @@ export default function RecipesList({
                         <div className="flex items-center gap-3 flex-shrink-0">
                             <button
                                 onClick={refetch}
-                                className="flex items-center gap-2 px-4 py-2.5 bg-[#6aa329] text-white rounded-lg hover:bg-[#4f7b38] text-sm font-medium transition-colors shadow-sm"
+                                className={cn(BUTTONS.primary, "gap-2 px-4 py-2.5 shadow-sm")}
                             >
-                                <ArrowPathIcon className="h-4 w-4" />
+                                <ArrowPathIcon className={iconStyles('sm')} />
                                 <span className="hidden sm:inline">Refresh</span>
                             </button>
                             <button
                                 onClick={clearCache}
-                                className="flex items-center gap-2 px-4 py-2.5 text-[#4f7b38] border border-[#d3e7b6] rounded-lg hover:bg-[#f0f7e7] text-sm font-medium transition-colors shadow-sm"
+                                className={cn(BUTTONS.secondary, "gap-2 px-4 py-2.5 shadow-sm")}
                             >
-                                <TrashIcon className="h-4 w-4" />
+                                <TrashIcon className={iconStyles('sm')} />
                                 <span className="hidden sm:inline">Clear</span>
                             </button>
                         </div>
@@ -275,14 +300,17 @@ export default function RecipesList({
                     {/* Results indicator - fixed height to prevent layout shift */}
                     <div className="mt-2 h-5 flex items-center">
                         {searchTerm && (
-                            <div className="text-xs text-[#4f7b38]">
+                            <div className={cn(textStyles({ size: 'xs', color: 'secondary' }))}>
                                 {filteredFiles.length} of {files.length} recipes
                                 {filteredFiles.length === 0 && (
                                     <>
                                         {' • '}
                                         <button
                                             onClick={() => setSearchTerm('')}
-                                            className="text-[#6aa329] hover:text-[#4f7b38] font-medium underline"
+                                            className={cn(
+                                                textStyles({ weight: 'medium' }),
+                                                "text-[#6aa329] hover:text-[#4f7b38] underline"
+                                            )}
                                         >
                                             clear search
                                         </button>
@@ -296,25 +324,28 @@ export default function RecipesList({
                 {/* Repository Info - Collapsible */}
                 {repoInfo && (
                     <div className="px-6 py-3 bg-white border-t border-gray-100">
-                        <div className="flex items-center gap-3 text-sm">
-                            <CodeBracketIcon className="h-4 w-4 text-[#4f7b38] flex-shrink-0" />
+                        <div className={cn("flex items-center gap-3", textStyles({ size: 'sm' }))}>
+                            <CodeBracketIcon className={cn(iconStyles('sm', 'secondary'), "flex-shrink-0")} />
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-gray-600">Latest:</span>
+                                    <span className={textStyles({ color: 'muted' })}>Latest:</span>
                                     <a
                                         href={repoInfo.lastCommit.htmlUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="text-xs bg-[#4f7b38] text-white px-2 py-0.5 rounded font-mono hover:bg-[#3d5f2b] transition-colors"
+                                        className={cn(
+                                            textStyles({ size: 'xs' }),
+                                            "bg-[#4f7b38] text-white px-2 py-0.5 rounded font-mono hover:bg-[#3d5f2b] transition-colors"
+                                        )}
                                     >
                                         {repoInfo.lastCommit.sha.substring(0, 7)}
                                     </a>
-                                    <span className="text-gray-600 truncate">
+                                    <span className={cn(textStyles({ color: 'muted' }), "truncate")}>
                                         &quot;{truncateMessage(repoInfo.lastCommit.message, 40)}&quot;
                                     </span>
                                 </div>
                             </div>
-                            <div className="text-xs text-gray-500 flex items-center gap-1">
+                            <div className={cn(textStyles({ size: 'xs', color: 'muted' }), "flex items-center gap-1")}>
                                 <ClockIcon className="h-3 w-3" />
                                 {formatDate(repoInfo.lastCommit.date)}
                             </div>
@@ -326,18 +357,21 @@ export default function RecipesList({
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto">
                 {filteredFiles.length === 0 ? (
-                    <div className="flex items-center justify-center h-full min-h-[300px] text-center text-gray-500">
+                    <div className={cn(
+                        "flex items-center justify-center h-full min-h-[300px] text-center",
+                        textStyles({ color: 'muted' })
+                    )}>
                         <div>
                             <DocumentTextIcon className="h-12 w-12 mx-auto mb-3 text-gray-300" />
                             {searchTerm ? (
                                 <>
-                                    <p className="text-base font-medium mb-1">No matching recipes</p>
-                                    <p className="text-sm">Try a different search term</p>
+                                    <p className={cn(textStyles({ size: 'base', weight: 'medium' }), "mb-1")}>No matching recipes</p>
+                                    <p className={textStyles({ size: 'sm' })}>Try a different search term</p>
                                 </>
                             ) : (
                                 <>
-                                    <p className="text-base font-medium mb-1">No recipes found</p>
-                                    <p className="text-sm">This repository doesn&apos;t contain any container recipes</p>
+                                    <p className={cn(textStyles({ size: 'base', weight: 'medium' }), "mb-1")}>No recipes found</p>
+                                    <p className={textStyles({ size: 'sm' })}>This repository doesn&apos;t contain any container recipes</p>
                                 </>
                             )}
                         </div>
@@ -354,10 +388,16 @@ export default function RecipesList({
                                     <div className="hidden sm:flex items-center gap-4">
                                         {/* Recipe info - consistent width */}
                                         <div className="flex-1 min-w-0">
-                                            <h3 className="font-semibold text-[#0c0e0a] text-base truncate mb-1">
+                                            <h3 className={cn(
+                                                textStyles({ size: 'base', weight: 'semibold', color: 'primary' }),
+                                                "truncate mb-1"
+                                            )}>
                                                 {getRecipeName(file.path)}
                                             </h3>
-                                            <p className="text-sm text-gray-500 truncate font-mono">
+                                            <p className={cn(
+                                                textStyles({ size: 'sm', color: 'muted' }),
+                                                "truncate font-mono"
+                                            )}>
                                                 {file.path}
                                             </p>
                                         </div>
@@ -368,13 +408,17 @@ export default function RecipesList({
                                                 <button
                                                     onClick={() => handleLoadRecipe(file)}
                                                     disabled={loadingRecipe === file.path}
-                                                    className="flex items-center gap-2 px-4 py-2 bg-[#6aa329] text-white rounded-lg hover:bg-[#4f7b38] text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-w-[80px] justify-center"
+                                                    className={cn(
+                                                        BUTTONS.primary,
+                                                        "gap-2 px-4 py-2 min-w-[80px] justify-center",
+                                                        "disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    )}
                                                 >
                                                     {loadingRecipe === file.path ? (
                                                         <div className="animate-spin h-4 w-4 border border-white border-t-transparent rounded-full"></div>
                                                     ) : (
                                                         <>
-                                                            <ArrowDownTrayIcon className="h-4 w-4" />
+                                                            <ArrowDownTrayIcon className={iconStyles('sm')} />
                                                             Load
                                                         </>
                                                     )}
@@ -385,9 +429,12 @@ export default function RecipesList({
                                                 href={file.htmlUrl}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="flex items-center gap-2 px-3 py-2 text-[#4f7b38] border border-[#d3e7b6] rounded-lg hover:bg-[#f0f7e7] text-sm font-medium transition-colors min-w-[70px] justify-center"
+                                                className={cn(
+                                                    BUTTONS.secondary,
+                                                    "gap-2 px-3 py-2 min-w-[70px] justify-center"
+                                                )}
                                             >
-                                                <EyeIcon className="h-4 w-4" />
+                                                <EyeIcon className={iconStyles('sm')} />
                                                 View
                                             </a>
                                         </div>
@@ -397,10 +444,16 @@ export default function RecipesList({
                                     <div className="sm:hidden">
                                         {/* Recipe info */}
                                         <div className="mb-3">
-                                            <h3 className="font-semibold text-[#0c0e0a] text-base mb-1">
+                                            <h3 className={cn(
+                                                textStyles({ size: 'base', weight: 'semibold', color: 'primary' }),
+                                                "mb-1"
+                                            )}>
                                                 {getRecipeName(file.path)}
                                             </h3>
-                                            <p className="text-sm text-gray-500 font-mono break-all">
+                                            <p className={cn(
+                                                textStyles({ size: 'sm', color: 'muted' }),
+                                                "font-mono break-all"
+                                            )}>
                                                 {file.path}
                                             </p>
                                         </div>
@@ -411,13 +464,17 @@ export default function RecipesList({
                                                 <button
                                                     onClick={() => handleLoadRecipe(file)}
                                                     disabled={loadingRecipe === file.path}
-                                                    className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-[#6aa329] text-white rounded-lg hover:bg-[#4f7b38] text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                                    className={cn(
+                                                        BUTTONS.primary,
+                                                        "justify-center gap-2 w-full px-4 py-3",
+                                                        "disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    )}
                                                 >
                                                     {loadingRecipe === file.path ? (
                                                         <div className="animate-spin h-4 w-4 border border-white border-t-transparent rounded-full"></div>
                                                     ) : (
                                                         <>
-                                                            <ArrowDownTrayIcon className="h-4 w-4" />
+                                                            <ArrowDownTrayIcon className={iconStyles('sm')} />
                                                             Load Recipe
                                                         </>
                                                     )}
@@ -428,9 +485,12 @@ export default function RecipesList({
                                                 href={file.htmlUrl}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="flex items-center justify-center gap-2 w-full px-4 py-3 text-[#4f7b38] border border-[#d3e7b6] rounded-lg hover:bg-[#f0f7e7] text-sm font-medium transition-colors"
+                                                className={cn(
+                                                    BUTTONS.secondary,
+                                                    "justify-center gap-2 w-full px-4 py-3"
+                                                )}
                                             >
-                                                <EyeIcon className="h-4 w-4" />
+                                                <EyeIcon className={iconStyles('sm')} />
                                                 View on GitHub
                                             </a>
                                         </div>
@@ -444,7 +504,11 @@ export default function RecipesList({
 
             {/* Fixed Footer */}
             {cacheInfo.isValid && cacheInfo.expiresAt && (
-                <div className="flex-shrink-0 px-6 py-2 bg-gray-50 border-t border-gray-200 text-xs text-gray-500 flex items-center gap-2">
+                <div className={cn(
+                    "flex-shrink-0 px-6 py-2 bg-gray-50 border-t border-gray-200",
+                    "flex items-center gap-2",
+                    textStyles({ size: 'xs', color: 'muted' })
+                )}>
                     <ClockIcon className="h-3 w-3" />
                     Cache expires: {cacheInfo.expiresAt.toLocaleString()}
                 </div>

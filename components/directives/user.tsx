@@ -1,6 +1,8 @@
 import { DirectiveContainer, Input } from "@/components/ui";
+import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
 import { UserIcon } from "@heroicons/react/24/outline";
 import { registerDirective, DirectiveMetadata } from "./registry";
+import { HELP_SECTION } from "@/lib/styles";
 
 export default function UserDirectiveComponent({
     user,
@@ -10,7 +12,8 @@ export default function UserDirectiveComponent({
     headerColor,
     borderColor,
     iconColor,
-    icon
+    icon,
+    controllers,
 }: {
     user: string,
     onChange: (user: string) => void,
@@ -20,13 +23,14 @@ export default function UserDirectiveComponent({
     borderColor?: string;
     iconColor?: string;
     icon?: React.ComponentType<{ className?: string }>;
+    controllers: DirectiveControllers;
 }) {
     const helpContent = (
-        <>
-            <h3 className="font-semibold text-[#0c0e0a] mb-2">
+        <div className={HELP_SECTION.container}>
+            <h3 className={HELP_SECTION.title}>
                 USER Directive
             </h3>
-            <div className="text-sm text-gray-600 space-y-2">
+            <div className={HELP_SECTION.text}>
                 <p>
                     The USER directive sets the user name or UID to use when running the container and for any subsequent commands.
                 </p>
@@ -48,7 +52,7 @@ export default function UserDirectiveComponent({
                 </div>
                 <div>
                     <strong>Examples:</strong>
-                    <div className="bg-gray-100 p-2 rounded text-xs mt-1 space-y-1">
+                    <div className={HELP_SECTION.code}>
                         <div><strong>Username:</strong> nginx</div>
                         <div><strong>UID:</strong> 1000</div>
                         <div><strong>User:Group:</strong> www-data:www-data</div>
@@ -56,12 +60,12 @@ export default function UserDirectiveComponent({
                     </div>
                 </div>
             </div>
-        </>
+        </div>
     );
 
     return (
-        <DirectiveContainer 
-            title="User" 
+        <DirectiveContainer
+            title="User"
             helpContent={helpContent}
             condition={condition}
             onConditionChange={onConditionChange}
@@ -69,6 +73,7 @@ export default function UserDirectiveComponent({
             borderColor={borderColor}
             iconColor={iconColor}
             icon={icon}
+            controllers={controllers}
         >
             <Input
                 value={user}

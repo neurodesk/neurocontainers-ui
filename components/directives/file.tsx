@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { DirectiveContainer, FormField, Input, Textarea, ToggleButtonGroup } from "@/components/ui";
+import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
 import { FileInfo } from "@/components/common";
 import { ClipboardDocumentListIcon } from "@heroicons/react/24/outline";
 import { registerDirective, DirectiveMetadata } from "./registry";
+import { HELP_SECTION } from "@/lib/styles";
 
 export default function FileDirectiveComponent({
     file,
@@ -12,7 +14,8 @@ export default function FileDirectiveComponent({
     headerColor,
     borderColor,
     iconColor,
-    icon
+    icon,
+    controllers,
 }: {
     file: FileInfo;
     onChange: (file: FileInfo) => void;
@@ -22,6 +25,7 @@ export default function FileDirectiveComponent({
     borderColor?: string;
     iconColor?: string;
     icon?: React.ComponentType<{ className?: string }>;
+    controllers: DirectiveControllers;
 }) {
     const [fileContent, setFileContent] = useState(file.contents || "");
 
@@ -99,11 +103,11 @@ export default function FileDirectiveComponent({
     };
 
     const helpContent = (
-        <>
-            <h3 className="font-semibold text-[#0c0e0a] mb-2">
+        <div className={HELP_SECTION.container}>
+            <h3 className={HELP_SECTION.title}>
                 FILE Directive
             </h3>
-            <div className="text-sm text-gray-600 space-y-2">
+            <div className={HELP_SECTION.text}>
                 <p>
                     The FILE directive allows you to include files in your container build process.
                 </p>
@@ -117,19 +121,19 @@ export default function FileDirectiveComponent({
                 </div>
                 <div>
                     <strong>Examples:</strong>
-                    <div className="bg-gray-100 p-2 rounded text-xs mt-1 space-y-1">
+                    <div className={HELP_SECTION.code}>
                         <div><strong>Content:</strong> Direct text input</div>
                         <div><strong>Filename:</strong> ./config/app.conf</div>
                         <div><strong>URL:</strong> https://example.com/config.json</div>
                     </div>
                 </div>
             </div>
-        </>
+        </div>
     );
 
     return (
-        <DirectiveContainer 
-            title={`File: ${file.name || 'Untitled'}`} 
+        <DirectiveContainer
+            title={`File: ${file.name || 'Untitled'}`}
             helpContent={helpContent}
             condition={condition}
             onConditionChange={onConditionChange}
@@ -137,6 +141,7 @@ export default function FileDirectiveComponent({
             borderColor={borderColor}
             iconColor={iconColor}
             icon={icon}
+            controllers={controllers}
         >
             <FormField label="Name">
                 <Input

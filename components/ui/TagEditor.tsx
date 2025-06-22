@@ -1,6 +1,7 @@
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useState, useRef } from "react";
 import { Input } from "./FormField";
+import { iconStyles, textStyles, cn } from "@/lib/styles";
 
 interface TagEditorProps {
     tags: string[];
@@ -79,17 +80,17 @@ export default function TagEditor({
                                 onKeyDown={(e) => handleTagKeyDown(e, index)}
                                 title={`Remove ${tag} (Enter or Space)`}
                             >
-                                <span className="font-mono text-[#0c0e0a] mr-2 text-sm break-all">
+                                <span className={cn(textStyles({ size: 'sm', color: 'primary' }), "font-mono mr-2 break-all")}>
                                     {tag}
                                 </span>
-                                <XMarkIcon className="h-4 w-4 text-[#4f7b38] group-hover:text-[#3a5c29] opacity-60 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                                <XMarkIcon className={cn(iconStyles('sm'), "text-[#4f7b38] group-hover:text-[#3a5c29] opacity-60 group-hover:opacity-100 transition-opacity flex-shrink-0")} />
                             </button>
                         ))}
                     </div>
                 </div>
             ) : emptyMessage ? (
                 <div className="mb-4 p-4 bg-gray-50 rounded-md border border-gray-200">
-                    <p className="text-sm text-gray-600 text-center">
+                    <p className={cn(textStyles({ size: 'sm', color: 'muted' }), "text-center")}>
                         {emptyMessage}
                     </p>
                 </div>
@@ -108,13 +109,13 @@ export default function TagEditor({
 
                 {filteredSuggestions.length > 0 && inputValue && (
                     <div className="mt-2 space-y-1">
-                        <p className="text-xs text-gray-500 mb-2">Suggestions:</p>
+                        <p className={cn(textStyles({ size: 'xs', color: 'muted' }), "mb-2")}>Suggestions:</p>
                         <div className="flex flex-wrap gap-1">
                             {filteredSuggestions.slice(0, 6).map((suggestion) => (
                                 <button
                                     key={suggestion}
                                     type="button"
-                                    className="px-2 py-1 text-xs bg-gray-100 hover:bg-[#f0f7e7] border border-gray-200 rounded transition-colors"
+                                    className={cn(textStyles({ size: 'xs' }), "px-2 py-1 bg-gray-100 hover:bg-[#f0f7e7] border border-gray-200 rounded transition-colors")}
                                     onClick={() => {
                                         addTag(suggestion);
                                         onSuggestionClick?.(suggestion);

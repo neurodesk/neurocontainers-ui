@@ -2,6 +2,7 @@ import { StructuredReadme, convertStructuredReadmeToText } from "@/components/co
 import { FormField } from "./FormField";
 import { useState } from "react";
 import { DocumentTextIcon } from "@heroicons/react/24/outline";
+import { presets, iconStyles, textStyles, textareaStyles, cn } from "@/lib/styles";
 
 interface StructuredReadmeEditorProps {
     value: StructuredReadme;
@@ -26,7 +27,7 @@ export function StructuredReadmeEditor({ value, onChange, containerName, contain
         <div className="space-y-4">
             {/* Preview Toggle */}
             <div className="flex justify-between items-center">
-                <h4 className="text-sm font-medium text-gray-700">Documentation Fields</h4>
+                <h4 className={textStyles({ size: 'sm', weight: 'medium', color: 'muted' })}>Documentation Fields</h4>
                 <button
                     type="button"
                     className="text-sm px-3 py-1.5 rounded-md bg-[#f0f7e7] text-[#4f7b38] hover:bg-[#e5f0d5] transition-colors font-medium"
@@ -39,18 +40,18 @@ export function StructuredReadmeEditor({ value, onChange, containerName, contain
             {showPreview ? (
                 <div className="border border-gray-200 rounded-lg overflow-hidden">
                     <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-                        <div className="text-sm font-medium text-gray-700">Generated README Preview</div>
+                        <div className={textStyles({ size: 'sm', weight: 'medium', color: 'muted' })}>Generated README Preview</div>
                     </div>
                     <div className="p-6 min-h-[300px] max-h-[500px] overflow-y-auto bg-white">
                         {previewContent ? (
-                            <pre className="whitespace-pre-wrap text-sm text-gray-900 font-mono leading-relaxed">
+                            <pre className={cn("whitespace-pre-wrap font-mono leading-relaxed", textStyles({ size: 'sm', color: 'primary' }))}>
                                 {previewContent}
                             </pre>
                         ) : (
                             <div className="text-gray-400 italic text-center py-12">
-                                <DocumentTextIcon className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                                <p className="text-base">Fill out the fields to see the generated README</p>
-                                <p className="text-sm mt-1">This preview shows exactly what will be included in your container</p>
+                                <DocumentTextIcon className={cn(iconStyles('lg'), "h-12 w-12 mx-auto mb-3 text-gray-300")} />
+                                <p className={textStyles({ size: 'base', color: 'muted' })}>Fill out the fields to see the generated README</p>
+                                <p className={cn(textStyles({ size: 'sm', color: 'muted' }), "mt-1")}>This preview shows exactly what will be included in your container</p>
                             </div>
                         )}
                     </div>
@@ -65,7 +66,7 @@ export function StructuredReadmeEditor({ value, onChange, containerName, contain
                             value={value.description}
                             onChange={(e) => updateField("description", e.target.value)}
                             placeholder="Enter a description of the neuroimaging tool..."
-                            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6aa329] focus:border-[#6aa329] sm:text-sm"
+                            className={textareaStyles()}
                             rows={4}
                         />
                     </FormField>
@@ -78,7 +79,7 @@ export function StructuredReadmeEditor({ value, onChange, containerName, contain
                             value={value.example}
                             onChange={(e) => updateField("example", e.target.value)}
                             placeholder="ml toolname/version&#10;toolname --help"
-                            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6aa329] focus:border-[#6aa329] sm:text-sm font-mono"
+                            className={textareaStyles({ monospace: true })}
                             rows={3}
                         />
                     </FormField>
@@ -92,7 +93,7 @@ export function StructuredReadmeEditor({ value, onChange, containerName, contain
                             value={value.documentation}
                             onChange={(e) => updateField("documentation", e.target.value)}
                             placeholder="https://..."
-                            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6aa329] focus:border-[#6aa329] sm:text-sm"
+                            className={presets.input}
                         />
                     </FormField>
 
@@ -104,7 +105,7 @@ export function StructuredReadmeEditor({ value, onChange, containerName, contain
                             value={value.citation}
                             onChange={(e) => updateField("citation", e.target.value)}
                             placeholder="Author et al. (Year). Title. Journal. DOI: ..."
-                            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6aa329] focus:border-[#6aa329] sm:text-sm"
+                            className={textareaStyles()}
                             rows={4}
                         />
                     </FormField>

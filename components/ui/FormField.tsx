@@ -1,4 +1,5 @@
 import { ReactNode, forwardRef } from "react";
+import { presets, textareaStyles, cn } from "@/lib/styles";
 
 interface FormFieldProps {
     label?: string | ReactNode;
@@ -9,15 +10,15 @@ interface FormFieldProps {
 
 export function FormField({ label, children, description, className = "" }: FormFieldProps) {
     return (
-        <div className={`mb-4 ${className}`}>
+        <div className={cn(presets.formField, className)}>
             {label && (
-                <label className="block text-sm font-medium text-[#0c0e0a] mb-2">
+                <label className={presets.formLabel}>
                     {label}
                 </label>
             )}
             {children}
             {description && (
-                <p className="mt-2 text-sm text-gray-500">
+                <p className="mt-1 text-xs text-gray-500">
                     {description}
                 </p>
             )}
@@ -35,7 +36,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         return (
             <input
                 ref={ref}
-                className={`${monoClass} w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329] ${className}`}
+                className={cn(presets.input, monoClass, className)}
                 {...props}
             />
         );
@@ -50,12 +51,10 @@ interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
     ({ className = "", monospace = false, ...props }, ref) => {
-        const monoClass = monospace ? "font-mono" : "";
-        const defaultClasses = "w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329] resize-none";
         return (
             <textarea
                 ref={ref}
-                className={`${monoClass} ${className || defaultClasses}`}
+                className={cn(textareaStyles({ monospace }), className)}
                 {...props}
             />
         );
@@ -71,7 +70,7 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
 export function Select({ className = "", children, ...props }: SelectProps) {
     return (
         <select
-            className={`w-full px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] bg-white focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329] ${className}`}
+            className={cn(presets.input, 'bg-white', className)}
             {...props}
         >
             {children}

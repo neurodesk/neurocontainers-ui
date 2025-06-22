@@ -1,6 +1,7 @@
 import { FolderOpenIcon, ExclamationTriangleIcon, MagnifyingGlassIcon, ArrowPathIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { filesystemService, isFileSystemAccessSupported, isSecureContext, NeurocontainerRecipeFile } from "@/lib/filesystem";
+import { BUTTONS, iconStyles, textStyles, inputStyles, cn } from "@/lib/styles";
 
 interface LocalFilesystemProps {
     onRecipeSelect: (content: string, filename: string) => void;
@@ -101,10 +102,10 @@ export default function LocalFilesystem({ onRecipeSelect }: LocalFilesystemProps
         return (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 m-4">
                 <div className="flex items-start">
-                    <ExclamationTriangleIcon className="h-5 w-5 text-yellow-600 mr-2 flex-shrink-0 mt-0.5" />
+                    <ExclamationTriangleIcon className={cn(iconStyles('md'), "text-yellow-600 mr-2 flex-shrink-0 mt-0.5")} />
                     <div>
-                        <h4 className="text-sm font-medium text-yellow-800">Browser Not Supported</h4>
-                        <p className="text-sm text-yellow-700 mt-1">
+                        <h4 className={cn(textStyles({ size: 'sm', weight: 'medium' }), "text-yellow-800")}>Browser Not Supported</h4>
+                        <p className={cn(textStyles({ size: 'sm' }), "text-yellow-700 mt-1")}>
                             Local filesystem access requires a modern browser with File System Access API support and HTTPS.
                             Try Chrome, Edge, or another Chromium-based browser.
                         </p>
@@ -119,16 +120,26 @@ export default function LocalFilesystem({ onRecipeSelect }: LocalFilesystemProps
             {!isDirectoryOpen ? (
                 <div className="p-8 text-center">
                     <FolderOpenIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    <h3 className={cn(
+                        textStyles({ size: 'lg', weight: 'medium', color: 'primary' }),
+                        "mb-2"
+                    )}>
                         Open Local Repository
                     </h3>
-                    <p className="text-sm text-gray-500 mb-4">
+                    <p className={cn(
+                        textStyles({ size: 'sm', color: 'muted' }),
+                        "mb-4"
+                    )}>
                         Select your local neurocontainers repository directory to edit recipes directly.
                     </p>
                     <button
                         onClick={handleOpenDirectory}
                         disabled={isLoading}
-                        className="inline-flex items-center px-4 py-2 bg-[#6aa329] text-white rounded-lg font-medium hover:bg-[#4f7b38] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className={cn(
+                            BUTTONS.primary,
+                            "inline-flex items-center px-4 py-2",
+                            "disabled:opacity-50 disabled:cursor-not-allowed"
+                        )}
                     >
                         {isLoading ? (
                             <>
@@ -137,7 +148,7 @@ export default function LocalFilesystem({ onRecipeSelect }: LocalFilesystemProps
                             </>
                         ) : (
                             <>
-                                <FolderOpenIcon className="h-4 w-4 mr-2" />
+                                <FolderOpenIcon className={cn(iconStyles('sm'), "mr-2")} />
                                 Open Directory
                             </>
                         )}
@@ -147,24 +158,30 @@ export default function LocalFilesystem({ onRecipeSelect }: LocalFilesystemProps
                 <>
                     {/* Connected Header */}
                     <div className="p-4 border-b border-[#f0f7e7] flex items-center justify-between">
-                        <div className="text-sm text-[#4f7b38]">
+                        <div className={cn(textStyles({ size: 'sm', color: 'secondary' }))}>
                             Connected to local repository - {recipes.length} recipes
                         </div>
                         <div className="flex items-center space-x-2">
                             <button
                                 onClick={handleRefresh}
                                 disabled={isLoading}
-                                className="p-1.5 text-gray-400 hover:text-[#6aa329] transition-colors"
+                                className={cn(
+                                    BUTTONS.icon,
+                                    "p-1.5 text-gray-400 hover:text-[#6aa329] transition-colors"
+                                )}
                                 title="Refresh"
                             >
-                                <ArrowPathIcon className="h-4 w-4" />
+                                <ArrowPathIcon className={iconStyles('sm')} />
                             </button>
                             <button
                                 onClick={handleCloseDirectory}
-                                className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
+                                className={cn(
+                                    BUTTONS.icon,
+                                    "p-1.5 text-gray-400 hover:text-red-500 transition-colors"
+                                )}
                                 title="Close Directory"
                             >
-                                <XMarkIcon className="h-4 w-4" />
+                                <XMarkIcon className={iconStyles('sm')} />
                             </button>
                         </div>
                     </div>
@@ -172,13 +189,20 @@ export default function LocalFilesystem({ onRecipeSelect }: LocalFilesystemProps
                     {/* Search */}
                     <div className="p-4 border-b border-[#f0f7e7]">
                         <div className="relative">
-                            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <MagnifyingGlassIcon className={cn(
+                                iconStyles('sm', 'muted'),
+                                "absolute left-3 top-1/2 transform -translate-y-1/2"
+                            )} />
                             <input
                                 type="text"
                                 placeholder="Search local recipes..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:border-transparent text-sm"
+                                className={cn(
+                                    inputStyles(),
+                                    "w-full pl-9 pr-3 py-2 bg-gray-50",
+                                    "focus:ring-2 focus:ring-[#6aa329] focus:border-transparent"
+                                )}
                             />
                         </div>
                     </div>
@@ -187,7 +211,7 @@ export default function LocalFilesystem({ onRecipeSelect }: LocalFilesystemProps
                     {isLoading ? (
                         <div className="p-8 text-center">
                             <div className="animate-spin h-8 w-8 border-2 border-[#6aa329] border-t-transparent rounded-full mx-auto mb-2"></div>
-                            <p className="text-sm text-gray-500">Loading recipes...</p>
+                            <p className={cn(textStyles({ size: 'sm', color: 'muted' }))}>Loading recipes...</p>
                         </div>
                     ) : filteredRecipes.length > 0 ? (
                         <div className="max-h-96 overflow-y-auto">
@@ -199,17 +223,26 @@ export default function LocalFilesystem({ onRecipeSelect }: LocalFilesystemProps
                                     >
                                         <div className="flex items-center justify-between">
                                             <div className="flex-1 min-w-0">
-                                                <h4 className="font-medium text-sm truncate text-[#0c0e0a]">
+                                                <h4 className={cn(
+                                                    textStyles({ size: 'sm', weight: 'medium', color: 'primary' }),
+                                                    "truncate"
+                                                )}>
                                                     {recipe.name}
                                                 </h4>
-                                                <p className="text-xs text-gray-500 mt-1 font-mono truncate">
+                                                <p className={cn(
+                                                    textStyles({ size: 'xs', color: 'muted' }),
+                                                    "mt-1 font-mono truncate"
+                                                )}>
                                                     {recipe.path}
                                                 </p>
                                             </div>
                                             <div className="flex items-center space-x-2 ml-3">
                                                 <button
                                                     onClick={() => handleRecipeSelect(recipe)}
-                                                    className="px-3 py-1.5 bg-[#6aa329] text-white rounded-lg text-xs font-medium hover:bg-[#4f7b38] transition-colors"
+                                                    className={cn(
+                                                        BUTTONS.primary,
+                                                        "px-3 py-1.5 text-xs"
+                                                    )}
                                                 >
                                                     Load
                                                 </button>
@@ -222,17 +255,20 @@ export default function LocalFilesystem({ onRecipeSelect }: LocalFilesystemProps
                     ) : searchTerm ? (
                         <div className="p-8 text-center">
                             <MagnifyingGlassIcon className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                            <p className="text-sm text-gray-500 mb-2">No recipes found matching &ldquo;{searchTerm}&rdquo;</p>
+                            <p className={cn(textStyles({ size: 'sm', color: 'muted' }), "mb-2")}>No recipes found matching &ldquo;{searchTerm}&rdquo;</p>
                             <button
                                 onClick={() => setSearchTerm('')}
-                                className="text-xs text-[#6aa329] hover:text-[#4f7b38] font-medium"
+                                className={cn(
+                                    textStyles({ size: 'xs', weight: 'medium' }),
+                                    "text-[#6aa329] hover:text-[#4f7b38]"
+                                )}
                             >
                                 Clear search
                             </button>
                         </div>
                     ) : (
                         <div className="p-8 text-center">
-                            <p className="text-sm text-gray-500">
+                            <p className={cn(textStyles({ size: 'sm', color: 'muted' }))}>
                                 No recipe files found in the repository.
                             </p>
                         </div>
@@ -244,10 +280,10 @@ export default function LocalFilesystem({ onRecipeSelect }: LocalFilesystemProps
             {error && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4 m-4">
                     <div className="flex items-start">
-                        <ExclamationTriangleIcon className="h-5 w-5 text-red-600 mr-2 flex-shrink-0 mt-0.5" />
+                        <ExclamationTriangleIcon className={cn(iconStyles('md'), "text-red-600 mr-2 flex-shrink-0 mt-0.5")} />
                         <div>
-                            <h4 className="text-sm font-medium text-red-800">Error</h4>
-                            <p className="text-sm text-red-700 mt-1">{error}</p>
+                            <h4 className={cn(textStyles({ size: 'sm', weight: 'medium' }), "text-red-800")}>Error</h4>
+                            <p className={cn(textStyles({ size: 'sm' }), "text-red-700 mt-1")}>{error}</p>
                         </div>
                     </div>
                 </div>

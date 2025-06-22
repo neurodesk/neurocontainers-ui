@@ -1,6 +1,8 @@
 import { DirectiveContainer, KeyValueEditor } from "@/components/ui";
+import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
 import { CogIcon } from "@heroicons/react/24/outline";
 import { registerDirective, DirectiveMetadata } from "./registry";
+import { HELP_SECTION } from "@/lib/styles";
 
 export default function EnvironmentDirectiveComponent({
     environment,
@@ -11,6 +13,7 @@ export default function EnvironmentDirectiveComponent({
     borderColor,
     iconColor,
     icon,
+    controllers,
 }: {
     environment: { [key: string]: string },
     onChange: (environment: { [key: string]: string }) => void
@@ -20,13 +23,14 @@ export default function EnvironmentDirectiveComponent({
     borderColor?: string;
     iconColor?: string;
     icon?: React.ComponentType<{ className?: string }>;
+    controllers: DirectiveControllers;
 }) {
     const helpContent = (
-        <>
-            <h3 className="font-semibold text-[#0c0e0a] mb-2">
+        <div className={HELP_SECTION.container}>
+            <h3 className={HELP_SECTION.title}>
                 ENVIRONMENT Directive
             </h3>
-            <div className="text-sm text-gray-600 space-y-2">
+            <div className={HELP_SECTION.text}>
                 <p>
                     The ENVIRONMENT directive sets environment variables that will be available in the container.
                 </p>
@@ -41,7 +45,7 @@ export default function EnvironmentDirectiveComponent({
                 </div>
                 <div>
                     <strong>Common Examples:</strong>
-                    <div className="bg-gray-100 p-2 rounded text-xs mt-1 space-y-1">
+                    <div className={HELP_SECTION.code}>
                         <div><strong>PATH:</strong> /usr/local/bin:/usr/bin:/bin</div>
                         <div><strong>APP_ENV:</strong> production</div>
                         <div><strong>DATABASE_URL:</strong> postgresql://user:pass@localhost/db</div>
@@ -49,12 +53,12 @@ export default function EnvironmentDirectiveComponent({
                     </div>
                 </div>
             </div>
-        </>
+        </div>
     );
 
     return (
-        <DirectiveContainer 
-            title="Environment Variables" 
+        <DirectiveContainer
+            title="Environment Variables"
             helpContent={helpContent}
             condition={condition}
             onConditionChange={onConditionChange}
@@ -62,6 +66,7 @@ export default function EnvironmentDirectiveComponent({
             borderColor={borderColor}
             iconColor={iconColor}
             icon={icon}
+            controllers={controllers}
         >
             <KeyValueEditor
                 data={environment}

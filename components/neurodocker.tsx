@@ -1,5 +1,6 @@
 import { NeuroDockerBuildRecipe, Directive } from "@/components/common";
 import { BaseImageSelector, DirectivesList } from "@/components/ui";
+import { CARDS } from "@/lib/styles";
 
 export default function NeuroDockerBuildRecipeComponent({
     recipe,
@@ -74,7 +75,7 @@ export default function NeuroDockerBuildRecipeComponent({
     };
 
     return (
-        <div className="bg-white rounded-lg shadow-md border border-[#d3e7b6]">
+        <div className={CARDS.minimal}>
             <div className="p-4 sm:p-6">
                 {/* Base Image Section */}
                 <div className="mb-8">

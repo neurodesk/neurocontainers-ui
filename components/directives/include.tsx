@@ -1,7 +1,9 @@
 import { DirectiveContainer, FormField, Select } from "@/components/ui";
+import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
 import { IncludeMacro, IncludeMacros } from "@/components/common";
 import { DocumentArrowDownIcon } from "@heroicons/react/24/outline";
 import { registerDirective, DirectiveMetadata } from "./registry";
+import { HELP_SECTION } from "@/lib/styles";
 
 export default function IncludeDirectiveComponent({
     include,
@@ -11,7 +13,8 @@ export default function IncludeDirectiveComponent({
     headerColor,
     borderColor,
     iconColor,
-    icon
+    icon,
+    controllers,
 }: {
     include: IncludeMacro,
     onChange: (include: IncludeMacro) => void,
@@ -21,13 +24,14 @@ export default function IncludeDirectiveComponent({
     borderColor?: string;
     iconColor?: string;
     icon?: React.ComponentType<{ className?: string }>;
+    controllers: DirectiveControllers;
 }) {
     const helpContent = (
-        <>
-            <h3 className="font-semibold text-[#0c0e0a] mb-2">
+        <div className={HELP_SECTION.container}>
+            <h3 className={HELP_SECTION.title}>
                 INCLUDE Directive
             </h3>
-            <div className="text-sm text-gray-600 space-y-2">
+            <div className={HELP_SECTION.text}>
                 <p>
                     The INCLUDE directive allows you to include predefined macros or templates in your container build.
                 </p>
@@ -36,7 +40,7 @@ export default function IncludeDirectiveComponent({
                     <ul className="list-disc list-inside mt-1 space-y-1">
                         {Object.entries(IncludeMacros).map(([key, value]) => (
                             <li key={key}>
-                                <code className="bg-gray-100 px-1 rounded text-xs">{value}</code>
+                                <code className={HELP_SECTION.code}>{value}</code>
                             </li>
                         ))}
                     </ul>
@@ -45,12 +49,12 @@ export default function IncludeDirectiveComponent({
                     Select a macro to include common configurations or setup procedures.
                 </p>
             </div>
-        </>
+        </div>
     );
 
     return (
-        <DirectiveContainer 
-            title="Include" 
+        <DirectiveContainer
+            title="Include"
             helpContent={helpContent}
             condition={condition}
             onConditionChange={onConditionChange}
@@ -58,8 +62,9 @@ export default function IncludeDirectiveComponent({
             borderColor={borderColor}
             iconColor={iconColor}
             icon={icon}
+            controllers={controllers}
         >
-            <FormField 
+            <FormField
                 label="Macro"
                 description="Select a predefined macro to include"
             >

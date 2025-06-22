@@ -5,6 +5,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { searchPackagesSync } from "@/lib/packages";
+import { presets, iconStyles, textStyles, cn } from "@/lib/styles";
 
 interface Package {
     name: string;
@@ -178,8 +179,8 @@ export default function PackageTagEditor({
         <div className={className}>
             {baseImage !== "ubuntu:24.04" && (
                 <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-md flex items-start">
-                    <ExclamationTriangleIcon className="h-5 w-5 text-amber-600 mr-2 mt-0.5 flex-shrink-0" />
-                    <div className="text-sm">
+                    <ExclamationTriangleIcon className={cn(iconStyles('md'), "text-amber-600 mr-2 mt-0.5 flex-shrink-0")} />
+                    <div className={textStyles({ size: 'sm' })}>
                         <p className="text-amber-800 font-medium">Ubuntu 24.04 Only</p>
                         <p className="text-amber-700">
                             Package search is currently limited to Ubuntu 24.04 LTS packages.
@@ -191,7 +192,7 @@ export default function PackageTagEditor({
 
             {packages.length > 0 ? (
                 <div className="mb-4">
-                    <label className="block text-sm font-medium text-[#0c0e0a] mb-2">
+                    <label className={presets.formLabel}>
                         Packages to Install ({packages.length})
                     </label>
                     <div className="flex flex-wrap gap-2">
@@ -203,27 +204,27 @@ export default function PackageTagEditor({
                                 onKeyDown={(e) => handlePackageKeyDown(e, index)}
                                 title={`Remove ${pkg} (Enter or Space)`}
                             >
-                                <span className="font-mono text-[#0c0e0a] mr-2 text-sm break-all">
+                                <span className={cn(textStyles({ size: 'sm', color: 'primary' }), "font-mono mr-2 break-all")}>
                                     {pkg}
                                 </span>
-                                <XMarkIcon className="h-4 w-4 text-[#4f7b38] group-hover:text-[#3a5c29] opacity-60 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                                <XMarkIcon className={cn(iconStyles('sm'), "text-[#4f7b38] group-hover:text-[#3a5c29] opacity-60 group-hover:opacity-100 transition-opacity flex-shrink-0")} />
                             </button>
                         ))}
                     </div>
                 </div>
             ) : (
                 <div className="mb-4 p-4 bg-gray-50 rounded-md border border-gray-200">
-                    <p className="text-sm text-gray-600 text-center">
+                    <p className={cn(textStyles({ size: 'sm', color: 'muted' }), "text-center")}>
                         No packages selected for installation.
                     </p>
-                    <p className="text-xs text-gray-500 text-center mt-1">
+                    <p className={cn(textStyles({ size: 'xs', color: 'muted' }), "text-center mt-1")}>
                         Start typing below to search from {databaseLoaded ? packageDatabase.length.toLocaleString() : '80,000+'} Ubuntu 24.04 packages.
                     </p>
                 </div>
             )}
 
             <div>
-                <label className="block text-sm font-medium text-[#0c0e0a] mb-2">
+                <label className={presets.formLabel}>
                     Add Package
                 </label>
                 <div className="relative" ref={dropdownRef}>
@@ -231,7 +232,7 @@ export default function PackageTagEditor({
                         <input
                             ref={inputRef}
                             type="text"
-                            className="font-mono w-full px-3 py-2 pr-8 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
+                            className={cn(presets.input, "font-mono pr-8")}
                             placeholder={
                                 isLoadingDatabase
                                     ? "Loading database..."
@@ -246,7 +247,7 @@ export default function PackageTagEditor({
                             {isLoadingDatabase ? (
                                 <div className="animate-spin h-4 w-4 border-2 border-[#6aa329] border-t-transparent rounded-full" />
                             ) : (
-                                <MagnifyingGlassIcon className="h-4 w-4 text-gray-400" />
+                                <MagnifyingGlassIcon className={cn(iconStyles('sm'), "text-gray-400")} />
                             )}
                         </div>
                     </div>
@@ -269,11 +270,14 @@ export default function PackageTagEditor({
                                                 onMouseEnter={() => setSelectedIndex(index)}
                                             >
                                                 <div
-                                                    className={`font-mono font-medium text-sm sm:text-base ${
+                                                    className={cn(
+                                                        "font-mono font-medium",
+                                                        textStyles({ size: 'sm' }),
+                                                        "sm:text-base",
                                                         index === selectedIndex
                                                             ? "text-white"
-                                                            : "text-[#0c0e0a]"
-                                                    }`}
+                                                            : textStyles({ color: 'primary' })
+                                                    )}
                                                 >
                                                     {pkg.name}
                                                     {pkg.version && (
@@ -285,27 +289,29 @@ export default function PackageTagEditor({
                                                     )}
                                                 </div>
                                                 <div
-                                                    className={`text-xs truncate ${
+                                                    className={cn(
+                                                        textStyles({ size: 'xs' }),
+                                                        "truncate",
                                                         index === selectedIndex
                                                             ? "text-green-100"
-                                                            : "text-gray-500"
-                                                    }`}
+                                                            : textStyles({ color: 'muted' })
+                                                    )}
                                                 >
                                                     {pkg.description}
                                                 </div>
                                             </button>
                                         ))}
                                         {searchTime !== null && (
-                                            <div className="px-3 py-2 text-xs text-gray-500 bg-gray-50 border-t border-gray-100">
+                                            <div className={cn("px-3 py-2 bg-gray-50 border-t border-gray-100", textStyles({ size: 'xs', color: 'muted' }))}>
                                                 Search completed in {searchTime}ms
                                             </div>
                                         )}
                                     </>
                                 ) : newPackage.length >= 2 && databaseLoaded ? (
-                                    <div className="px-3 py-2 text-sm text-gray-500">
+                                    <div className={cn("px-3 py-2", textStyles({ size: 'sm', color: 'muted' }))}>
                                         No packages found matching &quot;{newPackage}&quot;
                                         {searchTime !== null && (
-                                            <span className="block text-xs mt-1">
+                                            <span className={cn("block mt-1", textStyles({ size: 'xs' }))}>
                                                 Search completed in {searchTime}ms
                                             </span>
                                         )}
@@ -319,14 +325,14 @@ export default function PackageTagEditor({
                 {/* Help text - always visible when not loading */}
                 {!isLoadingDatabase && (
                     <div className="mt-2 space-y-1">
-                        <p className="text-xs text-gray-500">
+                        <p className={textStyles({ size: 'xs', color: 'muted' })}>
                             {databaseLoaded
                                 ? "Use ↑/↓ to navigate, Tab to autocomplete, Enter to add"
                                 : "Database loading..."
                             }
                         </p>
                         {/* Mobile-specific help */}
-                        <p className="text-xs text-gray-400 sm:hidden">
+                        <p className={cn(textStyles({ size: 'xs', color: 'muted' }), "sm:hidden opacity-60")}>
                             Tap suggestions to add packages
                         </p>
                     </div>

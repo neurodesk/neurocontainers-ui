@@ -1,6 +1,7 @@
 import { FolderIcon } from "@heroicons/react/24/outline";
 import { registerGroupEditor } from "../group";
 import type { ComponentType } from "react";
+import { HELP_SECTION, textStyles, cn } from "@/lib/styles";
 
 registerGroupEditor("shellScript", {
     metadata: {
@@ -20,11 +21,11 @@ registerGroupEditor("shellScript", {
     },
     helpContent() {
         return (
-            <>
-                <h3 className="font-semibold text-[#0c0e0a] mb-2">
+            <div className={HELP_SECTION.container}>
+                <h3 className={HELP_SECTION.title}>
                     Shell Script Group
                 </h3>
-                <div className="text-sm text-gray-600 space-y-2">
+                <div className={HELP_SECTION.text}>
                     <p>
                         Creates an executable shell script and configures it for deployment. 
                         This group automatically handles script creation, permission setting, 
@@ -49,12 +50,12 @@ registerGroupEditor("shellScript", {
                         </ul>
                     </div>
                     <div className="bg-blue-50 border border-blue-200 rounded-md p-2">
-                        <p className="text-blue-800 text-xs font-medium">
+                        <p className={cn(textStyles({ size: 'xs', weight: 'medium' }), "text-blue-800")}>
                             💡 Tip: Use the advanced mode to manually edit individual directives if needed
                         </p>
                     </div>
                 </div>
-            </>
+            </div>
         )
     },
     arguments: [

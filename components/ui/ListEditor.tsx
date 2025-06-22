@@ -1,5 +1,6 @@
 import { TrashIcon, PlusIcon, Bars3Icon } from "@heroicons/react/24/outline";
 import { useState, ReactNode } from "react";
+import { iconStyles, textStyles, cn } from "@/lib/styles";
 
 interface ListEditorProps<T> {
     items: T[];
@@ -128,15 +129,15 @@ export default function ListEditor<T>({
         return (
             <div className={className}>
                 <div className="mb-4 p-4 bg-gray-50 rounded-md border border-gray-200">
-                    <p className="text-sm text-gray-600 text-center">
+                    <p className={cn(textStyles({ size: 'sm', color: 'muted' }), "text-center")}>
                         {emptyMessage}
                     </p>
                 </div>
                 <button
-                    className="flex items-center text-sm text-[#4f7b38] hover:text-[#6aa329]"
+                    className={cn("flex items-center", textStyles({ size: 'sm', color: 'secondary' }), "hover:text-[#6aa329]")}
                     onClick={addItem}
                 >
-                    <PlusIcon className="h-4 w-4 mr-1" />
+                    <PlusIcon className={cn(iconStyles('sm'), "mr-1")} />
                     {addButtonText}
                 </button>
             </div>
@@ -178,7 +179,7 @@ export default function ListEditor<T>({
                                     onDragEnd={handleDragEnd}
                                     onTouchStart={(e) => e.stopPropagation()}
                                 >
-                                    <Bars3Icon className="h-5 w-5 text-gray-400" />
+                                    <Bars3Icon className={cn(iconStyles('md'), "text-gray-400")} />
                                 </div>
                             )}
                             <div className={`flex-grow ${allowReorder ? "" : "rounded-l-md"}`}>
@@ -188,7 +189,7 @@ export default function ListEditor<T>({
                                 className="px-3 py-2 bg-[#f0f7e7] rounded-r-md text-gray-400 hover:text-[#6aa329] flex items-start"
                                 onClick={() => removeItem(index)}
                             >
-                                <TrashIcon className="h-5 w-5 mt-1" />
+                                <TrashIcon className={cn(iconStyles('md'), "mt-1")} />
                             </button>
                                 </div>
                                 
@@ -203,10 +204,10 @@ export default function ListEditor<T>({
             )}
 
             <button
-                className="flex items-center text-sm text-[#4f7b38] hover:text-[#6aa329]"
+                className={cn("flex items-center", textStyles({ size: 'sm', color: 'secondary' }), "hover:text-[#6aa329]")}
                 onClick={addItem}
             >
-                <PlusIcon className="h-4 w-4 mr-1" />
+                <PlusIcon className={cn(iconStyles('sm'), "mr-1")} />
                 {addButtonText}
             </button>
         </div>

@@ -1,9 +1,11 @@
 import { TrashIcon, DocumentDuplicateIcon } from "@heroicons/react/24/outline";
 import { useState, useEffect, useRef } from "react";
 import { DirectiveContainer, FormField, Input, ToggleButtonGroup, TagEditor } from "@/components/ui";
+import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
 import { Template } from "@/components/common";
 import { VariableComponent } from "@/components/directives/variable";
 import { registerDirective, DirectiveMetadata, getDirective } from "./registry";
+import { HELP_SECTION, BUTTONS, iconStyles, textStyles, cn } from "@/lib/styles";
 
 interface BaseNeuroDockerArgument {
     name: string;
@@ -52,7 +54,8 @@ export function createNeuroDockerTemplateComponent(templateInfo: NeuroDockerTemp
         headerColor,
         borderColor,
         iconColor,
-        icon
+        icon,
+        controllers,
     }: {
         template: Template,
         onChange: (template: Template) => void,
@@ -62,6 +65,7 @@ export function createNeuroDockerTemplateComponent(templateInfo: NeuroDockerTemp
         borderColor?: string;
         iconColor?: string;
         icon?: React.ComponentType<{ className?: string }>;
+        controllers: DirectiveControllers;
     }) {
         const [showAdvanced, setShowAdvanced] = useState(false);
 
@@ -89,7 +93,7 @@ export function createNeuroDockerTemplateComponent(templateInfo: NeuroDockerTemp
                     return (
                         <FormField key={arg.name} label={arg.name} description={arg.description}>
                             <select
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:border-transparent"
+                                className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:border-transparent"
                                 value={String(currentValue)}
                                 onChange={(e) => updateParam(arg.name, e.target.value)}
                             >
@@ -135,7 +139,7 @@ export function createNeuroDockerTemplateComponent(templateInfo: NeuroDockerTemp
                         <FormField key={arg.name} label={arg.name} description={arg.description}>
                             {arg.multiline ? (
                                 <textarea
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:border-transparent font-mono text-sm"
+                                    className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:border-transparent font-mono"
                                     rows={6}
                                     value={String(currentValue)}
                                     onChange={(e) => updateParam(arg.name, e.target.value)}
@@ -155,15 +159,15 @@ export function createNeuroDockerTemplateComponent(templateInfo: NeuroDockerTemp
         };
 
         const helpContent = (
-            <>
-                <h3 className="font-semibold text-[#0c0e0a] mb-2">
+            <div className={HELP_SECTION.container}>
+                <h3 className={HELP_SECTION.title}>
                     {templateInfo.metadata.label} Template
                 </h3>
-                <div className="text-sm text-gray-600 space-y-2">
+                <div className={HELP_SECTION.text}>
                     <p>{templateInfo.description}</p>
                     {templateInfo.alert && (
                         <div className="bg-yellow-50 border border-yellow-200 rounded-md p-2">
-                            <p className="text-yellow-800 text-xs font-medium">⚠️ {templateInfo.alert}</p>
+                            <p className={cn(textStyles({ size: 'xs', weight: 'medium' }), "text-yellow-800")}>⚠️ {templateInfo.alert}</p>
                         </div>
                     )}
                     {templateInfo.url && (
@@ -172,14 +176,14 @@ export function createNeuroDockerTemplateComponent(templateInfo: NeuroDockerTemp
                                 href={templateInfo.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-[#6aa329] hover:underline"
+                                className={cn(textStyles({ color: 'secondary' }), "hover:underline")}
                             >
                                 Documentation →
                             </a>
                         </p>
                     )}
                 </div>
-            </>
+            </div>
         );
 
         const templateArgs = templateInfo.binaries?.arguments || templateInfo.source?.arguments || [];
@@ -220,8 +224,8 @@ export function createNeuroDockerTemplateComponent(templateInfo: NeuroDockerTemp
         });
 
         return (
-            <DirectiveContainer 
-                title={templateInfo.metadata.label} 
+            <DirectiveContainer
+                title={templateInfo.metadata.label}
                 helpContent={helpContent}
                 condition={condition}
                 onConditionChange={onConditionChange}
@@ -229,6 +233,7 @@ export function createNeuroDockerTemplateComponent(templateInfo: NeuroDockerTemp
                 borderColor={borderColor}
                 iconColor={iconColor}
                 icon={icon}
+                controllers={controllers}
             >
                 <div className="space-y-4">
                     {basicArgs.map(renderArgument)}
@@ -237,10 +242,10 @@ export function createNeuroDockerTemplateComponent(templateInfo: NeuroDockerTemp
                 {advancedArgs.length > 0 && (
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                            <h4 className="font-medium text-sm text-gray-700">Advanced Settings</h4>
+                            <h4 className={textStyles({ size: 'sm', weight: 'medium', color: 'secondary' })}>Advanced Settings</h4>
                             <button
                                 onClick={() => setShowAdvanced(!showAdvanced)}
-                                className="text-xs text-[#6aa329] hover:underline"
+                                className={cn(BUTTONS.secondary, "text-xs")}
                             >
                                 {showAdvanced ? 'Hide' : 'Show'} Advanced
                             </button>
@@ -274,7 +279,8 @@ export default function TemplateDirectiveComponent({
     headerColor,
     borderColor,
     iconColor,
-    icon
+    icon,
+    controllers,
 }: {
     template: Template,
     onChange: (template: Template) => void,
@@ -284,6 +290,7 @@ export default function TemplateDirectiveComponent({
     borderColor?: string;
     iconColor?: string;
     icon?: React.ComponentType<{ className?: string }>;
+    controllers: DirectiveControllers;
 }) {
     const [newParamKey, setNewParamKey] = useState("");
 
@@ -291,15 +298,16 @@ export default function TemplateDirectiveComponent({
     const specialEditor = getDirective(template.name);
     if (specialEditor && specialEditor.component !== TemplateDirectiveComponent) {
         const SpecialComponent = specialEditor.component;
-        return <SpecialComponent 
-            template={template} 
-            onChange={onChange} 
+        return <SpecialComponent
+            template={template}
+            onChange={onChange}
             condition={condition}
             onConditionChange={onConditionChange}
             headerColor={headerColor}
             borderColor={borderColor}
             iconColor={iconColor}
             icon={icon}
+            controllers={controllers}
         />;
     }
 
@@ -329,11 +337,11 @@ export default function TemplateDirectiveComponent({
     };
 
     const helpContent = (
-        <>
-            <h3 className="font-semibold text-[#0c0e0a] mb-2">
+        <div className={HELP_SECTION.container}>
+            <h3 className={HELP_SECTION.title}>
                 TEMPLATE Directive
             </h3>
-            <div className="text-sm text-gray-600 space-y-2">
+            <div className={HELP_SECTION.text}>
                 <p>
                     The TEMPLATE directive defines reusable templates with configurable parameters.
                 </p>
@@ -347,19 +355,19 @@ export default function TemplateDirectiveComponent({
                 </div>
                 <div>
                     <strong>Examples:</strong>
-                    <div className="bg-gray-100 p-2 rounded text-xs mt-1 space-y-1">
+                    <div className={HELP_SECTION.code}>
                         <div><strong>version:</strong> &quot;1.0.0&quot;</div>
                         <div><strong>ports:</strong> [8080, 3000]</div>
                         <div><strong>config:</strong> {"{"}&quot;debug&quot;: true{"}"}</div>
                     </div>
                 </div>
             </div>
-        </>
+        </div>
     );
 
     return (
-        <DirectiveContainer 
-            title={`Template: ${template.name}`} 
+        <DirectiveContainer
+            title={`Template: ${template.name}`}
             helpContent={helpContent}
             condition={condition}
             onConditionChange={onConditionChange}
@@ -367,6 +375,7 @@ export default function TemplateDirectiveComponent({
             borderColor={borderColor}
             iconColor={iconColor}
             icon={icon}
+            controllers={controllers}
         >
             <FormField label="Template Name">
                 <Input
@@ -386,11 +395,11 @@ export default function TemplateDirectiveComponent({
                             <div className="flex justify-between items-center">
                                 <span>{key}</span>
                                 <button
-                                    className="text-gray-400 hover:text-[#6aa329] ml-2"
+                                    className={cn(BUTTONS.icon, "ml-2")}
                                     onClick={() => removeParam(key)}
                                     title={`Remove parameter ${key}`}
                                 >
-                                    <TrashIcon className="h-4 w-4" />
+                                    <TrashIcon className={iconStyles('md')} />
                                 </button>
                             </div>
                         }
@@ -414,7 +423,7 @@ export default function TemplateDirectiveComponent({
                         onKeyDown={(e) => e.key === 'Enter' && addParam()}
                     />
                     <button
-                        className="px-4 py-2 bg-[#6aa329] text-white rounded-r-md hover:bg-[#4f7b38] disabled:opacity-50 disabled:cursor-not-allowed"
+                        className={cn(BUTTONS.primary, "rounded-r-md rounded-l-none")}
                         onClick={addParam}
                         disabled={!newParamKey.trim() || newParamKey === 'name'}
                     >

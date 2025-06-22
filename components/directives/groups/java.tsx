@@ -2,6 +2,7 @@ import { CodeBracketIcon } from "@heroicons/react/24/outline";
 import { registerGroupEditor } from "../group";
 import type { ComponentType } from "react";
 import type { Directive } from "@/components/common";
+import { HELP_SECTION, textStyles, cn } from "@/lib/styles";
 
 
 registerGroupEditor("java", {
@@ -22,11 +23,11 @@ registerGroupEditor("java", {
     },
     helpContent() {
         return (
-            <>
-                <h3 className="font-semibold text-[#0c0e0a] mb-2">
+            <div className={HELP_SECTION.container}>
+                <h3 className={HELP_SECTION.title}>
                     Java Installation
                 </h3>
-                <div className="text-sm text-gray-600 space-y-2">
+                <div className={HELP_SECTION.text}>
                     <p>
                         Installs Java Development Kit (JDK) or Java Runtime Environment (JRE) 
                         in your container. This group handles package installation and environment 
@@ -49,12 +50,12 @@ registerGroupEditor("java", {
                         </ul>
                     </div>
                     <div className="bg-blue-50 border border-blue-200 rounded-md p-2">
-                        <p className="text-blue-800 text-xs font-medium">
+                        <p className={cn(textStyles({ size: 'xs', weight: 'medium' }), "text-blue-800")}>
                             💡 Tip: Use OpenJDK for open-source projects. Version 17 or 21 recommended for modern applications.
                         </p>
                     </div>
                 </div>
-            </>
+            </div>
         )
     },
     arguments: [

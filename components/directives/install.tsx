@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { loadPackageDatabase } from "@/lib/packages";
 import { DirectiveContainer, FormField, Select } from "@/components/ui";
+import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
 import PackageTagEditor from "@/components/ui/PackageTagEditor";
 import { CommandLineIcon } from "@heroicons/react/24/outline";
 import { registerDirective, DirectiveMetadata } from "./registry";
+import { HELP_SECTION } from "@/lib/styles";
 
 type PackageManager = "system";
 
@@ -28,6 +30,7 @@ export default function InstallDirectiveComponent({
     borderColor,
     iconColor,
     icon,
+    controllers,
 }: {
     install: string | string[];
     baseImage: string;
@@ -38,6 +41,7 @@ export default function InstallDirectiveComponent({
     borderColor?: string;
     iconColor?: string;
     icon?: React.ComponentType<{ className?: string }>;
+    controllers: DirectiveControllers;
 }) {
     const [packages, setPackages] = useState<string[]>([]);
     const [packageManager, setPackageManager] = useState<PackageManager>("system");
@@ -83,31 +87,31 @@ export default function InstallDirectiveComponent({
     };
 
     const helpContent = (
-        <>
-            <h3 className="font-semibold text-[#0c0e0a] mb-2">
+        <div className={HELP_SECTION.container}>
+            <h3 className={HELP_SECTION.title}>
                 INSTALL Directive
             </h3>
-            <div className="text-sm text-gray-600 space-y-2">
+            <div className={HELP_SECTION.text}>
                 <p>
                     Search from {databaseLoaded ? packageDatabase.length.toLocaleString() : '80,000+'} Ubuntu 24.04 packages.
                 </p>
                 <div>
                     <strong>Keyboard Shortcuts:</strong>
                     <ul className="list-disc list-inside mt-1 space-y-1 text-xs">
-                        <li><kbd className="bg-gray-100 px-1 rounded">Enter</kbd> - Add package</li>
-                        <li><kbd className="bg-gray-100 px-1 rounded">↑/↓</kbd> - Navigate suggestions</li>
-                        <li><kbd className="bg-gray-100 px-1 rounded">Tab</kbd> - Autocomplete</li>
-                        <li><kbd className="bg-gray-100 px-1 rounded">Backspace</kbd> - Remove last (when empty)</li>
-                        <li><kbd className="bg-gray-100 px-1 rounded">Esc</kbd> - Close suggestions</li>
+                        <li><kbd className={HELP_SECTION.code}>Enter</kbd> - Add package</li>
+                        <li><kbd className={HELP_SECTION.code}>↑/↓</kbd> - Navigate suggestions</li>
+                        <li><kbd className={HELP_SECTION.code}>Tab</kbd> - Autocomplete</li>
+                        <li><kbd className={HELP_SECTION.code}>Backspace</kbd> - Remove last (when empty)</li>
+                        <li><kbd className={HELP_SECTION.code}>Esc</kbd> - Close suggestions</li>
                     </ul>
                 </div>
             </div>
-        </>
+        </div>
     );
 
     return (
-        <DirectiveContainer 
-            title="Install" 
+        <DirectiveContainer
+            title="Install"
             helpContent={helpContent}
             condition={condition}
             onConditionChange={onConditionChange}
@@ -115,6 +119,7 @@ export default function InstallDirectiveComponent({
             borderColor={borderColor}
             iconColor={iconColor}
             icon={icon}
+            controllers={controllers}
         >
             <FormField label="Package Manager">
                 <Select

@@ -1,3 +1,5 @@
+import { textStyles, cn } from "@/lib/styles";
+
 interface ToggleOption {
     value: string;
     label: string;
@@ -23,11 +25,13 @@ export default function ToggleButtonGroup({
                     key={option.value}
                     type="button"
                     onClick={() => onChange(option.value)}
-                    className={`px-4 py-2 text-sm rounded-md transition-colors ${
+                    className={cn(
+                        "px-4 py-2 rounded-md transition-colors",
+                        textStyles({ size: 'sm' }),
                         value === option.value
                             ? "bg-white shadow-sm text-[#4f7b38] font-medium"
                             : "text-gray-600 hover:text-[#4f7b38]"
-                    }`}
+                    )}
                 >
                     {option.label}
                 </button>

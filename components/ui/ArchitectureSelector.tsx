@@ -1,4 +1,5 @@
 import { Architecture } from "@/components/common";
+import { textStyles, cn } from "@/lib/styles";
 
 interface ArchitectureSelectorProps {
     selectedArchitectures: Architecture[];
@@ -41,13 +42,13 @@ export default function ArchitectureSelector({
                     />
                     <div className="ml-3">
                         <div className="flex items-center gap-2">
-                            <span className="font-medium text-[#0c0e0a]">x86_64</span>
-                            <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                            <span className={textStyles({ weight: 'medium', color: 'primary' })}>x86_64</span>
+                            <span className={cn(textStyles({ size: 'xs' }), "px-2 py-1 bg-blue-100 text-blue-800 rounded-full")}>
                                 Most Common
                             </span>
                         </div>
-                        <p className="text-sm text-gray-600 mt-1">Intel/AMD processors</p>
-                        <p className="text-xs text-gray-500">Desktop, laptop, most cloud servers</p>
+                        <p className={cn(textStyles({ size: 'sm', color: 'muted' }), "mt-1")}>Intel/AMD processors</p>
+                        <p className={textStyles({ size: 'xs', color: 'muted' })}>Desktop, laptop, most cloud servers</p>
                     </div>
                 </label>
 
@@ -68,13 +69,13 @@ export default function ArchitectureSelector({
                     />
                     <div className="ml-3">
                         <div className="flex items-center gap-2">
-                            <span className="font-medium text-[#0c0e0a]">aarch64</span>
-                            <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
+                            <span className={textStyles({ weight: 'medium', color: 'primary' })}>aarch64</span>
+                            <span className={cn(textStyles({ size: 'xs' }), "px-2 py-1 bg-green-100 text-green-800 rounded-full")}>
                                 Growing
                             </span>
                         </div>
-                        <p className="text-sm text-gray-600 mt-1">ARM 64-bit processors</p>
-                        <p className="text-xs text-gray-500">
+                        <p className={cn(textStyles({ size: 'sm', color: 'muted' }), "mt-1")}>ARM 64-bit processors</p>
+                        <p className={textStyles({ size: 'xs', color: 'muted' })}>
                             Apple Silicon, AWS Graviton, Raspberry Pi
                         </p>
                     </div>
@@ -82,8 +83,8 @@ export default function ArchitectureSelector({
             </div>
 
             {showValidation && error && (
-                <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-800">
-                    <p className="font-medium">No architectures selected</p>
+                <div className={cn("mt-3 p-3 bg-red-50 border border-red-200 rounded-md", textStyles({ size: 'sm' }), "text-red-800")}>
+                    <p className={textStyles({ weight: 'medium' })}>No architectures selected</p>
                     <p>Please select at least one target architecture for your container.</p>
                 </div>
             )}

@@ -1,14 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import {
     TrashIcon,
-    ChevronUpIcon,
-    ChevronDownIcon,
-    Bars3Icon,
     InformationCircleIcon,
 } from "@heroicons/react/24/outline";
 import { Directive } from "@/components/common";
 import DirectiveComponent from "@/components/directives/factory";
 import AddDirectiveButton from "@/components/add";
+import { iconStyles, textStyles, buttonStyles, cn, HELP_SECTION } from "@/lib/styles";
 
 interface DirectivesListProps {
     directives: Directive[];
@@ -41,25 +39,25 @@ function DirectiveDeleteModal({
                 <div className="p-6">
                     <div className="flex items-center gap-3 mb-4">
                         <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                            <TrashIcon className="h-6 w-6 text-red-600" />
+                            <TrashIcon className={cn(iconStyles('lg'), "text-red-600")} />
                         </div>
                         <div>
-                            <h3 className="text-lg font-medium text-gray-900">Delete Directive</h3>
-                            <p className="text-sm text-gray-500">Step {directiveIndex + 1}</p>
+                            <h3 className={textStyles({ size: 'lg', weight: 'medium' })}>Delete Directive</h3>
+                            <p className={textStyles({ size: 'sm', color: 'muted' })}>Step {directiveIndex + 1}</p>
                         </div>
                     </div>
-                    <p className="text-gray-700 mb-6">
+                    <p className={cn(textStyles({ color: 'muted' }), "mb-6")}>
                         Are you sure you want to delete this directive? This action cannot be undone.
                     </p>
                     <div className="flex gap-3 justify-end">
                         <button
-                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                            className={buttonStyles('secondary', 'md')}
                             onClick={onCancel}
                         >
                             Cancel
                         </button>
                         <button
-                            className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
+                            className={buttonStyles('danger', 'md')}
                             onClick={onConfirm}
                         >
                             Delete
@@ -170,8 +168,8 @@ export default function DirectivesList({
 
     const directivesHelpContent = (
         <>
-            <h4 className="font-semibold text-[#0c0e0a] mb-2">Directives</h4>
-            <div className="text-sm text-gray-600 space-y-2">
+            <h4 className={HELP_SECTION.title}>Directives</h4>
+            <div className={cn(HELP_SECTION.text, "space-y-2")}>
                 <p>
                     Directives define the software and configurations to install in your container.
                 </p>
@@ -194,22 +192,27 @@ export default function DirectivesList({
     return (
         <div className="mb-6">
             <div className="flex items-center gap-2 mb-4">
-                <h3 className="text-lg font-medium text-[#0c0e0a]">Directives</h3>
-                <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                <h3 className={textStyles({ size: 'lg', weight: 'medium', color: 'primary' })}>Directives</h3>
+                <div className={cn(textStyles({ size: 'xs', color: 'muted' }), "bg-gray-100 px-2 py-1 rounded")}>
                     {directives.length} directive{directives.length !== 1 ? "s" : ""}
                 </div>
                 <button
                     type="button"
-                    className={`text-[#4f7b38] hover:text-[#6aa329] p-1 transition-colors ${showDirectivesHelp ? 'text-[#6aa329]' : ''}`}
+                    className={cn(
+                        "p-1 transition-colors",
+                        iconStyles('sm', 'primary'),
+                        "hover:text-[#6aa329]",
+                        showDirectivesHelp && "text-[#6aa329]"
+                    )}
                     onClick={() => setShowDirectivesHelp(!showDirectivesHelp)}
                     title={showDirectivesHelp ? "Hide documentation" : "Show documentation"}
                 >
-                    <InformationCircleIcon className="h-4 w-4" />
+                    <InformationCircleIcon className={iconStyles('sm')} />
                 </button>
             </div>
 
             {showDirectivesHelp && (
-                <div className="mb-4 px-4 py-3 bg-[#fafcf7] border border-[#e6f1d6] rounded-md">
+                <div className={cn(HELP_SECTION.container, "mb-4")}>
                     {directivesHelpContent}
                 </div>
             )}
@@ -237,7 +240,7 @@ export default function DirectivesList({
                                 {/* Directive */}
                                 <div
                                     ref={index === directives.length - 1 ? lastDirectiveRef : null}
-                                    className={`flex flex-col sm:flex-row gap-3 transition-all duration-200 ${
+                                    className={`transition-all duration-200 ${
                                         draggedIndex === index ? "opacity-50" : ""
                                     } ${
                                         dragOverIndex === index &&
@@ -245,116 +248,27 @@ export default function DirectivesList({
                                             ? "border-t-2 border-[#6aa329] pt-2"
                                             : ""
                                     }`}
-                                    draggable
-                                    onDragStart={(e) => handleDragStart(e, index)}
-                                    onDragOver={(e) => handleDragOver(e, index)}
-                                    onDragLeave={handleDragLeave}
-                                    onDrop={(e) => handleDrop(e, index)}
-                                    onDragEnd={handleDragEnd}
                                 >
-                                    {/* Mobile: Horizontal Controls */}
-                                    <div className="flex sm:hidden items-center justify-between bg-gray-50 p-2 rounded-md border">
-                                        <div className="flex items-center gap-2">
-                                            <button
-                                                className="text-gray-400 hover:text-[#6aa329] cursor-grab active:cursor-grabbing"
-                                                onMouseDown={(e) => e.stopPropagation()}
-                                            >
-                                                <Bars3Icon className="h-4 w-4" />
-                                            </button>
-                                            <span className="text-xs font-medium text-gray-600">
-                                                Step {index + 1}
-                                            </span>
-                                            <div className="flex gap-1">
-                                                <button
-                                                    className={`p-1.5 rounded ${
-                                                        index === 0
-                                                            ? "text-gray-300 cursor-not-allowed"
-                                                            : "text-gray-600 hover:text-[#6aa329] hover:bg-white"
-                                                    } transition-colors`}
-                                                    onClick={() => onMoveDirective(index, "up")}
-                                                    disabled={index === 0}
-                                                    title="Move up"
-                                                >
-                                                    <ChevronUpIcon className="h-4 w-4" />
-                                                </button>
-                                                <button
-                                                    className={`p-1.5 rounded ${
-                                                        index === directives.length - 1
-                                                            ? "text-gray-300 cursor-not-allowed"
-                                                            : "text-gray-600 hover:text-[#6aa329] hover:bg-white"
-                                                    } transition-colors`}
-                                                    onClick={() => onMoveDirective(index, "down")}
-                                                    disabled={index === directives.length - 1}
-                                                    title="Move down"
-                                                >
-                                                    <ChevronDownIcon className="h-4 w-4" />
-                                                </button>
-                                                <button
-                                                    className="text-red-400 hover:text-red-600 transition-colors p-1.5 rounded hover:bg-white"
-                                                    onClick={() => handleDeleteClick(index)}
-                                                    title="Delete directive"
-                                                >
-                                                    <TrashIcon className="h-4 w-4" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Desktop: Vertical Controls */}
-                                    <div className="hidden sm:flex flex-col items-center pt-3 flex-shrink-0">
-                                        <div className="flex flex-col bg-white border border-gray-300 rounded-md shadow-sm">
-                                            <button
-                                                className="p-2 border-b border-gray-200 text-gray-400 hover:text-[#6aa329] cursor-grab active:cursor-grabbing transition-colors"
-                                                onMouseDown={(e) => e.stopPropagation()}
-                                                title="Drag to reorder"
-                                            >
-                                                <Bars3Icon className="h-5 w-5" />
-                                            </button>
-                                            <button
-                                                className={`p-2 border-b border-gray-200 ${
-                                                    index === 0
-                                                        ? "text-gray-300 cursor-not-allowed"
-                                                        : "text-gray-600 hover:text-[#6aa329] hover:bg-[#f0f7e7]"
-                                                } transition-colors`}
-                                                onClick={() => onMoveDirective(index, "up")}
-                                                disabled={index === 0}
-                                                title="Move up"
-                                            >
-                                                <ChevronUpIcon className="h-5 w-5" />
-                                            </button>
-                                            <button
-                                                className={`p-2 border-b border-gray-200 ${
-                                                    index === directives.length - 1
-                                                        ? "text-gray-300 cursor-not-allowed"
-                                                        : "text-gray-600 hover:text-[#6aa329] hover:bg-[#f0f7e7]"
-                                                } transition-colors`}
-                                                onClick={() => onMoveDirective(index, "down")}
-                                                disabled={index === directives.length - 1}
-                                                title="Move down"
-                                            >
-                                                <ChevronDownIcon className="h-5 w-5" />
-                                            </button>
-                                            <button
-                                                className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                                                onClick={() => handleDeleteClick(index)}
-                                                title="Delete directive"
-                                            >
-                                                <TrashIcon className="h-5 w-5" />
-                                            </button>
-                                        </div>
-                                        <div className="mt-2 text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                                            {index + 1}
-                                        </div>
-                                    </div>
-
-                                    {/* Directive Content */}
-                                    <div className="flex-1 min-w-0">
+                                    {/* Directive Content with Integrated Controls */}
                                         <DirectiveComponent
                                             directive={directive}
                                             baseImage={baseImage}
                                             onChange={(updated) => onUpdateDirective(index, updated)}
+                                            controllers={{
+                                                onMoveUp: () => onMoveDirective(index, "up"),
+                                                onMoveDown: () => onMoveDirective(index, "down"),
+                                                onDelete: () => handleDeleteClick(index),
+                                                canMoveUp: index !== 0,
+                                                canMoveDown: index !== directives.length - 1,
+                                                stepNumber: index + 1,
+                                                draggable: true,
+                                                onDragStart: (e) => handleDragStart(e, index),
+                                                onDragOver: (e) => handleDragOver(e, index),
+                                                onDragLeave: handleDragLeave,
+                                                onDrop: (e) => handleDrop(e, index),
+                                                onDragEnd: handleDragEnd,
+                                            }}
                                         />
-                                    </div>
                                 </div>
 
                                 {/* Add button after this directive */}

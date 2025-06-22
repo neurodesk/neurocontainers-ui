@@ -1,8 +1,10 @@
 import { DirectiveContainer, FormField, Input, Textarea, ListEditor } from "@/components/ui";
+import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
 import { Variable } from "@/components/common";
 import { TrashIcon, CubeTransparentIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import { registerDirective, DirectiveMetadata } from "./registry";
+import { HELP_SECTION, BUTTONS, cn, iconStyles } from "@/lib/styles";
 
 export function VariableComponent({ variable, onChange }: { variable: Variable, onChange?: (variable: Variable) => void }) {
     if (typeof variable === 'string') {
@@ -16,7 +18,7 @@ export function VariableComponent({ variable, onChange }: { variable: Variable, 
         );
     } else if (Array.isArray(variable)) {
         const stringArray = variable.map(item => JSON.stringify(item));
-        
+
         const handleArrayChange = (newStringArray: string[]) => {
             if (onChange) {
                 try {
@@ -61,8 +63,7 @@ export function VariableComponent({ variable, onChange }: { variable: Variable, 
                     }
                 }}
                 placeholder="Enter JSON object"
-                className="min-h-[80px]"
-                monospace
+                className="w-full min-h-[80px] px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329] resize-none font-mono text-sm"
             />
         );
     }
@@ -76,7 +77,8 @@ export default function VariableDirectiveComponent({
     headerColor,
     borderColor,
     iconColor,
-    icon
+    icon,
+    controllers,
 }: {
     variables: { [key: string]: Variable },
     onChange: (variables: { [key: string]: Variable }) => void,
@@ -86,6 +88,7 @@ export default function VariableDirectiveComponent({
     borderColor?: string;
     iconColor?: string;
     icon?: React.ComponentType<{ className?: string }>;
+    controllers: DirectiveControllers;
 }) {
     const [newVarKey, setNewVarKey] = useState("");
 
@@ -108,10 +111,10 @@ export default function VariableDirectiveComponent({
 
     const helpContent = (
         <>
-            <h3 className="font-semibold text-[#0c0e0a] mb-2">
+            <h3 className={HELP_SECTION.title}>
                 VARIABLE Directive
             </h3>
-            <div className="text-sm text-gray-600 space-y-2">
+            <div className={cn(HELP_SECTION.text, "space-y-2")}>
                 <p>
                     The VARIABLE directive defines variables that can be used throughout the container build.
                 </p>
@@ -125,7 +128,7 @@ export default function VariableDirectiveComponent({
                 </div>
                 <div>
                     <strong>Examples:</strong>
-                    <div className="bg-gray-100 p-2 rounded text-xs mt-1 space-y-1">
+                    <div className={HELP_SECTION.code}>
                         <div><strong>String:</strong> &quot;myvalue&quot; or hello_world</div>
                         <div><strong>Array:</strong> [&quot;item1&quot;, &quot;item2&quot;, &quot;item3&quot;]</div>
                         <div><strong>Object:</strong> {"{"}&quot;key&quot;: &quot;value&quot;, &quot;number&quot;: 42{"}"}</div>
@@ -136,8 +139,8 @@ export default function VariableDirectiveComponent({
     );
 
     return (
-        <DirectiveContainer 
-            title="Variables" 
+        <DirectiveContainer
+            title="Variables"
             helpContent={helpContent}
             condition={condition}
             onConditionChange={onConditionChange}
@@ -145,19 +148,20 @@ export default function VariableDirectiveComponent({
             borderColor={borderColor}
             iconColor={iconColor}
             icon={icon}
+            controllers={controllers}
         >
             {Object.entries(variables).map(([key, value]) => (
-                <FormField 
+                <FormField
                     key={key}
                     label={
                         <div className="flex justify-between items-center">
                             <span>{key}</span>
                             <button
-                                className="text-gray-400 hover:text-[#6aa329] ml-2"
+                                className={cn(BUTTONS.icon, "ml-2")}
                                 onClick={() => removeVariable(key)}
                                 title={`Remove variable ${key}`}
                             >
-                                <TrashIcon className="h-4 w-4" />
+                                <TrashIcon className={iconStyles('sm')} />
                             </button>
                         </div>
                     }
@@ -173,14 +177,14 @@ export default function VariableDirectiveComponent({
             <FormField label="Add New Variable">
                 <div className="flex">
                     <Input
-                        className="flex-grow rounded-r-none"
+                        className="rounded-r-none"
                         placeholder="Variable name"
                         value={newVarKey}
                         onChange={(e) => setNewVarKey(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && addVariable()}
                     />
                     <button
-                        className="px-3 py-1.5 text-sm bg-[#6aa329] text-white rounded-r-md hover:bg-[#4f7b38] disabled:opacity-50 disabled:cursor-not-allowed"
+                        className={cn(BUTTONS.primary, "rounded-l-none rounded-r-md")}
                         onClick={addVariable}
                         disabled={!newVarKey.trim()}
                     >

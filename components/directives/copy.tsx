@@ -1,6 +1,8 @@
 import { DirectiveContainer, ListEditor, Input } from "@/components/ui";
+import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
 import { DocumentIcon } from "@heroicons/react/24/outline";
 import { registerDirective, DirectiveMetadata } from "./registry";
+import { HELP_SECTION } from "@/lib/styles";
 
 export default function CopyDirectiveComponent({
     copy,
@@ -10,7 +12,8 @@ export default function CopyDirectiveComponent({
     headerColor,
     borderColor,
     iconColor,
-    icon
+    icon,
+    controllers,
 }: {
     copy: string[] | string,
     onChange: (copy: string[]) => void,
@@ -20,33 +23,34 @@ export default function CopyDirectiveComponent({
     borderColor?: string;
     iconColor?: string;
     icon?: React.ComponentType<{ className?: string }>;
+    controllers: DirectiveControllers;
 }) {
     const copyAsArray = Array.isArray(copy) ? copy : copy.split(" ");
 
     const helpContent = (
-        <>
-            <h3 className="font-semibold text-[#0c0e0a] mb-2">
+        <div className={HELP_SECTION.container}>
+            <h3 className={HELP_SECTION.title}>
                 COPY Directive
             </h3>
-            <div className="text-sm text-gray-600 space-y-2">
+            <div className={HELP_SECTION.text}>
                 <p>
                     The COPY instruction copies new files or directories from the source and adds them to the filesystem of the container.
                 </p>
                 <div>
                     <strong>Format:</strong>
                     <ul className="list-disc list-inside mt-1 space-y-1">
-                        <li><code>source:destination</code> - Copy from source to destination</li>
-                        <li><code>file.txt:/app/</code> - Copy file to directory</li>
-                        <li><code>./src:/app/src</code> - Copy directory contents</li>
+                        <li><code className={HELP_SECTION.code}>source:destination</code> - Copy from source to destination</li>
+                        <li><code className={HELP_SECTION.code}>file.txt:/app/</code> - Copy file to directory</li>
+                        <li><code className={HELP_SECTION.code}>./src:/app/src</code> - Copy directory contents</li>
                     </ul>
                 </div>
             </div>
-        </>
+        </div>
     );
 
     return (
-        <DirectiveContainer 
-            title="Copy" 
+        <DirectiveContainer
+            title="Copy"
             helpContent={helpContent}
             condition={condition}
             onConditionChange={onConditionChange}
@@ -54,6 +58,7 @@ export default function CopyDirectiveComponent({
             borderColor={borderColor}
             iconColor={iconColor}
             icon={icon}
+            controllers={controllers}
         >
             <ListEditor
                 items={copyAsArray}

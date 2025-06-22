@@ -1,7 +1,9 @@
 import { DirectiveContainer, FormField, Input, Textarea } from "@/components/ui";
+import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
 import { TestInfo, ScriptTest, BuiltinTest } from "@/components/common";
 import { BeakerIcon } from "@heroicons/react/24/outline";
 import { registerDirective, DirectiveMetadata } from "./registry";
+import { HELP_SECTION, cn } from "@/lib/styles";
 
 export default function TestDirectiveComponent({
     test,
@@ -11,7 +13,8 @@ export default function TestDirectiveComponent({
     headerColor,
     borderColor,
     iconColor,
-    icon
+    icon,
+    controllers,
 }: {
     test: TestInfo,
     onChange: (test: TestInfo) => void,
@@ -21,6 +24,7 @@ export default function TestDirectiveComponent({
     borderColor?: string;
     iconColor?: string;
     icon?: React.ComponentType<{ className?: string }>;
+    controllers: DirectiveControllers;
 }) {
     const isBuiltin = 'builtin' in test;
 
@@ -36,10 +40,10 @@ export default function TestDirectiveComponent({
 
     const helpContent = (
         <>
-            <h3 className="font-semibold text-[#0c0e0a] mb-2">
+            <h3 className={HELP_SECTION.title}>
                 TEST Directive
             </h3>
-            <div className="text-sm text-gray-600 space-y-2">
+            <div className={cn(HELP_SECTION.text, "space-y-2")}>
                 <p>
                     The TEST directive defines test scripts to validate the container functionality.
                 </p>
@@ -52,7 +56,7 @@ export default function TestDirectiveComponent({
                 </div>
                 <div>
                     <strong>Examples:</strong>
-                    <div className="bg-gray-100 p-2 rounded text-xs mt-1 space-y-1">
+                    <div className={HELP_SECTION.code}>
                         <div><strong>Script:</strong> echo &quot;Hello World&quot; && exit 0</div>
                         <div><strong>Builtin:</strong> System-provided test scripts</div>
                     </div>
@@ -65,8 +69,8 @@ export default function TestDirectiveComponent({
     const title = `Test: ${test.name} (${testTypeLabel})`;
 
     return (
-        <DirectiveContainer 
-            title={title} 
+        <DirectiveContainer
+            title={title}
             helpContent={helpContent}
             condition={condition}
             onConditionChange={onConditionChange}
@@ -74,6 +78,7 @@ export default function TestDirectiveComponent({
             borderColor={borderColor}
             iconColor={iconColor}
             icon={icon}
+            controllers={controllers}
         >
             <FormField label="Test Name">
                 <Input
@@ -83,12 +88,12 @@ export default function TestDirectiveComponent({
                 />
             </FormField>
 
-            <FormField 
+            <FormField
                 label={isBuiltin ? 'Builtin Test Script' : 'Test Script'}
                 description={isBuiltin ? 'This test uses a predefined builtin script' : 'Write your custom test script'}
             >
                 {isBuiltin ? (
-                    <div className="px-3 py-2 border border-gray-200 bg-gray-50 rounded-md text-gray-500 font-mono">
+                    <div className="px-3 py-1.5 border border-gray-200 bg-gray-50 rounded-md text-gray-500 font-mono text-sm">
                         {(test as BuiltinTest).builtin}
                     </div>
                 ) : (
@@ -96,7 +101,7 @@ export default function TestDirectiveComponent({
                         value={(test as ScriptTest).script}
                         onChange={(e) => updateScript(e.target.value)}
                         placeholder="Enter test script commands..."
-                        className="min-h-[200px]"
+                        className="h-64"
                         monospace
                     />
                 )}

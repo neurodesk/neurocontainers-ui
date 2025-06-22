@@ -1,6 +1,7 @@
 import { CATEGORIES } from "@/components/common";
 import { useState } from "react";
 import { ChevronDownIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { presets, iconStyles, textStyles, cn } from "@/lib/styles";
 
 export function CategorySelector({
     selectedCategories,
@@ -33,20 +34,25 @@ export function CategorySelector({
                 <button
                     type="button"
                     onClick={() => setIsOpen(!isOpen)}
-                    className={`w-full px-3 py-2 text-left bg-white border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:border-[#6aa329] ${
-                        showValidation && error ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={cn(
+                        presets.input,
+                        "text-left bg-white shadow-sm",
+                        showValidation && error ? 'border-red-500' : ''
+                    )}
                 >
                     <div className="flex items-center justify-between">
                         <div className="flex-1">
                             {selectedCategories.length === 0 ? (
-                                <span className="text-gray-500">Select categories</span>
+                                <span className={textStyles({ color: 'muted' })}>Select categories</span>
                             ) : (
                                 <div className="flex flex-wrap gap-1">
                                     {selectedCategories.map(category => (
                                         <span
                                             key={category}
-                                            className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-[#4f7b38] bg-[#f0f8e8] rounded-full"
+                                            className={cn(
+                                                "inline-flex items-center gap-1 px-2 py-1 rounded-full bg-[#f0f8e8]",
+                                                textStyles({ size: 'xs', weight: 'medium', color: 'secondary' })
+                                            )}
                                         >
                                             {category}
                                             <button
@@ -64,7 +70,7 @@ export function CategorySelector({
                                 </div>
                             )}
                         </div>
-                        <ChevronDownIcon className={`h-5 w-5 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                        <ChevronDownIcon className={cn(iconStyles('md'), "text-gray-400 transition-transform", isOpen && "rotate-180")} />
                     </div>
                 </button>
 
@@ -82,8 +88,8 @@ export function CategorySelector({
                                     className="mt-0.5 h-4 w-4 text-[#6aa329] border-gray-300 rounded focus:ring-[#6aa329]"
                                 />
                                 <div className="flex-1">
-                                    <div className="font-medium text-sm">{category}</div>
-                                    <div className="text-xs text-gray-500">{description}</div>
+                                    <div className={textStyles({ size: 'sm', weight: 'medium' })}>{category}</div>
+                                    <div className={textStyles({ size: 'xs', color: 'muted' })}>{description}</div>
                                 </div>
                             </label>
                         ))}
@@ -91,7 +97,7 @@ export function CategorySelector({
                 )}
             </div>
             {showValidation && error && (
-                <p className="mt-1 text-sm text-red-600">{error}</p>
+                <p className={cn("mt-1 text-red-600", textStyles({ size: 'sm' }))}>{error}</p>
             )}
         </div>
     );

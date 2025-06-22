@@ -34,6 +34,7 @@ import GitHubModal from "@/components/githubExport";
 import LocalFilesystem from "@/components/localFilesystem";
 import { useGitHubFiles } from '@/lib/useGithub';
 import { filesystemService } from "@/lib/filesystem";
+import { CARDS, BUTTONS, iconStyles, textStyles, inputStyles, cn } from "@/lib/styles";
 
 enum Section {
     BasicInfo = "basic-info",
@@ -281,19 +282,19 @@ function LocalContainersList({
     };
 
     return (
-        <div className="bg-white rounded-xl border border-[#e6f1d6] h-fit">
+        <div className={cn(CARDS.elevated, "h-fit")}>
             {/* Header */}
             <div className="border-b border-[#e6f1d6] p-4">
                 <div className="flex items-center space-x-2 mb-2">
-                    <ComputerDesktopIcon className="h-5 w-5 text-[#4f7b38]" />
-                    <h2 className="text-lg font-semibold text-[#0c0e0a]">
+                    <ComputerDesktopIcon className={iconStyles('md', 'secondary')} />
+                    <h2 className={textStyles({ size: 'lg', weight: 'semibold', color: 'primary' })}>
                         Recent Containers
                     </h2>
-                    <div className="text-xs bg-[#e6f1d6] text-[#4f7b38] px-2 py-1 rounded-full">
+                    <div className={cn("px-2 py-1 rounded-full", textStyles({ size: 'xs' }), "bg-[#e6f1d6] text-[#4f7b38]")}>
                         Browser Only
                     </div>
                 </div>
-                <p className="text-sm text-[#4f7b38]">
+                <p className={textStyles({ size: 'sm', color: 'secondary' })}>
                     {savedContainers.length} container{savedContainers.length !== 1 ? 's' : ''} recently worked on
                 </p>
             </div>
@@ -302,17 +303,17 @@ function LocalContainersList({
             {savedContainers.length > 0 && (
                 <div className="p-4 border-b border-[#f0f7e7]">
                     <div className="relative">
-                        <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <MagnifyingGlassIcon className={cn("absolute left-3 top-1/2 transform -translate-y-1/2", iconStyles('sm', 'muted'))} />
                         <input
                             type="text"
                             placeholder="Search containers..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:border-transparent text-sm"
+                            className={cn(inputStyles(), "pl-9 bg-gray-50")}
                         />
                     </div>
                     {searchTerm && (
-                        <p className="text-xs text-gray-500 mt-2">
+                        <p className={cn(textStyles({ size: 'xs', color: 'muted' }), "mt-2")}>
                             {filteredContainers.length} of {savedContainers.length} containers match
                         </p>
                     )}
@@ -322,18 +323,18 @@ function LocalContainersList({
             {/* Container List */}
             <div className="max-h-96 overflow-y-auto">
                 {savedContainers.length === 0 ? (
-                    <div className="text-center py-12 text-[#4f7b38]">
-                        <ComputerDesktopIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                        <p className="text-sm">No containers saved yet</p>
-                        <p className="text-xs text-gray-500 mt-1">Your work will appear here automatically</p>
+                    <div className="text-center py-12">
+                        <ComputerDesktopIcon className={cn(iconStyles('lg'), "mx-auto mb-3 opacity-50 h-12 w-12 text-[#4f7b38]")} />
+                        <p className={textStyles({ size: 'sm', color: 'secondary' })}>No containers saved yet</p>
+                        <p className={cn(textStyles({ size: 'xs', color: 'muted' }), "mt-1")}>Your work will appear here automatically</p>
                     </div>
                 ) : filteredContainers.length === 0 ? (
-                    <div className="text-center py-12 text-[#4f7b38]">
-                        <ComputerDesktopIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                        <p className="text-sm">No matching containers found</p>
+                    <div className="text-center py-12">
+                        <ComputerDesktopIcon className={cn(iconStyles('lg'), "mx-auto mb-3 opacity-50 h-12 w-12 text-[#4f7b38]")} />
+                        <p className={textStyles({ size: 'sm', color: 'secondary' })}>No matching containers found</p>
                         <button
                             onClick={() => setSearchTerm('')}
-                            className="mt-1 text-xs text-[#6aa329] hover:underline"
+                            className={cn(textStyles({ size: 'xs' }), "mt-1 text-[#6aa329] hover:underline")}
                         >
                             Clear search
                         </button>
@@ -347,24 +348,28 @@ function LocalContainersList({
                             >
                                 <div className="flex items-center justify-between">
                                     <div className="flex-1 min-w-0 mr-3">
-                                        <h3 className={`font-medium text-sm truncate ${container.name === "Untitled" ? "text-gray-500 italic" : "text-[#0c0e0a]"}`}>
+                                        <h3 className={cn(
+                                            textStyles({ size: 'sm', weight: 'medium' }),
+                                            "truncate",
+                                            container.name === "Untitled" ? "text-gray-500 italic" : "text-[#0c0e0a]"
+                                        )}>
                                             {container.name}
                                         </h3>
                                         <div className="flex items-center space-x-3 mt-1">
-                                            <span className="text-xs text-[#4f7b38]">
+                                            <span className={textStyles({ size: 'xs', color: 'secondary' })}>
                                                 v{container.version || '0.0.0'}
                                             </span>
-                                            <span className="text-xs text-gray-500 flex items-center">
-                                                <ClockIcon className="h-3 w-3 mr-1" />
+                                            <span className={cn(textStyles({ size: 'xs', color: 'muted' }), "flex items-center")}>
+                                                <ClockIcon className={cn(iconStyles('sm'), "mr-1 h-3 w-3")} />
                                                 {formatTimeAgo(container.lastModified)}
                                             </span>
                                         </div>
                                         <div className="flex items-center space-x-2 mt-1">
-                                            <span className="text-xs text-gray-500">
+                                            <span className={textStyles({ size: 'xs', color: 'muted' })}>
                                                 {container.data.build.directives?.length || 0} build steps
                                             </span>
                                             {!isPublishedContainer(container.data.name) && (
-                                                <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full">
+                                                <span className={cn(textStyles({ size: 'xs' }), "bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full")}>
                                                     Unpublished
                                                 </span>
                                             )}
@@ -373,16 +378,16 @@ function LocalContainersList({
                                     <div className="flex items-center space-x-2 flex-shrink-0">
                                         <button
                                             onClick={() => onLoadContainer(container.data, container.id)}
-                                            className="px-3 py-1.5 bg-[#6aa329] text-white rounded-lg text-xs font-medium hover:bg-[#4f7b38] transition-colors"
+                                            className={cn(BUTTONS.primary, "rounded-lg")}
                                         >
                                             Open
                                         </button>
                                         <button
                                             onClick={(e) => handleDelete(container.id, e)}
-                                            className="p-1.5 text-gray-400 hover:text-red-600 transition-colors"
+                                            className={cn(BUTTONS.icon, "hover:text-red-600")}
                                             title="Delete container"
                                         >
-                                            <TrashIcon className="h-4 w-4" />
+                                            <TrashIcon className={iconStyles('sm')} />
                                         </button>
                                     </div>
                                 </div>
@@ -395,23 +400,23 @@ function LocalContainersList({
             {/* Confirmation Dialog */}
             {confirmDeleteId && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 max-w-sm mx-4">
-                        <h3 className="text-lg font-semibold text-[#0c0e0a] mb-3">
+                    <div className={cn(CARDS.default, "p-6 max-w-sm mx-4")}>
+                        <h3 className={cn(textStyles({ size: 'lg', weight: 'semibold', color: 'primary' }), "mb-3")}>
                             Delete Container?
                         </h3>
-                        <p className="text-[#4f7b38] mb-6">
+                        <p className={cn(textStyles({ color: 'secondary' }), "mb-6")}>
                             This action cannot be undone. The container will be permanently removed from your browser.
                         </p>
                         <div className="flex space-x-3">
                             <button
                                 onClick={cancelDelete}
-                                className="flex-1 px-4 py-2 border border-[#e6f1d6] text-[#4f7b38] rounded-md hover:bg-[#f8fdf2] transition-colors"
+                                className={cn(BUTTONS.secondary, "flex-1")}
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={confirmDelete}
-                                className="flex-1 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                                className={cn(BUTTONS.danger, "flex-1")}
                             >
                                 Delete
                             </button>
@@ -496,20 +501,20 @@ function RemoteContainersList({
     };
 
     return (
-        <div className="bg-white rounded-xl border border-[#e6f1d6] h-fit">
+        <div className={cn(CARDS.elevated, "h-fit")}>
             {/* Header */}
             <div className="border-b border-[#e6f1d6] p-4">
                 <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center space-x-2">
                         {filesystemMode === 'remote' ? (
-                            <CloudIcon className="h-5 w-5 text-[#4f7b38]" />
+                            <CloudIcon className={iconStyles('md', 'secondary')} />
                         ) : (
-                            <ComputerDesktopIcon className="h-5 w-5 text-[#4f7b38]" />
+                            <ComputerDesktopIcon className={iconStyles('md', 'secondary')} />
                         )}
-                        <h2 className="text-lg font-semibold text-[#0c0e0a]">
+                        <h2 className={textStyles({ size: 'lg', weight: 'semibold', color: 'primary' })}>
                             {filesystemMode === 'remote' ? 'Published Containers' : 'Local Repository'}
                         </h2>
-                        <div className="text-xs bg-[#f0f7e7] text-[#4f7b38] px-2 py-1 rounded-full">
+                        <div className={cn("px-2 py-1 rounded-full", textStyles({ size: 'xs' }), "bg-[#f0f7e7] text-[#4f7b38]")}>
                             {filesystemMode === 'remote' ? 'NeuroContainers' : 'Local Files'}
                         </div>
                     </div>
@@ -519,17 +524,17 @@ function RemoteContainersList({
                                 <button
                                     onClick={refetch}
                                     disabled={loading}
-                                    className="p-1.5 text-[#4f7b38] hover:text-[#6aa329] transition-colors disabled:opacity-50"
+                                    className={cn(BUTTONS.icon, "disabled:opacity-50")}
                                     title="Refresh recipes"
                                 >
-                                    <ArrowPathIcon className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                                    <ArrowPathIcon className={cn(iconStyles('sm'), loading && 'animate-spin')} />
                                 </button>
                                 <button
                                     onClick={clearCache}
-                                    className="p-1.5 text-gray-400 hover:text-red-600 transition-colors"
+                                    className={cn(BUTTONS.icon, "hover:text-red-600")}
                                     title="Clear cache"
                                 >
-                                    <TrashIcon className="h-4 w-4" />
+                                    <TrashIcon className={iconStyles('sm')} />
                                 </button>
                             </>
                         )}
@@ -1813,10 +1818,10 @@ export default function Home() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                                 </svg>
                             </div>
-                            <h1 className="text-4xl font-bold text-[#0c0e0a] mb-4">
+                            <h1 className={cn(textStyles({ size: '2xl', weight: 'bold', color: 'primary' }), "mb-4 text-4xl")}>
                                 Neurocontainers Builder
                             </h1>
-                            <p className="text-xl text-[#4f7b38] mb-8 max-w-2xl mx-auto">
+                            <p className={cn(textStyles({ size: 'xl', color: 'secondary' }), "mb-8 max-w-2xl mx-auto")}>
                                 Create reproducible neuroimaging containers with ease. Build, validate, and publish
                                 containerized neuroimaging tools using our intuitive visual interface.
                             </p>
@@ -1825,7 +1830,7 @@ export default function Home() {
                         {/* Action Cards at Top */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
                             <button
-                                className="group p-6 bg-white border-2 border-[#e6f1d6] rounded-xl hover:border-[#6aa329] hover:shadow-lg transition-all duration-300 text-left"
+                                className={cn(CARDS.theme, "group p-6 border-2 hover:border-[#6aa329] hover:shadow-lg transition-all duration-300 text-left")}
                                 onClick={() => {
                                     const newContainer = getNewContainerYAML();
                                     setYamlData(newContainer);
@@ -1845,10 +1850,10 @@ export default function Home() {
                                         <PlusIcon className="h-5 w-5 text-white" />
                                     </div>
                                     <div>
-                                        <h3 className="text-lg font-semibold text-[#0c0e0a]">
+                                        <h3 className={textStyles({ size: 'lg', weight: 'semibold', color: 'primary' })}>
                                             Create New Container
                                         </h3>
-                                        <p className="text-[#4f7b38] text-sm">
+                                        <p className={textStyles({ size: 'sm', color: 'secondary' })}>
                                             Start from scratch with guided workflow
                                         </p>
                                     </div>
@@ -1917,10 +1922,10 @@ export default function Home() {
                                         <ArrowUpTrayIcon className="h-5 w-5 text-white" />
                                     </div>
                                     <div>
-                                        <h3 className="text-lg font-semibold text-[#0c0e0a]">
+                                        <h3 className={textStyles({ size: 'lg', weight: 'semibold', color: 'primary' })}>
                                             Upload YAML Recipe
                                         </h3>
-                                        <p className="text-[#4f7b38] text-sm">
+                                        <p className={textStyles({ size: 'sm', color: 'secondary' })}>
                                             Import existing recipe file or drag & drop
                                         </p>
                                     </div>

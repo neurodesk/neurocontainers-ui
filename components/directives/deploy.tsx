@@ -1,7 +1,9 @@
 import { DirectiveContainer, FormField, TagEditor } from "@/components/ui";
+import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
 import { DeployInfo } from "@/components/common";
 import { RocketLaunchIcon } from "@heroicons/react/24/outline";
 import { registerDirective, DirectiveMetadata } from "./registry";
+import { HELP_SECTION } from "@/lib/styles";
 
 export default function DeployDirectiveComponent({
     deploy,
@@ -11,7 +13,8 @@ export default function DeployDirectiveComponent({
     headerColor,
     borderColor,
     iconColor,
-    icon
+    icon,
+    controllers,
 }: {
     deploy: DeployInfo;
     onChange: (deploy: DeployInfo) => void;
@@ -21,6 +24,7 @@ export default function DeployDirectiveComponent({
     borderColor?: string;
     iconColor?: string;
     icon?: React.ComponentType<{ className?: string }>;
+    controllers: DirectiveControllers;
 }) {
     const updatePaths = (paths: string[]) => {
         onChange({
@@ -37,11 +41,11 @@ export default function DeployDirectiveComponent({
     };
 
     const helpContent = (
-        <>
-            <h3 className="font-semibold text-[#0c0e0a] mb-2">
+        <div className={HELP_SECTION.container}>
+            <h3 className={HELP_SECTION.title}>
                 DEPLOY Directive
             </h3>
-            <div className="text-sm text-gray-600 space-y-2">
+            <div className={HELP_SECTION.text}>
                 <p>
                     The DEPLOY directive configures deployment settings for the container, including paths and binaries.
                 </p>
@@ -50,7 +54,7 @@ export default function DeployDirectiveComponent({
                     <ul className="list-disc list-inside mt-1 space-y-1">
                         <li>Specify directories to include in deployment</li>
                         <li>Use absolute paths for clarity</li>
-                        <li>Example: <code>/app/bin</code>, <code>/usr/local/bin</code></li>
+                        <li>Example: <code className={HELP_SECTION.code}>/app/bin</code>, <code className={HELP_SECTION.code}>/usr/local/bin</code></li>
                     </ul>
                 </div>
                 <div>
@@ -58,16 +62,16 @@ export default function DeployDirectiveComponent({
                     <ul className="list-disc list-inside mt-1 space-y-1">
                         <li>List specific executable files to deploy</li>
                         <li>Binary names or full paths</li>
-                        <li>Example: <code>myapp</code>, <code>processingTool</code></li>
+                        <li>Example: <code className={HELP_SECTION.code}>myapp</code>, <code className={HELP_SECTION.code}>processingTool</code></li>
                     </ul>
                 </div>
             </div>
-        </>
+        </div>
     );
 
     return (
-        <DirectiveContainer 
-            title="Deploy" 
+        <DirectiveContainer
+            title="Deploy"
             helpContent={helpContent}
             condition={condition}
             onConditionChange={onConditionChange}
@@ -75,8 +79,9 @@ export default function DeployDirectiveComponent({
             borderColor={borderColor}
             iconColor={iconColor}
             icon={icon}
+            controllers={controllers}
         >
-            <FormField 
+            <FormField
                 label="Paths"
                 description="Add directories to include in deployment"
             >
@@ -88,7 +93,7 @@ export default function DeployDirectiveComponent({
                 />
             </FormField>
 
-            <FormField 
+            <FormField
                 label="Binaries"
                 description="Add specific executable files to deploy"
             >

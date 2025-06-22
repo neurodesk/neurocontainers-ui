@@ -5,10 +5,22 @@ import { registerDirective, DirectiveMetadata } from "./registry";
 
 export default function TestDirectiveComponent({
     test,
-    onChange
+    onChange,
+    condition,
+    onConditionChange,
+    headerColor,
+    borderColor,
+    iconColor,
+    icon
 }: {
     test: TestInfo,
-    onChange: (test: TestInfo) => void
+    onChange: (test: TestInfo) => void,
+    condition?: string;
+    onConditionChange?: (condition: string | undefined) => void;
+    headerColor?: string;
+    borderColor?: string;
+    iconColor?: string;
+    icon?: React.ComponentType<{ className?: string }>;
 }) {
     const isBuiltin = 'builtin' in test;
 
@@ -53,7 +65,16 @@ export default function TestDirectiveComponent({
     const title = `Test: ${test.name} (${testTypeLabel})`;
 
     return (
-        <DirectiveContainer title={title} helpContent={helpContent}>
+        <DirectiveContainer 
+            title={title} 
+            helpContent={helpContent}
+            condition={condition}
+            onConditionChange={onConditionChange}
+            headerColor={headerColor}
+            borderColor={borderColor}
+            iconColor={iconColor}
+            icon={icon}
+        >
             <FormField label="Test Name">
                 <Input
                     value={test.name}
@@ -75,7 +96,7 @@ export default function TestDirectiveComponent({
                         value={(test as ScriptTest).script}
                         onChange={(e) => updateScript(e.target.value)}
                         placeholder="Enter test script commands..."
-                        className="min-h-[120px]"
+                        className="min-h-[200px]"
                         monospace
                     />
                 )}
@@ -91,6 +112,8 @@ export const testDirectiveMetadata: DirectiveMetadata = {
     description: "Define test scripts to validate container functionality",
     icon: BeakerIcon,
     color: "bg-violet-50 border-violet-200 hover:bg-violet-100",
+    headerColor: "bg-violet-50",
+    borderColor: "border-violet-200",
     iconColor: "text-violet-600",
     defaultValue: { test: { name: "", script: "" } },
     keywords: ["test", "testing", "validation", "check", "verify"],

@@ -46,10 +46,22 @@ export interface NeuroDockerTemplateInformation {
 export function createNeuroDockerTemplateComponent(templateInfo: NeuroDockerTemplateInformation) {
     return function NeuroDockerTemplateComponent({
         template,
-        onChange
+        onChange,
+        condition,
+        onConditionChange,
+        headerColor,
+        borderColor,
+        iconColor,
+        icon
     }: {
         template: Template,
-        onChange: (template: Template) => void
+        onChange: (template: Template) => void,
+        condition?: string;
+        onConditionChange?: (condition: string | undefined) => void;
+        headerColor?: string;
+        borderColor?: string;
+        iconColor?: string;
+        icon?: React.ComponentType<{ className?: string }>;
     }) {
         const [showAdvanced, setShowAdvanced] = useState(false);
 
@@ -208,7 +220,16 @@ export function createNeuroDockerTemplateComponent(templateInfo: NeuroDockerTemp
         });
 
         return (
-            <DirectiveContainer title={templateInfo.metadata.label} helpContent={helpContent}>
+            <DirectiveContainer 
+                title={templateInfo.metadata.label} 
+                helpContent={helpContent}
+                condition={condition}
+                onConditionChange={onConditionChange}
+                headerColor={headerColor}
+                borderColor={borderColor}
+                iconColor={iconColor}
+                icon={icon}
+            >
                 <div className="space-y-4">
                     {basicArgs.map(renderArgument)}
                 </div>
@@ -247,10 +268,22 @@ export function registerNeuroDockerTemplate(template: NeuroDockerTemplateInforma
 
 export default function TemplateDirectiveComponent({
     template,
-    onChange
+    onChange,
+    condition,
+    onConditionChange,
+    headerColor,
+    borderColor,
+    iconColor,
+    icon
 }: {
     template: Template,
-    onChange: (template: Template) => void
+    onChange: (template: Template) => void,
+    condition?: string;
+    onConditionChange?: (condition: string | undefined) => void;
+    headerColor?: string;
+    borderColor?: string;
+    iconColor?: string;
+    icon?: React.ComponentType<{ className?: string }>;
 }) {
     const [newParamKey, setNewParamKey] = useState("");
 
@@ -258,7 +291,16 @@ export default function TemplateDirectiveComponent({
     const specialEditor = getDirective(template.name);
     if (specialEditor && specialEditor.component !== TemplateDirectiveComponent) {
         const SpecialComponent = specialEditor.component;
-        return <SpecialComponent template={template} onChange={onChange} />;
+        return <SpecialComponent 
+            template={template} 
+            onChange={onChange} 
+            condition={condition}
+            onConditionChange={onConditionChange}
+            headerColor={headerColor}
+            borderColor={borderColor}
+            iconColor={iconColor}
+            icon={icon}
+        />;
     }
 
     // Fall back to generic template editor
@@ -316,7 +358,16 @@ export default function TemplateDirectiveComponent({
     );
 
     return (
-        <DirectiveContainer title={`Template: ${template.name}`} helpContent={helpContent}>
+        <DirectiveContainer 
+            title={`Template: ${template.name}`} 
+            helpContent={helpContent}
+            condition={condition}
+            onConditionChange={onConditionChange}
+            headerColor={headerColor}
+            borderColor={borderColor}
+            iconColor={iconColor}
+            icon={icon}
+        >
             <FormField label="Template Name">
                 <Input
                     value={template.name}
@@ -382,6 +433,8 @@ export const templateDirectiveMetadata: DirectiveMetadata = {
     description: "Create reusable templates with parameters",
     icon: DocumentDuplicateIcon,
     color: "bg-pink-50 border-pink-200 hover:bg-pink-100",
+    headerColor: "bg-pink-50",
+    borderColor: "border-pink-200",
     iconColor: "text-pink-600",
     defaultValue: { template: { name: "new-template" } },
     keywords: ["template", "reusable", "pattern", "blueprint"],

@@ -7,9 +7,21 @@ import { registerDirective, DirectiveMetadata } from "./registry";
 export default function FileDirectiveComponent({
     file,
     onChange,
+    condition,
+    onConditionChange,
+    headerColor,
+    borderColor,
+    iconColor,
+    icon
 }: {
     file: FileInfo;
     onChange: (file: FileInfo) => void;
+    condition?: string;
+    onConditionChange?: (condition: string | undefined) => void;
+    headerColor?: string;
+    borderColor?: string;
+    iconColor?: string;
+    icon?: React.ComponentType<{ className?: string }>;
 }) {
     const [fileContent, setFileContent] = useState(file.contents || "");
 
@@ -116,7 +128,16 @@ export default function FileDirectiveComponent({
     );
 
     return (
-        <DirectiveContainer title={`File: ${file.name || 'Untitled'}`} helpContent={helpContent}>
+        <DirectiveContainer 
+            title={`File: ${file.name || 'Untitled'}`} 
+            helpContent={helpContent}
+            condition={condition}
+            onConditionChange={onConditionChange}
+            headerColor={headerColor}
+            borderColor={borderColor}
+            iconColor={iconColor}
+            icon={icon}
+        >
             <FormField label="Name">
                 <Input
                     value={file.name}
@@ -182,6 +203,8 @@ export const fileDirectiveMetadata: DirectiveMetadata = {
     description: "Create or manage files in the container",
     icon: ClipboardDocumentListIcon,
     color: "bg-emerald-50 border-emerald-200 hover:bg-emerald-100",
+    headerColor: "bg-emerald-50",
+    borderColor: "border-emerald-200",
     iconColor: "text-emerald-600",
     defaultValue: { file: { name: "", filename: "" } },
     keywords: ["file", "create", "manage", "document", "content"],

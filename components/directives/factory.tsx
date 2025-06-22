@@ -15,11 +15,54 @@ import TestDirectiveComponent from "./test";
 import IncludeDirectiveComponent from "./include";
 import { getDirective } from "./registry";
 
+// Helper function to get directive metadata based on directive type
+function getDirectiveMetadata(directive: Directive) {
+    if ('group' in directive) return getDirective('group');
+    if ('environment' in directive) return getDirective('environment');
+    if ('install' in directive) return getDirective('install');
+    if ('workdir' in directive) return getDirective('workdir');
+    if ('run' in directive) return getDirective('run');
+    if ('variables' in directive) return getDirective('variables');
+    if ('template' in directive) return getDirective('template');
+    if ('deploy' in directive) return getDirective('deploy');
+    if ('user' in directive) return getDirective('user');
+    if ('copy' in directive) return getDirective('copy');
+    if ('file' in directive) return getDirective('file');
+    if ('test' in directive) return getDirective('test');
+    if ('include' in directive) return getDirective('include');
+    return undefined;
+}
+
 export default function DirectiveComponent({ directive, baseImage, onChange }: {
     directive: Directive;
     baseImage: string;
     onChange: (directive: Directive) => void;
 }) {
+    // Get metadata for styling
+    const metadata = getDirectiveMetadata(directive);
+
+    // Common props for condition handling
+    const conditionProps = {
+        condition: directive.condition,
+        onConditionChange: (condition: string | undefined) => {
+            if (condition) {
+                onChange({ ...directive, condition });
+            } else {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                const { condition: _unused, ...directiveWithoutCondition } = directive as unknown as Record<string, unknown>;
+                onChange(directiveWithoutCondition as unknown as Directive);
+            }
+        }
+    };
+
+    // Common props for styling
+    const styleProps = metadata ? {
+        color: metadata.color,
+        headerColor: metadata.headerColor,
+        iconColor: metadata.iconColor,
+        icon: metadata.icon,
+    } : {};
+
     if ('group' in directive) {
         // Check if this is a custom group that should use a special editor
         const customType = (directive as GroupDirective).custom;
@@ -62,6 +105,9 @@ export default function DirectiveComponent({ directive, baseImage, onChange }: {
                 group={directive.group}
                 baseImage={baseImage}
                 onChange={(group: Directive[]) => onChange({ ...directive, group })}
+                condition={directive.condition}
+                onConditionChange={conditionProps.onConditionChange}
+                {...styleProps}
             />
         );
     } else if ('environment' in directive) {
@@ -69,6 +115,9 @@ export default function DirectiveComponent({ directive, baseImage, onChange }: {
             <EnvironmentDirectiveComponent
                 environment={directive.environment}
                 onChange={(environment) => onChange({ ...directive, environment })}
+                condition={directive.condition}
+                onConditionChange={conditionProps.onConditionChange}
+                {...styleProps}
             />
         );
     } else if ('install' in directive) {
@@ -77,6 +126,9 @@ export default function DirectiveComponent({ directive, baseImage, onChange }: {
                 install={directive.install}
                 baseImage={baseImage}
                 onChange={(install) => onChange({ ...directive, install })}
+                condition={directive.condition}
+                onConditionChange={conditionProps.onConditionChange}
+                {...styleProps}
             />
         );
     } else if ('workdir' in directive) {
@@ -84,6 +136,9 @@ export default function DirectiveComponent({ directive, baseImage, onChange }: {
             <WorkingDirectoryDirectiveComponent
                 workdir={directive.workdir}
                 onChange={(workdir) => onChange({ ...directive, workdir })}
+                condition={directive.condition}
+                onConditionChange={conditionProps.onConditionChange}
+                {...styleProps}
             />
         );
     } else if ('run' in directive) {
@@ -91,6 +146,9 @@ export default function DirectiveComponent({ directive, baseImage, onChange }: {
             <RunCommandDirectiveComponent
                 run={directive.run}
                 onChange={(run) => onChange({ ...directive, run })}
+                condition={directive.condition}
+                onConditionChange={conditionProps.onConditionChange}
+                {...styleProps}
             />
         );
     } else if ('variables' in directive) {
@@ -98,6 +156,9 @@ export default function DirectiveComponent({ directive, baseImage, onChange }: {
             <VariableDirectiveComponent
                 variables={directive.variables}
                 onChange={(variables) => onChange({ ...directive, variables })}
+                condition={directive.condition}
+                onConditionChange={conditionProps.onConditionChange}
+                {...styleProps}
             />
         );
     } else if ('template' in directive) {
@@ -105,6 +166,9 @@ export default function DirectiveComponent({ directive, baseImage, onChange }: {
             <TemplateDirectiveComponent
                 template={directive.template}
                 onChange={(template) => onChange({ ...directive, template })}
+                condition={directive.condition}
+                onConditionChange={conditionProps.onConditionChange}
+                {...styleProps}
             />
         );
     } else if ('deploy' in directive) {
@@ -112,6 +176,9 @@ export default function DirectiveComponent({ directive, baseImage, onChange }: {
             <DeployDirectiveComponent
                 deploy={directive.deploy}
                 onChange={(deploy) => onChange({ ...directive, deploy })}
+                condition={directive.condition}
+                onConditionChange={conditionProps.onConditionChange}
+                {...styleProps}
             />
         );
     } else if ('user' in directive) {
@@ -119,6 +186,9 @@ export default function DirectiveComponent({ directive, baseImage, onChange }: {
             <UserDirectiveComponent
                 user={directive.user}
                 onChange={(user) => onChange({ ...directive, user })}
+                condition={directive.condition}
+                onConditionChange={conditionProps.onConditionChange}
+                {...styleProps}
             />
         );
     } else if ('copy' in directive) {
@@ -126,6 +196,9 @@ export default function DirectiveComponent({ directive, baseImage, onChange }: {
             <CopyDirectiveComponent
                 copy={directive.copy}
                 onChange={(copy) => onChange({ ...directive, copy })}
+                condition={directive.condition}
+                onConditionChange={conditionProps.onConditionChange}
+                {...styleProps}
             />
         );
     } else if ('file' in directive) {
@@ -133,6 +206,9 @@ export default function DirectiveComponent({ directive, baseImage, onChange }: {
             <FileDirectiveComponent
                 file={directive.file}
                 onChange={(file) => onChange({ ...directive, file })}
+                condition={directive.condition}
+                onConditionChange={conditionProps.onConditionChange}
+                {...styleProps}
             />
         );
     } else if ('test' in directive) {
@@ -140,12 +216,18 @@ export default function DirectiveComponent({ directive, baseImage, onChange }: {
             <TestDirectiveComponent
                 test={directive.test}
                 onChange={(test) => onChange({ ...directive, test })}
+                condition={directive.condition}
+                onConditionChange={conditionProps.onConditionChange}
+                {...styleProps}
             />
         );
     } else if ('include' in directive) {
         return <IncludeDirectiveComponent
             include={directive.include}
             onChange={(include) => onChange({ ...directive, include })}
+            condition={directive.condition}
+            onConditionChange={conditionProps.onConditionChange}
+            {...styleProps}
         />;
     } else {
         return (

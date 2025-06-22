@@ -4,10 +4,22 @@ import { registerDirective, DirectiveMetadata } from "./registry";
 
 export default function CopyDirectiveComponent({
     copy,
-    onChange
+    onChange,
+    condition,
+    onConditionChange,
+    headerColor,
+    borderColor,
+    iconColor,
+    icon
 }: {
     copy: string[] | string,
-    onChange: (copy: string[]) => void
+    onChange: (copy: string[]) => void,
+    condition?: string;
+    onConditionChange?: (condition: string | undefined) => void;
+    headerColor?: string;
+    borderColor?: string;
+    iconColor?: string;
+    icon?: React.ComponentType<{ className?: string }>;
 }) {
     const copyAsArray = Array.isArray(copy) ? copy : copy.split(" ");
 
@@ -33,7 +45,16 @@ export default function CopyDirectiveComponent({
     );
 
     return (
-        <DirectiveContainer title="Copy" helpContent={helpContent}>
+        <DirectiveContainer 
+            title="Copy" 
+            helpContent={helpContent}
+            condition={condition}
+            onConditionChange={onConditionChange}
+            headerColor={headerColor}
+            borderColor={borderColor}
+            iconColor={iconColor}
+            icon={icon}
+        >
             <ListEditor
                 items={copyAsArray}
                 onChange={onChange}
@@ -61,6 +82,8 @@ export const copyDirectiveMetadata: DirectiveMetadata = {
     description: "Copy files and directories into the container",
     icon: DocumentIcon,
     color: "bg-cyan-50 border-cyan-200 hover:bg-cyan-100",
+    headerColor: "bg-cyan-50",
+    borderColor: "border-cyan-200",
     iconColor: "text-cyan-600",
     defaultValue: { copy: [] as string[] },
     keywords: ["copy", "file", "transfer", "duplicate", "move"],

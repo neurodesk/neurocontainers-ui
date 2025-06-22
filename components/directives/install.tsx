@@ -22,10 +22,22 @@ export default function InstallDirectiveComponent({
     install,
     baseImage,
     onChange,
+    condition,
+    onConditionChange,
+    headerColor,
+    borderColor,
+    iconColor,
+    icon,
 }: {
     install: string | string[];
     baseImage: string;
     onChange: (install: string) => void;
+    condition?: string;
+    onConditionChange?: (condition: string | undefined) => void;
+    headerColor?: string;
+    borderColor?: string;
+    iconColor?: string;
+    icon?: React.ComponentType<{ className?: string }>;
 }) {
     const [packages, setPackages] = useState<string[]>([]);
     const [packageManager, setPackageManager] = useState<PackageManager>("system");
@@ -94,7 +106,16 @@ export default function InstallDirectiveComponent({
     );
 
     return (
-        <DirectiveContainer title="Install" helpContent={helpContent}>
+        <DirectiveContainer 
+            title="Install" 
+            helpContent={helpContent}
+            condition={condition}
+            onConditionChange={onConditionChange}
+            headerColor={headerColor}
+            borderColor={borderColor}
+            iconColor={iconColor}
+            icon={icon}
+        >
             <FormField label="Package Manager">
                 <Select
                     value={packageManager}
@@ -129,6 +150,8 @@ export const installDirectiveMetadata: DirectiveMetadata = {
     description: "Install packages or dependencies",
     icon: CommandLineIcon,
     color: "bg-purple-50 border-purple-200 hover:bg-purple-100",
+    headerColor: "bg-purple-50",
+    borderColor: "border-purple-200",
     iconColor: "text-purple-600",
     defaultValue: { install: "" },
     keywords: ["install", "package", "dependency", "apt", "yum", "npm"],

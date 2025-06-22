@@ -5,10 +5,22 @@ import { registerDirective, DirectiveMetadata } from "./registry";
 
 export default function IncludeDirectiveComponent({
     include,
-    onChange
+    onChange,
+    condition,
+    onConditionChange,
+    headerColor,
+    borderColor,
+    iconColor,
+    icon
 }: {
     include: IncludeMacro,
-    onChange: (include: IncludeMacro) => void
+    onChange: (include: IncludeMacro) => void,
+    condition?: string;
+    onConditionChange?: (condition: string | undefined) => void;
+    headerColor?: string;
+    borderColor?: string;
+    iconColor?: string;
+    icon?: React.ComponentType<{ className?: string }>;
 }) {
     const helpContent = (
         <>
@@ -37,7 +49,16 @@ export default function IncludeDirectiveComponent({
     );
 
     return (
-        <DirectiveContainer title="Include" helpContent={helpContent}>
+        <DirectiveContainer 
+            title="Include" 
+            helpContent={helpContent}
+            condition={condition}
+            onConditionChange={onConditionChange}
+            headerColor={headerColor}
+            borderColor={borderColor}
+            iconColor={iconColor}
+            icon={icon}
+        >
             <FormField 
                 label="Macro"
                 description="Select a predefined macro to include"
@@ -65,6 +86,8 @@ export const includeDirectiveMetadata: DirectiveMetadata = {
     description: "Include external macros or templates",
     icon: DocumentArrowDownIcon,
     color: "bg-slate-50 border-slate-200 hover:bg-slate-100",
+    headerColor: "bg-slate-50",
+    borderColor: "border-slate-200",
     iconColor: "text-slate-600",
     defaultValue: { include: "macros/openrecon/neurodocker.yaml" },
     keywords: ["include", "import", "external", "reference", "link"],

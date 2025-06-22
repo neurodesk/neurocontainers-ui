@@ -6,9 +6,21 @@ import { registerDirective, DirectiveMetadata } from "./registry";
 export default function RunCommandDirectiveComponent({
     run,
     onChange,
+    condition,
+    onConditionChange,
+    headerColor,
+    borderColor,
+    iconColor,
+    icon
 }: {
     run: string[];
     onChange: (run: string[]) => void;
+    condition?: string;
+    onConditionChange?: (condition: string | undefined) => void;
+    headerColor?: string;
+    borderColor?: string;
+    iconColor?: string;
+    icon?: React.ComponentType<{ className?: string }>;
 }) {
     const textareaRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
     const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
@@ -96,7 +108,16 @@ export default function RunCommandDirectiveComponent({
     );
 
     return (
-        <DirectiveContainer title="Run Commands" helpContent={helpContent}>
+        <DirectiveContainer 
+            title="Run Commands" 
+            helpContent={helpContent}
+            condition={condition}
+            onConditionChange={onConditionChange}
+            headerColor={headerColor}
+            borderColor={borderColor}
+            iconColor={iconColor}
+            icon={icon}
+        >
             <ListEditor
                 items={run}
                 onChange={onChange}
@@ -131,6 +152,8 @@ export const runDirectiveMetadata: DirectiveMetadata = {
     description: "Execute shell commands during container build",
     icon: PlayIcon,
     color: "bg-red-50 border-red-200 hover:bg-red-100",
+    headerColor: "bg-red-50",
+    borderColor: "border-red-200",
     iconColor: "text-red-600",
     defaultValue: { run: [] as string[] },
     keywords: ["run", "command", "execute", "bash"],

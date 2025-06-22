@@ -7,6 +7,8 @@ export interface DirectiveMetadata {
     description: string;
     icon: ComponentType<{ className?: string }>;
     color: string;
+    headerColor?: string; // Optional separate color for the header background
+    borderColor?: string; // Optional separate color for the container border
     iconColor: string;
     defaultValue: Directive;
     keywords: string[];

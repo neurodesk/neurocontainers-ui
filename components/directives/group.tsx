@@ -1,6 +1,4 @@
 import {
-    ChevronDownIcon,
-    ChevronRightIcon,
     TrashIcon,
     Bars3Icon,
     ChevronUpIcon,
@@ -263,10 +261,22 @@ export default function GroupDirectiveComponent({
     group,
     baseImage,
     onChange,
+    condition,
+    onConditionChange,
+    headerColor,
+    borderColor,
+    iconColor,
+    icon,
 }: {
     group: Directive[];
     baseImage: string;
     onChange: (group: Directive[]) => void;
+    condition?: string;
+    onConditionChange?: (condition: string | undefined) => void;
+    headerColor?: string;
+    borderColor?: string;
+    iconColor?: string;
+    icon?: React.ComponentType<{ className?: string }>;
 }) {
     const [isExpanded, setIsExpanded] = useState(true);
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -384,57 +394,44 @@ export default function GroupDirectiveComponent({
 
     return (
         <>
-            <div className="bg-gray-50 rounded-md border border-gray-200 mb-3">
-                <div
-                    className="flex items-center justify-between p-3 bg-gray-100 rounded-t-md cursor-pointer hover:bg-gray-150 transition-colors"
-                    onClick={() => setIsExpanded(!isExpanded)}
-                >
-                    <div className="flex items-center">
-                        <button className="mr-2 text-gray-500">
-                            {isExpanded ? (
-                                <ChevronDownIcon className="h-4 w-4" />
-                            ) : (
-                                <ChevronRightIcon className="h-4 w-4" />
-                            )}
-                        </button>
-                        <h4 className="text-sm font-medium text-gray-700">
-                            Group Directive
-                        </h4>
-                    </div>
-                    <div className="text-xs text-gray-500 bg-white px-2 py-1 rounded">
-                        {group.length} item{group.length !== 1 ? "s" : ""}
-                    </div>
-                </div>
-
-                {isExpanded && (
-                    <div className="p-3 border-t border-gray-200">
-                        <div className="space-y-2">
-                            {group.length === 0 ? (
+            <DirectiveContainer
+                title={`Group Directive (${group.length} item${group.length !== 1 ? "s" : ""})`}
+                isExpanded={isExpanded}
+                onToggle={setIsExpanded}
+                condition={condition}
+                onConditionChange={onConditionChange}
+                headerColor={headerColor}
+                borderColor={borderColor}
+                iconColor={iconColor}
+                icon={icon}
+            >
+                <div className="space-y-2">
+                    {group.length === 0 ? (
+                        <Suspense fallback={<div>Loading...</div>}>
+                            <AddDirectiveButton
+                                onAddDirective={addDirective}
+                                variant="empty"
+                                index={0}
+                                emptyText={{
+                                    title: "No items in group",
+                                    subtitle: "Click here to add directives to this group"
+                                }}
+                            />
+                        </Suspense>
+                    ) : (
+                        <>
+                            {/* First add button - only shows when there are items */}
+                            <div className="py-1">
                                 <Suspense fallback={<div>Loading...</div>}>
                                     <AddDirectiveButton
                                         onAddDirective={addDirective}
-                                        variant="empty"
+                                        variant="inline"
                                         index={0}
-                                        emptyText={{
-                                            title: "No items in group",
-                                            subtitle: "Click here to add directives to this group"
-                                        }}
                                     />
                                 </Suspense>
-                            ) : (
-                                <>
-                                    {/* First add button - only shows when there are items */}
-                                    <div className="py-1">
-                                        <Suspense fallback={<div>Loading...</div>}>
-                                            <AddDirectiveButton
-                                                onAddDirective={addDirective}
-                                                variant="inline"
-                                                index={0}
-                                            />
-                                        </Suspense>
-                                    </div>
+                            </div>
 
-                                    {group.map((directive, index) => (
+                            {group.map((directive, index) => (
                                         <div key={index}>
                                             {/* Directive */}
                                             <div
@@ -616,12 +613,10 @@ export default function GroupDirectiveComponent({
                                             </div>
                                         </div>
                                     ))}
-                                </>
-                            )}
-                        </div>
-                    </div>
-                )}
-            </div>
+                        </>
+                    )}
+                </div>
+            </DirectiveContainer>
 
             {/* Delete Confirmation Modal */}
             {deleteConfirmIndex !== null && (
@@ -676,6 +671,8 @@ export const groupDirectiveMetadata: DirectiveMetadata = {
     description: "Group related directives together",
     icon: FolderIcon,
     color: "bg-blue-50 border-blue-200 hover:bg-blue-100",
+    headerColor: "bg-blue-50",
+    borderColor: "border-blue-200",
     iconColor: "text-blue-600",
     defaultValue: { group: [] as Directive[] },
     keywords: ["group", "folder", "organize", "collection"],

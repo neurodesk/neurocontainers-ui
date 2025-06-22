@@ -6,9 +6,21 @@ import { registerDirective, DirectiveMetadata } from "./registry";
 export default function DeployDirectiveComponent({
     deploy,
     onChange,
+    condition,
+    onConditionChange,
+    headerColor,
+    borderColor,
+    iconColor,
+    icon
 }: {
     deploy: DeployInfo;
     onChange: (deploy: DeployInfo) => void;
+    condition?: string;
+    onConditionChange?: (condition: string | undefined) => void;
+    headerColor?: string;
+    borderColor?: string;
+    iconColor?: string;
+    icon?: React.ComponentType<{ className?: string }>;
 }) {
     const updatePaths = (paths: string[]) => {
         onChange({
@@ -54,7 +66,16 @@ export default function DeployDirectiveComponent({
     );
 
     return (
-        <DirectiveContainer title="Deploy" helpContent={helpContent}>
+        <DirectiveContainer 
+            title="Deploy" 
+            helpContent={helpContent}
+            condition={condition}
+            onConditionChange={onConditionChange}
+            headerColor={headerColor}
+            borderColor={borderColor}
+            iconColor={iconColor}
+            icon={icon}
+        >
             <FormField 
                 label="Paths"
                 description="Add directories to include in deployment"
@@ -89,6 +110,8 @@ export const deployDirectiveMetadata: DirectiveMetadata = {
     description: "Configure deployment settings for the container",
     icon: RocketLaunchIcon,
     color: "bg-orange-50 border-orange-200 hover:bg-orange-100",
+    headerColor: "bg-orange-50",
+    borderColor: "border-orange-200",
     iconColor: "text-orange-600",
     defaultValue: { deploy: { path: [] as string[], bins: [] as string[] } },
     keywords: ["deploy", "deployment", "publish", "release", "launch"],

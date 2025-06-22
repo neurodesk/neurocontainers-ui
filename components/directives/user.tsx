@@ -4,10 +4,22 @@ import { registerDirective, DirectiveMetadata } from "./registry";
 
 export default function UserDirectiveComponent({
     user,
-    onChange
+    onChange,
+    condition,
+    onConditionChange,
+    headerColor,
+    borderColor,
+    iconColor,
+    icon
 }: {
     user: string,
-    onChange: (user: string) => void
+    onChange: (user: string) => void,
+    condition?: string;
+    onConditionChange?: (condition: string | undefined) => void;
+    headerColor?: string;
+    borderColor?: string;
+    iconColor?: string;
+    icon?: React.ComponentType<{ className?: string }>;
 }) {
     const helpContent = (
         <>
@@ -48,7 +60,16 @@ export default function UserDirectiveComponent({
     );
 
     return (
-        <DirectiveContainer title="User" helpContent={helpContent}>
+        <DirectiveContainer 
+            title="User" 
+            helpContent={helpContent}
+            condition={condition}
+            onConditionChange={onConditionChange}
+            headerColor={headerColor}
+            borderColor={borderColor}
+            iconColor={iconColor}
+            icon={icon}
+        >
             <Input
                 value={user}
                 onChange={(e) => onChange(e.target.value)}
@@ -66,6 +87,8 @@ export const userDirectiveMetadata: DirectiveMetadata = {
     description: "Set the user context for subsequent commands",
     icon: UserIcon,
     color: "bg-teal-50 border-teal-200 hover:bg-teal-100",
+    headerColor: "bg-teal-50",
+    borderColor: "border-teal-200",
     iconColor: "text-teal-600",
     defaultValue: { user: "" },
     keywords: ["user", "account", "permission", "context", "identity"],

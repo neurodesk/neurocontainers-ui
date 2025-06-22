@@ -4,10 +4,22 @@ import { registerDirective, DirectiveMetadata } from "./registry";
 
 export default function EnvironmentDirectiveComponent({
     environment,
-    onChange
+    onChange,
+    condition,
+    onConditionChange,
+    headerColor,
+    borderColor,
+    iconColor,
+    icon,
 }: {
     environment: { [key: string]: string },
     onChange: (environment: { [key: string]: string }) => void
+    condition?: string;
+    onConditionChange?: (condition: string | undefined) => void;
+    headerColor?: string;
+    borderColor?: string;
+    iconColor?: string;
+    icon?: React.ComponentType<{ className?: string }>;
 }) {
     const helpContent = (
         <>
@@ -41,7 +53,16 @@ export default function EnvironmentDirectiveComponent({
     );
 
     return (
-        <DirectiveContainer title="Environment Variables" helpContent={helpContent}>
+        <DirectiveContainer 
+            title="Environment Variables" 
+            helpContent={helpContent}
+            condition={condition}
+            onConditionChange={onConditionChange}
+            headerColor={headerColor}
+            borderColor={borderColor}
+            iconColor={iconColor}
+            icon={icon}
+        >
             <KeyValueEditor
                 data={environment}
                 onChange={onChange}
@@ -64,6 +85,8 @@ export const environmentDirectiveMetadata: DirectiveMetadata = {
     description: "Set environment variables",
     icon: CogIcon,
     color: "bg-green-50 border-green-200 hover:bg-green-100",
+    headerColor: "bg-green-50",
+    borderColor: "border-green-200",
     iconColor: "text-green-600",
     defaultValue: { environment: {} },
     keywords: ["environment", "env", "variables", "config", "settings"],

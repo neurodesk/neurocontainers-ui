@@ -70,10 +70,22 @@ export function VariableComponent({ variable, onChange }: { variable: Variable, 
 
 export default function VariableDirectiveComponent({
     variables,
-    onChange
+    onChange,
+    condition,
+    onConditionChange,
+    headerColor,
+    borderColor,
+    iconColor,
+    icon
 }: {
     variables: { [key: string]: Variable },
-    onChange: (variables: { [key: string]: Variable }) => void
+    onChange: (variables: { [key: string]: Variable }) => void,
+    condition?: string;
+    onConditionChange?: (condition: string | undefined) => void;
+    headerColor?: string;
+    borderColor?: string;
+    iconColor?: string;
+    icon?: React.ComponentType<{ className?: string }>;
 }) {
     const [newVarKey, setNewVarKey] = useState("");
 
@@ -124,7 +136,16 @@ export default function VariableDirectiveComponent({
     );
 
     return (
-        <DirectiveContainer title="Variables" helpContent={helpContent}>
+        <DirectiveContainer 
+            title="Variables" 
+            helpContent={helpContent}
+            condition={condition}
+            onConditionChange={onConditionChange}
+            headerColor={headerColor}
+            borderColor={borderColor}
+            iconColor={iconColor}
+            icon={icon}
+        >
             {Object.entries(variables).map(([key, value]) => (
                 <FormField 
                     key={key}
@@ -178,6 +199,8 @@ export const variablesDirectiveMetadata: DirectiveMetadata = {
     description: "Define template variables for dynamic values",
     icon: CubeTransparentIcon,
     color: "bg-indigo-50 border-indigo-200 hover:bg-indigo-100",
+    headerColor: "bg-indigo-50",
+    borderColor: "border-indigo-200",
     iconColor: "text-indigo-600",
     defaultValue: { variables: {} },
     keywords: ["variables", "var", "template", "placeholder", "substitution"],

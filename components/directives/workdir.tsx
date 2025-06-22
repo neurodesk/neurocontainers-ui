@@ -4,10 +4,22 @@ import { registerDirective, DirectiveMetadata } from "./registry";
 
 export default function WorkingDirectoryDirectiveComponent({
     workdir,
-    onChange
+    onChange,
+    condition,
+    onConditionChange,
+    headerColor,
+    borderColor,
+    iconColor,
+    icon
 }: {
     workdir: string,
-    onChange: (workdir: string) => void
+    onChange: (workdir: string) => void,
+    condition?: string;
+    onConditionChange?: (condition: string | undefined) => void;
+    headerColor?: string;
+    borderColor?: string;
+    iconColor?: string;
+    icon?: React.ComponentType<{ className?: string }>;
 }) {
     const helpContent = (
         <>
@@ -50,7 +62,16 @@ export default function WorkingDirectoryDirectiveComponent({
     );
 
     return (
-        <DirectiveContainer title="Working Directory" helpContent={helpContent}>
+        <DirectiveContainer 
+            title="Working Directory" 
+            helpContent={helpContent}
+            condition={condition}
+            onConditionChange={onConditionChange}
+            headerColor={headerColor}
+            borderColor={borderColor}
+            iconColor={iconColor}
+            icon={icon}
+        >
             <Input
                 value={workdir}
                 onChange={(e) => onChange(e.target.value)}
@@ -68,6 +89,8 @@ export const workdirDirectiveMetadata: DirectiveMetadata = {
     description: "Set the working directory for subsequent commands",
     icon: FolderOpenIcon,
     color: "bg-yellow-50 border-yellow-200 hover:bg-yellow-100",
+    headerColor: "bg-yellow-50",
+    borderColor: "border-yellow-200",
     iconColor: "text-yellow-600",
     defaultValue: { workdir: "" },
     keywords: ["workdir", "directory", "folder", "path", "cd"],

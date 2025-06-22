@@ -4,12 +4,16 @@ import {
     TrashIcon, 
     ChevronUpIcon, 
     ChevronDownIcon, 
-    Bars3Icon 
+    Bars3Icon,
+    ScaleIcon 
 } from "@heroicons/react/24/outline";
 import { CopyrightInfo } from "@/components/common";
 import { FormField, Input } from "./FormField";
 import LicenseDropdown from "./LicenseDropdown";
 import spdxLicenses from "./licenses.json";
+import { iconStyles, cardStyles, textStyles, cn, buttonStyles } from "@/lib/styles";
+import { colors } from "@/lib/theme";
+import { DirectiveControllers } from "./DirectiveContainer";
 
 interface LicenseSectionProps {
     licenses: CopyrightInfo[];
@@ -221,10 +225,10 @@ export default function LicenseSection({
 
     const AddLicenseButton = () => (
         <button
-            className="text-sm text-white bg-[#6aa329] hover:bg-[#4f7b38] flex items-center gap-2 px-3 py-2 rounded-md transition-colors"
+            className={cn(buttonStyles('primary', 'md'), "flex items-center gap-2")}
             onClick={() => addLicense()}
         >
-            <PlusIcon className="h-4 w-4" />
+            <PlusIcon className={iconStyles('sm')} />
             Add License
         </button>
     );
@@ -274,119 +278,120 @@ export default function LicenseSection({
                     {/* First add button - only shows when there are licenses */}
                     <InlineAddButton index={0} />
                     
-                    {licenses.map((info, index) => (
+                    {licenses.map((info, index) => {
+                        const controllers: DirectiveControllers = {
+                            onMoveUp: () => handleMoveLicense(index, "up"),
+                            onMoveDown: () => handleMoveLicense(index, "down"),
+                            onDelete: () => handleDeleteClick(index),
+                            canMoveUp: index > 0,
+                            canMoveDown: index < licenses.length - 1,
+                            stepNumber: index + 1,
+                            draggable: true,
+                            onDragStart: (e) => handleDragStart(e, index),
+                            onDragOver: (e) => handleDragOver(e, index),
+                            onDragLeave: handleDragLeave,
+                            onDrop: (e) => handleDrop(e, index),
+                            onDragEnd: handleDragEnd,
+                        };
+
+                        return (
                         <div key={`license-${index}`}>
-                            {/* License */}
+                            {/* License Container using DirectiveContainer style */}
                             <div
-                                className={`flex flex-col sm:flex-row gap-3 transition-all duration-200 ${
-                                draggedIndex === index ? "opacity-50" : ""
-                            } ${
-                                dragOverIndex === index ? "border-t-2 border-[#6aa329] pt-2" : ""
-                            }`}
-                            draggable
-                            onDragStart={(e) => handleDragStart(e, index)}
-                            onDragOver={(e) => handleDragOver(e, index)}
-                            onDragLeave={handleDragLeave}
-                            onDrop={(e) => handleDrop(e, index)}
-                            onDragEnd={handleDragEnd}
-                        >
-                            {/* Mobile: Horizontal Controls */}
-                            <div className="flex sm:hidden items-center justify-between bg-gray-50 p-2 rounded-md border">
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        className="text-gray-400 hover:text-[#6aa329] cursor-grab active:cursor-grabbing"
-                                        onMouseDown={(e) => e.stopPropagation()}
-                                    >
-                                        <Bars3Icon className="h-4 w-4" />
-                                    </button>
-                                    <span className="text-xs font-medium text-gray-600">
-                                        License {index + 1}
-                                    </span>
-                                    <div className="flex gap-1">
+                                className={cn(
+                                    cardStyles("default", "zero"),
+                                    "border-gray-200",
+                                    draggedIndex === index ? "opacity-50" : "",
+                                    dragOverIndex === index ? "border-t-2 border-[#6aa329] pt-2" : ""
+                                )}
+                                draggable
+                                onDragStart={(e) => handleDragStart(e, index)}
+                                onDragOver={(e) => handleDragOver(e, index)}
+                                onDragLeave={handleDragLeave}
+                                onDrop={(e) => handleDrop(e, index)}
+                                onDragEnd={handleDragEnd}
+                            >
+                                {/* Header with DirectiveContainer style */}
+                                <div className={cn("flex items-center w-full p-1 rounded-t-md", "bg-[#f0f7e7]")}>                                    {/* Left-aligned Controls */}
+                                    <div className="flex items-center gap-0.5 mr-2 flex-shrink-0">
+                                        {/* Drag Handle */}
                                         <button
-                                            className={`p-1.5 rounded ${
-                                                index === 0
-                                                    ? "text-gray-300 cursor-not-allowed"
-                                                    : "text-gray-600 hover:text-[#6aa329] hover:bg-white"
-                                            } transition-colors`}
-                                            onClick={() => handleMoveLicense(index, "up")}
-                                            disabled={index === 0}
-                                            title="Move up"
+                                            className={cn(
+                                                "cursor-grab active:cursor-grabbing transition-colors p-1 flex items-center justify-center",
+                                                `text-gray-400 hover:text-[${colors.primary[600]}]`
+                                            )}
+                                            onMouseDown={(e) => e.stopPropagation()}
+                                            title="Drag to reorder"
                                         >
-                                            <ChevronUpIcon className="h-4 w-4" />
+                                            <Bars3Icon className={iconStyles('sm')} />
                                         </button>
+
+                                        {/* Step Number */}
+                                        <div className={cn(
+                                            "px-1.5 py-0.5 rounded text-xs font-medium min-w-[1.5rem] text-center flex items-center justify-center",
+                                            "bg-gray-200 text-gray-600"
+                                        )}>
+                                            {index + 1}
+                                        </div>
+
+                                        {/* Reorder Controls - Vertically Centered */}
+                                        <div className="flex flex-col -space-y-px">
+                                            <button
+                                                className={cn(
+                                                    "transition-colors p-0.5 flex items-center justify-center",
+                                                    iconStyles('sm'),
+                                                    controllers.canMoveUp
+                                                        ? `text-gray-600 hover:text-[${colors.primary[600]}]`
+                                                        : "text-gray-300 cursor-not-allowed"
+                                                )}
+                                                onClick={controllers.onMoveUp}
+                                                disabled={!controllers.canMoveUp}
+                                                title="Move up"
+                                            >
+                                                <ChevronUpIcon className="w-3 h-3" />
+                                            </button>
+                                            <button
+                                                className={cn(
+                                                    "transition-colors p-0.5 flex items-center justify-center",
+                                                    iconStyles('sm'),
+                                                    controllers.canMoveDown
+                                                        ? `text-gray-600 hover:text-[${colors.primary[600]}]`
+                                                        : "text-gray-300 cursor-not-allowed"
+                                                )}
+                                                onClick={controllers.onMoveDown}
+                                                disabled={!controllers.canMoveDown}
+                                                title="Move down"
+                                            >
+                                                <ChevronDownIcon className="w-3 h-3" />
+                                            </button>
+                                        </div>
                                         <button
-                                            className={`p-1.5 rounded ${
-                                                index === licenses.length - 1
-                                                    ? "text-gray-300 cursor-not-allowed"
-                                                    : "text-gray-600 hover:text-[#6aa329] hover:bg-white"
-                                            } transition-colors`}
-                                            onClick={() => handleMoveLicense(index, "down")}
-                                            disabled={index === licenses.length - 1}
-                                            title="Move down"
-                                        >
-                                            <ChevronDownIcon className="h-4 w-4" />
-                                        </button>
-                                        <button
-                                            className="text-red-400 hover:text-red-600 transition-colors p-1.5 rounded hover:bg-white"
-                                            onClick={() => handleDeleteClick(index)}
+                                            className={cn(
+                                                "transition-colors p-1 flex items-center justify-center",
+                                                `text-[${colors.error}] hover:text-red-600`
+                                            )}
+                                            onClick={controllers.onDelete}
                                             title="Delete license"
                                         >
-                                            <TrashIcon className="h-4 w-4" />
+                                            <TrashIcon className={iconStyles('sm')} />
                                         </button>
                                     </div>
-                                </div>
-                            </div>
 
-                            {/* Desktop: Vertical Controls */}
-                            <div className="hidden sm:flex flex-col items-center pt-3 flex-shrink-0">
-                                <div className="flex flex-col bg-white border border-gray-300 rounded-md shadow-sm">
-                                    <button
-                                        className="p-2 border-b border-gray-200 text-gray-400 hover:text-[#6aa329] cursor-grab active:cursor-grabbing transition-colors"
-                                        onMouseDown={(e) => e.stopPropagation()}
-                                        title="Drag to reorder"
-                                    >
-                                        <Bars3Icon className="h-5 w-5" />
-                                    </button>
-                                    <button
-                                        className={`p-2 border-b border-gray-200 ${
-                                            index === 0
-                                                ? "text-gray-300 cursor-not-allowed"
-                                                : "text-gray-600 hover:text-[#6aa329] hover:bg-[#f0f7e7]"
-                                        } transition-colors`}
-                                        onClick={() => handleMoveLicense(index, "up")}
-                                        disabled={index === 0}
-                                        title="Move up"
-                                    >
-                                        <ChevronUpIcon className="h-5 w-5" />
-                                    </button>
-                                    <button
-                                        className={`p-2 border-b border-gray-200 ${
-                                            index === licenses.length - 1
-                                                ? "text-gray-300 cursor-not-allowed"
-                                                : "text-gray-600 hover:text-[#6aa329] hover:bg-[#f0f7e7]"
-                                        } transition-colors`}
-                                        onClick={() => handleMoveLicense(index, "down")}
-                                        disabled={index === licenses.length - 1}
-                                        title="Move down"
-                                    >
-                                        <ChevronDownIcon className="h-5 w-5" />
-                                    </button>
-                                    <button
-                                        className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                                        onClick={() => handleDeleteClick(index)}
-                                        title="Delete license"
-                                    >
-                                        <TrashIcon className="h-5 w-5" />
-                                    </button>
+                                    {/* Icon and Title */}
+                                    <ScaleIcon className={cn(iconStyles('md'), "mr-2", "text-gray-600")} />
+                                    <h2 className={cn(textStyles({ size: 'base', weight: 'medium', color: 'primary' }), "flex-1")}>
+                                        License {index + 1}
+                                        {isCustomLicense(index) && (
+                                            <span className="ml-2 text-xs bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded">
+                                                Custom
+                                            </span>
+                                        )}
+                                    </h2>
                                 </div>
-                                <div className="mt-2 text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                                    {index + 1}
-                                </div>
-                            </div>
 
-                            {/* License Content */}
-                            <div className="flex-1 min-w-0 p-4 bg-gray-50 rounded-md border border-gray-200">
+
+                                <div className="border-t border-[#e6f1d6]">
+                                    <div className="p-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <FormField
                                     label={
@@ -462,25 +467,27 @@ export default function LicenseSection({
                                             placeholder={isCustomLicense(index) ? "https://example.com/license.txt" : "https://opensource.org/licenses/MIT"}
                                         />
                                     </FormField>
-                                </div>
-                                
-                                {/* Show validation errors */}
-                                {validateLicense(info).length > 0 && (
-                                    <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-600">
-                                        <ul className="list-disc list-inside space-y-1">
-                                            {validateLicense(info).map((error, errorIndex) => (
-                                                <li key={errorIndex}>{error}</li>
-                                            ))}
-                                        </ul>
+                                        </div>
+                                        
+                                        {/* Show validation errors */}
+                                        {validateLicense(info).length > 0 && (
+                                            <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-600">
+                                                <ul className="list-disc list-inside space-y-1">
+                                                    {validateLicense(info).map((error, errorIndex) => (
+                                                        <li key={errorIndex}>{error}</li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
                                     </div>
-                                )}
+                                </div>
                             </div>
-                        </div>
                         
-                        {/* Add button after this license */}
-                        <InlineAddButton index={index + 1} />
-                    </div>
-                ))}
+                            {/* Add button after this license */}
+                            <InlineAddButton index={index + 1} />
+                        </div>
+                        );
+                    })}
                 </>
             )}
 

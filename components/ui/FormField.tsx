@@ -1,5 +1,5 @@
 import { ReactNode, forwardRef } from "react";
-import { presets, textareaStyles, cn } from "@/lib/styles";
+import { presets, textareaStyles, textStyles, cn } from "@/lib/styles";
 
 interface FormFieldProps {
     label?: string | ReactNode;
@@ -18,7 +18,7 @@ export function FormField({ label, children, description, className = "" }: Form
             )}
             {children}
             {description && (
-                <p className="mt-1 text-xs text-gray-500">
+                <p className={cn("mt-1", textStyles({ size: 'xs', color: 'muted' }))}>
                     {description}
                 </p>
             )}

@@ -1,6 +1,7 @@
 import { TrashIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { Input } from "./FormField";
-import { iconStyles, textStyles, cn } from "@/lib/styles";
+import { iconStyles, textStyles, buttonStyles, cardStyles, cn } from "@/lib/styles";
+import { colors } from "@/lib/theme";
 
 interface KeyValueEditorProps {
     data: { [key: string]: string };
@@ -52,16 +53,19 @@ export default function KeyValueEditor({
     if (entries.length === 0 && emptyMessage) {
         return (
             <div>
-                <div className="mb-4 p-4 bg-gray-50 rounded-md border border-gray-200">
+                <div className={cn(cardStyles('default', 'md'), "mb-3")}>
                     <p className={cn(textStyles({ size: 'sm', color: 'muted' }), "text-center")}>
                         {emptyMessage}
                     </p>
                 </div>
                 <button
-                    className={cn("flex items-center", textStyles({ size: 'sm', color: 'secondary' }), "hover:text-[#6aa329]")}
+                    className={cn(
+                        buttonStyles('ghost', 'sm'),
+                        "flex items-center gap-1 px-0"
+                    )}
                     onClick={addItem}
                 >
-                    <PlusIcon className={cn(iconStyles('sm'), "mr-1")} />
+                    <PlusIcon className={iconStyles('sm')} />
                     {addButtonText}
                 </button>
             </div>
@@ -71,34 +75,38 @@ export default function KeyValueEditor({
     return (
         <div>
             {entries.length > 0 && (
-                <div className="mb-4">
-                    <div className={cn("grid grid-cols-12 gap-2 mb-2", textStyles({ size: 'sm', weight: 'medium', color: 'primary' }))}>
-                        <div className="col-span-5">{keyLabel}</div>
-                        <div className="col-span-6">{valueLabel}</div>
-                        <div className="col-span-1"></div>
+                <div className="mb-3">
+                    <div className={cn("flex gap-2 mb-2", textStyles({ size: 'sm', weight: 'medium', color: 'primary' }))}>
+                        <div className="flex-1">{keyLabel}</div>
+                        <div className="flex-1">{valueLabel}</div>
+                        <div className="w-8"></div>
                     </div>
 
                     {entries.map(([key, value], index) => (
-                        <div key={index} className="grid grid-cols-12 gap-2 mb-2">
+                        <div key={index} className="flex gap-2 mb-2">
                             <Input
-                                className="col-span-5"
+                                className="flex-1"
                                 value={key}
                                 onChange={(e) => updateKey(key, e.target.value)}
                                 placeholder={keyPlaceholder}
                                 monospace={monospace}
                             />
                             <Input
-                                className="col-span-6"
+                                className="flex-1"
                                 value={value}
                                 onChange={(e) => updateValue(key, e.target.value)}
                                 placeholder={valuePlaceholder}
                                 monospace={monospace}
                             />
                             <button
-                                className="col-span-1 flex justify-center items-center text-gray-400 hover:text-[#6aa329]"
+                                className={cn(
+                                    "w-8 h-8 flex justify-center items-center transition-colors rounded",
+                                    `text-gray-400 hover:text-[${colors.primary[600]}] hover:bg-gray-50`
+                                )}
                                 onClick={() => removeItem(key)}
+                                title="Remove item"
                             >
-                                <TrashIcon className={iconStyles('md')} />
+                                <TrashIcon className={iconStyles('sm')} />
                             </button>
                         </div>
                     ))}
@@ -106,10 +114,13 @@ export default function KeyValueEditor({
             )}
 
             <button
-                className={cn("flex items-center", textStyles({ size: 'sm', color: 'secondary' }), "hover:text-[#6aa329]")}
+                className={cn(
+                    buttonStyles('ghost', 'sm'),
+                    "flex items-center gap-1 px-0"
+                )}
                 onClick={addItem}
             >
-                <PlusIcon className={cn(iconStyles('sm'), "mr-1")} />
+                <PlusIcon className={iconStyles('sm')} />
                 {addButtonText}
             </button>
         </div>

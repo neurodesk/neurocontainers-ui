@@ -8,6 +8,8 @@ import {
 } from "@heroicons/react/24/outline";
 import { useState, ReactNode } from "react";
 import { presets, iconStyles, cardStyles, textStyles, cn } from "@/lib/styles";
+import { colors } from "@/lib/theme";
+import { Input } from "./FormField";
 
 export interface DirectiveControllers {
     onMoveUp?: () => void;
@@ -73,7 +75,10 @@ export default function DirectiveContainer({
                     <div className="flex items-center gap-0.5 mr-2 flex-shrink-0">
                         {/* Drag Handle */}
                         <button
-                            className="text-gray-400 hover:text-[#6aa329] cursor-grab active:cursor-grabbing transition-colors p-1 flex items-center justify-center"
+                            className={cn(
+                                "cursor-grab active:cursor-grabbing transition-colors p-1 flex items-center justify-center",
+                                `text-gray-400 hover:text-[${colors.primary[600]}]`
+                            )}
                             onMouseDown={(e) => e.stopPropagation()}
                             title="Drag to reorder"
                         >
@@ -82,7 +87,10 @@ export default function DirectiveContainer({
 
                         {/* Step Number */}
                         {controllers.stepNumber && (
-                            <div className={cn("bg-gray-200 px-1.5 py-0.5 rounded text-xs font-medium text-gray-600 min-w-[1.5rem] text-center flex items-center justify-center")}>
+                            <div className={cn(
+                                "px-1.5 py-0.5 rounded text-xs font-medium min-w-[1.5rem] text-center flex items-center justify-center",
+                                "bg-gray-200 text-gray-600"
+                            )}>
                                 {controllers.stepNumber}
                             </div>
                         )}
@@ -94,7 +102,7 @@ export default function DirectiveContainer({
                                     "transition-colors p-0.5 flex items-center justify-center",
                                     iconStyles('sm'),
                                     controllers.canMoveUp
-                                        ? "text-gray-600 hover:text-[#6aa329]"
+                                        ? `text-gray-600 hover:text-[${colors.primary[600]}]`
                                         : "text-gray-300 cursor-not-allowed"
                                 )}
                                 onClick={controllers.onMoveUp}
@@ -108,7 +116,7 @@ export default function DirectiveContainer({
                                     "transition-colors p-0.5 flex items-center justify-center",
                                     iconStyles('sm'),
                                     controllers.canMoveDown
-                                        ? "text-gray-600 hover:text-[#6aa329]"
+                                        ? `text-gray-600 hover:text-[${colors.primary[600]}]`
                                         : "text-gray-300 cursor-not-allowed"
                                 )}
                                 onClick={controllers.onMoveDown}
@@ -119,7 +127,10 @@ export default function DirectiveContainer({
                             </button>
                         </div>
                         <button
-                            className="text-red-400 hover:text-red-600 transition-colors p-1 flex items-center justify-center"
+                            className={cn(
+                                "transition-colors p-1 flex items-center justify-center",
+                                `text-[${colors.error}] hover:text-red-600`
+                            )}
                             onClick={controllers.onDelete}
                             title="Delete directive"
                         >
@@ -180,13 +191,13 @@ export default function DirectiveContainer({
                             <label className={presets.formLabel}>
                                 Condition
                             </label>
-                            <input
-                                type="text"
+                            <Input
                                 value={condition || ''}
                                 onChange={(e) => onConditionChange(e.target.value || undefined)}
                                 placeholder='e.g., arch=="x86_64" or platform=="linux"'
-                                className={cn(presets.input, "font-mono")}
                                 onClick={(e) => e.stopPropagation()}
+                                monospace
+                                className={cn("bg-white")}
                             />
                             <p className={textStyles({ size: 'xs', color: 'muted' })}>
                                 This directive will only be executed when the condition is true. Leave empty to always execute.

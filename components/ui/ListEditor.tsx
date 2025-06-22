@@ -1,6 +1,7 @@
 import { TrashIcon, PlusIcon, Bars3Icon } from "@heroicons/react/24/outline";
 import { useState, ReactNode } from "react";
-import { iconStyles, textStyles, cn } from "@/lib/styles";
+import { iconStyles, textStyles, buttonStyles, cardStyles, cn } from "@/lib/styles";
+import { colors } from "@/lib/theme";
 
 interface ListEditorProps<T> {
     items: T[];
@@ -59,14 +60,14 @@ export default function ListEditor<T>({
         e.preventDefault();
         e.stopPropagation(); // Prevent parent drag handlers
         e.dataTransfer.dropEffect = "move";
-        
+
         // Determine if we're in the top or bottom half of the element
         const rect = e.currentTarget.getBoundingClientRect();
         const midY = rect.top + rect.height / 2;
         // Add a small deadzone (20% from center) to reduce sensitivity
         const deadzone = rect.height * 0.1;
         let insertIndex;
-        
+
         if (e.clientY < midY - deadzone) {
             insertIndex = index;
         } else if (e.clientY > midY + deadzone) {
@@ -75,7 +76,7 @@ export default function ListEditor<T>({
             // In deadzone, don't change if we already have a valid dragOverIndex
             insertIndex = dragOverIndex !== null ? dragOverIndex : index;
         }
-        
+
         setDragOverIndex(insertIndex);
     };
 
@@ -128,16 +129,19 @@ export default function ListEditor<T>({
     if (items.length === 0 && emptyMessage) {
         return (
             <div className={className}>
-                <div className="mb-4 p-4 bg-gray-50 rounded-md border border-gray-200">
+                <div className={cn(cardStyles('default', 'md'), "mb-3")}>
                     <p className={cn(textStyles({ size: 'sm', color: 'muted' }), "text-center")}>
                         {emptyMessage}
                     </p>
                 </div>
                 <button
-                    className={cn("flex items-center", textStyles({ size: 'sm', color: 'secondary' }), "hover:text-[#6aa329]")}
+                    className={cn(
+                        buttonStyles('ghost', 'sm'),
+                        "flex items-center gap-1 px-0"
+                    )}
                     onClick={addItem}
                 >
-                    <PlusIcon className={cn(iconStyles('sm'), "mr-1")} />
+                    <PlusIcon className={iconStyles('sm')} />
                     {addButtonText}
                 </button>
             </div>
@@ -147,55 +151,65 @@ export default function ListEditor<T>({
     return (
         <div className={className}>
             {items.length > 0 && (
-                <div className="space-y-2 mb-4">
+                <div className="space-y-1.5 mb-3">
                     {items.map((item, index) => {
                         // Insert placeholder before this item if needed
                         const showPlaceholderBefore = dragOverIndex === index && draggedIndex !== null;
                         // Insert placeholder after this item if it's the last item and dragOverIndex is beyond
                         const showPlaceholderAfter = index === items.length - 1 && dragOverIndex === items.length && draggedIndex !== null;
-                        
+
                         return (
                             <div key={index}>
                                 {/* Drop indicator before current item */}
                                 {showPlaceholderBefore && (
-                                    <div className="h-1 bg-[#6aa329] rounded-full mx-4 mb-2 opacity-75 transition-opacity duration-150"></div>
+                                    <div className={`h-0.5 rounded-full mx-3 mb-1 opacity-75 transition-opacity duration-150`}
+                                        style={{ backgroundColor: colors.primary[500] }}></div>
                                 )}
-                                
+
                                 <div
-                                    className={`flex transition-all duration-150 border rounded-md will-change-transform ${
-                                        focusedIndex === index ? "border-[#6aa329]" : "border-gray-200"
-                                    } ${
-                                        draggedIndex === index ? "opacity-30 scale-95" : ""
-                                    }`}
+                                    className={cn(
+                                        "flex transition-all duration-150 border rounded-md will-change-transform bg-white",
+                                        focusedIndex === index
+                                            ? `border-[${colors.primary[500]}] shadow-sm`
+                                            : "border-gray-200",
+                                        draggedIndex === index && "opacity-30 scale-95"
+                                    )}
                                     onDragOver={allowReorder ? (e) => handleDragOver(e, index) : undefined}
                                     onDragLeave={allowReorder ? handleDragLeave : undefined}
                                     onDrop={allowReorder ? handleDrop : undefined}
                                 >
-                            {allowReorder && (
-                                <div
-                                    className="flex items-start px-3 py-3 bg-gray-50 rounded-l-md cursor-grab active:cursor-grabbing hover:bg-gray-100 touch-manipulation select-none"
-                                    draggable
-                                    onDragStart={(e) => handleDragStart(e, index)}
-                                    onDragEnd={handleDragEnd}
-                                    onTouchStart={(e) => e.stopPropagation()}
-                                >
-                                    <Bars3Icon className={cn(iconStyles('md'), "text-gray-400")} />
+                                    {allowReorder && (
+                                        <div
+                                            className={cn(
+                                                "flex items-start px-2 py-2 rounded-l-md cursor-grab active:cursor-grabbing touch-manipulation select-none transition-colors",
+                                                "bg-gray-50 hover:bg-gray-100"
+                                            )}
+                                            draggable
+                                            onDragStart={(e) => handleDragStart(e, index)}
+                                            onDragEnd={handleDragEnd}
+                                            onTouchStart={(e) => e.stopPropagation()}
+                                        >
+                                            <Bars3Icon className={cn(iconStyles('sm', 'muted'))} />
+                                        </div>
+                                    )}
+                                    <div className={`flex-grow ${allowReorder ? "" : "rounded-l-md"}`}>
+                                        {renderItem(item, index, (updatedItem) => updateItem(index, updatedItem))}
+                                    </div>
+                                    <button
+                                        className={cn(
+                                            "px-2 py-2 rounded-r-md flex items-start transition-colors",
+                                            `bg-[${colors.primary[50]}] text-gray-400 hover:text-[${colors.primary[600]}]`
+                                        )}
+                                        onClick={() => removeItem(index)}
+                                    >
+                                        <TrashIcon className={cn(iconStyles('sm'), "mt-0.5")} />
+                                    </button>
                                 </div>
-                            )}
-                            <div className={`flex-grow ${allowReorder ? "" : "rounded-l-md"}`}>
-                                {renderItem(item, index, (updatedItem) => updateItem(index, updatedItem))}
-                            </div>
-                            <button
-                                className="px-3 py-2 bg-[#f0f7e7] rounded-r-md text-gray-400 hover:text-[#6aa329] flex items-start"
-                                onClick={() => removeItem(index)}
-                            >
-                                <TrashIcon className={cn(iconStyles('md'), "mt-1")} />
-                            </button>
-                                </div>
-                                
+
                                 {/* Drop indicator after current item (only for last item) */}
                                 {showPlaceholderAfter && (
-                                    <div className="h-1 bg-[#6aa329] rounded-full mx-4 mt-2 opacity-75 transition-opacity duration-150"></div>
+                                    <div className={`h-0.5 rounded-full mx-3 mt-1 opacity-75 transition-opacity duration-150`}
+                                        style={{ backgroundColor: colors.primary[500] }}></div>
                                 )}
                             </div>
                         );
@@ -204,10 +218,13 @@ export default function ListEditor<T>({
             )}
 
             <button
-                className={cn("flex items-center", textStyles({ size: 'sm', color: 'secondary' }), "hover:text-[#6aa329]")}
+                className={cn(
+                    buttonStyles('ghost', 'sm'),
+                    "flex items-center gap-1 px-0"
+                )}
                 onClick={addItem}
             >
-                <PlusIcon className={cn(iconStyles('sm'), "mr-1")} />
+                <PlusIcon className={iconStyles('sm')} />
                 {addButtonText}
             </button>
         </div>

@@ -28,11 +28,11 @@ interface DropdownPosition {
 const getDirectiveTypes = () => {
     const directives = getAllDirectives();
     const directiveTypes: Record<string, DirectiveMetadata> = {};
-    
+
     directives.forEach(directive => {
         directiveTypes[directive.key] = directive;
     });
-    
+
     return directiveTypes;
 };
 
@@ -95,7 +95,7 @@ const DirectiveItem = ({
             <div className="flex-1 min-w-0">
                 <div
                     className={cn(
-                        textStyles({ 
+                        textStyles({
                             size: isMobile ? 'base' : 'sm',
                             weight: 'semibold',
                             color: 'primary'
@@ -107,7 +107,7 @@ const DirectiveItem = ({
                 </div>
                 <div
                     className={cn(
-                        textStyles({ 
+                        textStyles({
                             size: isMobile ? 'sm' : 'xs',
                             color: 'secondary'
                         }),
@@ -408,6 +408,7 @@ export default function AddDirectiveButton({
                 onKeyDown={handleKeyDown}
                 className={cn(
                     inputStyles(),
+                    "bg-white text-gray-800 placeholder-gray-400",
                     "w-full pl-10 pr-4",
                     isMobile ? "py-3 text-base rounded-xl" : "py-2 text-sm rounded-lg",
                     "border-[#e6f1d6] focus:border-[#6aa329]"
@@ -450,7 +451,7 @@ export default function AddDirectiveButton({
                     isMobile ? "w-12 h-12 mb-4" : "w-8 h-8 mb-2"
                 )}
             />
-            <p className={cn(textStyles({ 
+            <p className={cn(textStyles({
                 size: isMobile ? 'base' : 'sm',
                 weight: 'medium'
             }))}>
@@ -458,7 +459,7 @@ export default function AddDirectiveButton({
             </p>
             <p
                 className={cn(
-                    textStyles({ 
+                    textStyles({
                         size: isMobile ? 'sm' : 'xs',
                         color: 'disabled'
                     }),
@@ -563,7 +564,7 @@ export default function AddDirectiveButton({
                             <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl max-h-[90vh] overflow-hidden">
                                 {/* Mobile Header */}
                                 <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-[#f8fdf2]">
-                                    <h2 className={textStyles({ 
+                                    <h2 className={textStyles({
                                         size: 'lg',
                                         weight: 'semibold',
                                         color: 'primary'
@@ -615,7 +616,7 @@ export default function AddDirectiveButton({
                         {/* Desktop Header with Search */}
                         <div className="px-4 py-3 border-b border-gray-100 bg-[#f8fdf2]">
                             <h3 className={cn(
-                                textStyles({ 
+                                textStyles({
                                     size: 'sm',
                                     weight: 'semibold',
                                     color: 'primary'

@@ -24,20 +24,6 @@ export const colors = {
     900: '#0c0e0a',   // Text dark
   },
 
-  // Grays - standardized
-  gray: {
-    50: '#f9fafb',
-    100: '#f3f4f6',
-    200: '#e5e7eb',
-    300: '#d1d5db',
-    400: '#9ca3af',
-    500: '#6b7280',
-    600: '#4b5563',
-    700: '#374151',
-    800: '#1f2937',
-    900: '#111827',
-  },
-
   // Semantic colors
   success: '#10b981',
   warning: '#f59e0b',
@@ -81,8 +67,8 @@ export const typography = {
   color: {
     primary: `text-[${colors.primary[900]}]`,
     secondary: `text-[${colors.primary[600]}]`,
-    muted: `text-[${colors.gray[500]}]`,
-    disabled: `text-[${colors.gray[400]}]`,
+    muted: 'text-gray-500',
+    disabled: 'text-gray-400',
     white: 'text-white',
     success: `text-[${colors.success}]`,
     warning: `text-[${colors.warning}]`,
@@ -112,16 +98,16 @@ export const spacing = {
 export const components = {
   // Form inputs - standardized
   input: {
-    base: `w-full px-3 py-1.5 border border-[${colors.gray[200]}] rounded-md text-[${colors.primary[900]}] text-sm`,
+    base: `w-full px-3 py-1.5 border border-gray-200 rounded-md text-[${colors.primary[900]}] text-sm`,
     focus: `focus:outline-none focus:ring-1 focus:ring-[${colors.primary[500]}] focus:border-[${colors.primary[500]}]`,
-    disabled: `disabled:bg-[${colors.gray[50]}] disabled:text-[${colors.gray[400]}] disabled:cursor-not-allowed`,
+    disabled: `disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed`,
     error: `border-[${colors.error}] focus:ring-[${colors.error}] focus:border-[${colors.error}]`,
     get full() { return `${this.base} ${this.focus} ${this.disabled}` }
   },
 
   // Textarea - standardized
   textarea: {
-    base: `w-full px-3 py-1.5 border border-[${colors.gray[200]}] rounded-md text-[${colors.primary[900]}] text-sm resize-none`,
+    base: `w-full px-3 py-1.5 border border-gray-200 rounded-md text-[${colors.primary[900]}] text-sm resize-none`,
     focus: `focus:outline-none focus:ring-1 focus:ring-[${colors.primary[500]}] focus:border-[${colors.primary[500]}]`,
     monospace: 'font-mono',
     get full() { return `${this.base} ${this.focus}` },
@@ -152,7 +138,7 @@ export const components = {
 
   // Cards and containers
   card: {
-    base: `bg-white rounded-md shadow-sm border border-[${colors.gray[200]}]`,
+    base: `bg-white rounded-md shadow-sm border border-gray-200`,
     elevated: `bg-white rounded-lg shadow-md border border-[${colors.primary[400]}]`,
     theme: `bg-[${colors.primary[50]}] border border-[${colors.primary[300]}] rounded-md`,
 
@@ -168,16 +154,16 @@ export const components = {
   formField: {
     container: 'mb-3', // Reduced from mb-4 for density
     label: `block text-sm font-medium text-[${colors.primary[900]}] mb-1.5`, // Reduced margin
-    description: `mt-1 text-xs text-[${colors.gray[500]}]`, // Smaller text
+    description: `mt-1 text-xs text-gray-500`, // Smaller text
     error: `mt-1 text-xs text-[${colors.error}]`,
   },
 
   // Help sections
   help: {
-    container: `bg-[${colors.primary[100]}] border border-[${colors.primary[300]}] rounded-md p-3`,
+    container: ``,
     title: `font-semibold text-[${colors.primary[900]}] mb-2 text-sm`,
-    text: `text-xs text-[${colors.gray[600]}]`,
-    code: `bg-[${colors.gray[100]}] px-2 py-1 rounded text-xs font-mono`,
+    text: `text-xs text-gray-600`,
+    code: `bg-gray-100 px-2 py-1 rounded text-xs font-mono`,
   },
 
   // Icons
@@ -187,8 +173,8 @@ export const components = {
     lg: 'h-6 w-6',
     color: {
       primary: `text-[${colors.primary[600]}]`,
-      secondary: `text-[${colors.gray[500]}]`,
-      muted: `text-[${colors.gray[400]}]`,
+      secondary: `text-gray-500`,
+      muted: `text-gray-400`,
     }
   },
 

@@ -3,7 +3,7 @@ import { DirectiveContainer, ListEditor, Textarea } from "@/components/ui";
 import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
 import { PlayIcon } from "@heroicons/react/24/outline";
 import { registerDirective, DirectiveMetadata } from "./registry";
-import { HELP_SECTION, textStyles, cn } from "@/lib/styles";
+import { HELP_SECTION, textareaStyles, cn } from "@/lib/styles";
 
 export default function RunCommandDirectiveComponent({
     run,
@@ -38,10 +38,17 @@ export default function RunCommandDirectiveComponent({
         textarea.style.height = "auto";
         const scrollHeight = textarea.scrollHeight;
         // Use line height to calculate minimum height for single line
-        const lineHeight = parseInt(getComputedStyle(textarea).lineHeight) || 20;
-        const padding = 16; // py-2 = 8px top + 8px bottom
-        const minHeight = lineHeight + padding;
-        textarea.style.height = Math.max(minHeight, scrollHeight) + "px";
+        const computedStyle = getComputedStyle(textarea);
+        const lineHeight = parseInt(computedStyle.lineHeight) || 20; // leading-5 = 1.25 * 16px = 20px
+        const paddingTop = parseInt(computedStyle.paddingTop) || 6; // py-1.5 = 6px
+        const paddingBottom = parseInt(computedStyle.paddingBottom) || 6; // py-1.5 = 6px
+        const borderTop = parseInt(computedStyle.borderTopWidth) || 0;
+        const borderBottom = parseInt(computedStyle.borderBottomWidth) || 0;
+        
+        const minHeight = lineHeight + paddingTop + paddingBottom + borderTop + borderBottom;
+        const newHeight = Math.max(minHeight, scrollHeight);
+        
+        textarea.style.height = newHeight + "px";
     };
 
     const handleKeyDown = (
@@ -135,8 +142,11 @@ export default function RunCommandDirectiveComponent({
                     <Textarea
                         ref={(el) => { (textareaRefs.current[index] = el) }}
                         className={cn(
-                            "w-full px-3 py-2 border-0 rounded-none focus:outline-none focus:ring-0 focus:border-transparent resize-none overflow-hidden leading-5",
-                            textStyles({ color: 'primary' })
+                            textareaStyles({
+                                monospace: true,
+                                height: 'min-h-[2.5rem]'
+                            }),
+                            "border-0 rounded-none focus:ring-0 focus:border-transparent resize-none overflow-hidden leading-5"
                         )}
                         value={command}
                         onChange={(e) => handleTextareaChange(e, index, onChangeCommand)}

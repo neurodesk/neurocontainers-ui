@@ -7,8 +7,8 @@ registerNeuroDockerTemplate({
         label: "Convert3D",
         description: "Medical image conversion tool",
         icon: DocumentDuplicateIcon,
-        color: "bg-teal-50 border-teal-200 hover:bg-teal-100",
-        iconColor: "text-teal-600",
+        color: { light: "bg-teal-50 border-teal-200 hover:bg-teal-100", dark: "bg-teal-900 border-teal-700 hover:bg-teal-800" },
+        iconColor: { light: "text-teal-600", dark: "text-teal-400" },
         defaultValue: {
             template: {
                 name: "convert3d",

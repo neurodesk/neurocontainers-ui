@@ -4,7 +4,8 @@ import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
 import { FileInfo } from "@/components/common";
 import { ClipboardDocumentListIcon } from "@heroicons/react/24/outline";
 import { registerDirective, DirectiveMetadata } from "./registry";
-import { HELP_SECTION } from "@/lib/styles";
+import { getHelpSection } from "@/lib/styles";
+import { useTheme } from "@/lib/ThemeContext";
 
 export default function FileDirectiveComponent({
     file,
@@ -21,12 +22,13 @@ export default function FileDirectiveComponent({
     onChange: (file: FileInfo) => void;
     condition?: string;
     onConditionChange?: (condition: string | undefined) => void;
-    headerColor?: string;
-    borderColor?: string;
-    iconColor?: string;
+    headerColor?: { light: string, dark: string };
+    borderColor?: { light: string, dark: string };
+    iconColor?: { light: string, dark: string };
     icon?: React.ComponentType<{ className?: string }>;
     controllers: DirectiveControllers;
 }) {
+    const { isDark } = useTheme();
     const [fileContent, setFileContent] = useState(file.contents || "");
 
     // Determine input type based on file properties
@@ -103,11 +105,11 @@ export default function FileDirectiveComponent({
     };
 
     const helpContent = (
-        <div className={HELP_SECTION.container}>
-            <h3 className={HELP_SECTION.title}>
+        <div className={getHelpSection(isDark).container}>
+            <h3 className={getHelpSection(isDark).title}>
                 FILE Directive
             </h3>
-            <div className={HELP_SECTION.text}>
+            <div className={getHelpSection(isDark).text}>
                 <p>
                     The FILE directive allows you to include files in your container build process.
                 </p>
@@ -121,7 +123,7 @@ export default function FileDirectiveComponent({
                 </div>
                 <div>
                     <strong>Examples:</strong>
-                    <div className={HELP_SECTION.code}>
+                    <div className={getHelpSection(isDark).code}>
                         <div><strong>Content:</strong> Direct text input</div>
                         <div><strong>Filename:</strong> ./config/app.conf</div>
                         <div><strong>URL:</strong> https://example.com/config.json</div>
@@ -207,10 +209,10 @@ export const fileDirectiveMetadata: DirectiveMetadata = {
     label: "File",
     description: "Create or manage files in the container",
     icon: ClipboardDocumentListIcon,
-    color: "bg-emerald-50 border-emerald-200 hover:bg-emerald-100",
-    headerColor: "bg-emerald-50",
-    borderColor: "border-emerald-200",
-    iconColor: "text-emerald-600",
+    color: { light: "bg-emerald-50 border-emerald-200 hover:bg-emerald-100", dark: "bg-emerald-900 border-emerald-700 hover:bg-emerald-800" },
+    headerColor: { light: "bg-emerald-50", dark: "bg-emerald-900" },
+    borderColor: { light: "border-emerald-200", dark: "border-emerald-700" },
+    iconColor: { light: "text-emerald-600", dark: "text-emerald-400" },
     defaultValue: { file: { name: "", filename: "" } },
     keywords: ["file", "create", "manage", "document", "content"],
     component: FileDirectiveComponent,

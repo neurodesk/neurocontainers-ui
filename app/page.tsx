@@ -34,7 +34,9 @@ import GitHubModal from "@/components/githubExport";
 import LocalFilesystem from "@/components/localFilesystem";
 import { useGitHubFiles } from '@/lib/useGithub';
 import { filesystemService } from "@/lib/filesystem";
-import { CARDS, BUTTONS, iconStyles, textStyles, inputStyles, cn } from "@/lib/styles";
+import { iconStyles, textStyles, inputStyles, cn, useThemeStyles, cardStyles, buttonStyles } from "@/lib/styles";
+import { ThemeToggleIcon } from "@/components/ui/ThemeToggle";
+import { useTheme } from "@/lib/ThemeContext";
 
 enum Section {
     BasicInfo = "basic-info",
@@ -236,6 +238,8 @@ function LocalContainersList({
     onDeleteContainer: (id: string) => void;
     githubFiles?: { path: string; downloadUrl?: string; htmlUrl?: string }[];
 }) {
+    const { isDark } = useTheme();
+    const styles = useThemeStyles(isDark);
     const [savedContainers, setSavedContainers] = useState<SavedContainer[]>([]);
     const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
@@ -282,38 +286,47 @@ function LocalContainersList({
     };
 
     return (
-        <div className={cn(CARDS.elevated, "h-fit")}>
+        <div className={cn(cardStyles(isDark, 'elevated'), "h-fit")}>
             {/* Header */}
             <div className="border-b border-[#e6f1d6] p-4">
                 <div className="flex items-center space-x-2 mb-2">
-                    <ComputerDesktopIcon className={iconStyles('md', 'secondary')} />
-                    <h2 className={textStyles({ size: 'lg', weight: 'semibold', color: 'primary' })}>
+                    <ComputerDesktopIcon className={iconStyles(isDark, 'md', 'secondary')} />
+                    <h2 className={textStyles(isDark, { size: 'lg', weight: 'semibold', color: 'primary' })}>
                         Recent Containers
                     </h2>
-                    <div className={cn("px-2 py-1 rounded-full", textStyles({ size: 'xs' }), "bg-[#e6f1d6] text-[#4f7b38]")}>
+                    <div className={cn(
+                        "px-2 py-1 rounded-full",
+                        textStyles(isDark, { size: 'xs' }),
+                        isDark ? "bg-[#2d4222] text-[#7bb33a]" : "bg-[#f0f7e7] text-[#4f7b38]"
+                    )}>
                         Browser Only
                     </div>
                 </div>
-                <p className={textStyles({ size: 'sm', color: 'secondary' })}>
+                <p className={textStyles(isDark, { size: 'sm', color: 'secondary' })}>
                     {savedContainers.length} container{savedContainers.length !== 1 ? 's' : ''} recently worked on
                 </p>
             </div>
 
             {/* Search */}
             {savedContainers.length > 0 && (
-                <div className="p-4 border-b border-[#f0f7e7]">
+                <div
+                    className={cn("p-4 border-b", isDark
+                        ? "border-[#2d4222]"
+                        : "border-[#f0f7e7]"
+                    )}
+                >
                     <div className="relative">
-                        <MagnifyingGlassIcon className={cn("absolute left-3 top-1/2 transform -translate-y-1/2", iconStyles('sm', 'muted'))} />
+                        <MagnifyingGlassIcon className={cn("absolute left-3 top-1/2 transform -translate-y-1/2", iconStyles(isDark, 'sm', 'muted'))} />
                         <input
                             type="text"
                             placeholder="Search containers..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className={cn(inputStyles(), "pl-9 bg-gray-50")}
+                            className={cn(inputStyles(isDark), "pl-9")}
                         />
                     </div>
                     {searchTerm && (
-                        <p className={cn(textStyles({ size: 'xs', color: 'muted' }), "mt-2")}>
+                        <p className={cn(textStyles(isDark, { size: 'xs', color: 'muted' }), "mt-2")}>
                             {filteredContainers.length} of {savedContainers.length} containers match
                         </p>
                     )}
@@ -324,52 +337,58 @@ function LocalContainersList({
             <div className="max-h-96 overflow-y-auto">
                 {savedContainers.length === 0 ? (
                     <div className="text-center py-12">
-                        <ComputerDesktopIcon className={cn(iconStyles('lg'), "mx-auto mb-3 opacity-50 h-12 w-12 text-[#4f7b38]")} />
-                        <p className={textStyles({ size: 'sm', color: 'secondary' })}>No containers saved yet</p>
-                        <p className={cn(textStyles({ size: 'xs', color: 'muted' }), "mt-1")}>Your work will appear here automatically</p>
+                        <ComputerDesktopIcon className={cn(iconStyles(isDark, 'lg'), "mx-auto mb-3 opacity-50 h-12 w-12 text-[#4f7b38]")} />
+                        <p className={textStyles(isDark, { size: 'sm', color: 'secondary' })}>No containers saved yet</p>
+                        <p className={cn(textStyles(isDark, { size: 'xs', color: 'muted' }), "mt-1")}>Your work will appear here automatically</p>
                     </div>
                 ) : filteredContainers.length === 0 ? (
                     <div className="text-center py-12">
-                        <ComputerDesktopIcon className={cn(iconStyles('lg'), "mx-auto mb-3 opacity-50 h-12 w-12 text-[#4f7b38]")} />
-                        <p className={textStyles({ size: 'sm', color: 'secondary' })}>No matching containers found</p>
+                        <ComputerDesktopIcon className={cn(iconStyles(isDark, 'lg'), "mx-auto mb-3 opacity-50 h-12 w-12 text-[#4f7b38]")} />
+                        <p className={textStyles(isDark, { size: 'sm', color: 'secondary' })}>No matching containers found</p>
                         <button
                             onClick={() => setSearchTerm('')}
-                            className={cn(textStyles({ size: 'xs' }), "mt-1 text-[#6aa329] hover:underline")}
+                            className={cn(textStyles(isDark, { size: 'xs' }), "mt-1 text-[#6aa329] hover:underline")}
                         >
                             Clear search
                         </button>
                     </div>
                 ) : (
-                    <div className="divide-y divide-[#f0f7e7]">
+                    <div className={cn("divide-y", isDark ? "divide-[#2d4222]" : "divide-[#f0f7e7]")}>
                         {filteredContainers.map((container) => (
                             <div
                                 key={container.id}
-                                className="group p-4 hover:bg-[#fafdfb] transition-colors"
+                                className={cn(
+                                    "group p-4 transition-colors",
+                                    isDark ? "hover:bg-[#1f2616]" : "hover:bg-[#f0f7e7]"
+                                )}
                             >
                                 <div className="flex items-center justify-between">
                                     <div className="flex-1 min-w-0 mr-3">
                                         <h3 className={cn(
-                                            textStyles({ size: 'sm', weight: 'medium' }),
+                                            textStyles(isDark, { size: 'sm', weight: 'medium' }),
                                             "truncate",
-                                            container.name === "Untitled" ? "text-gray-500 italic" : "text-[#0c0e0a]"
+                                            // container.name === "Untitled" ? "text-gray-500 italic" : "text-[#0c0e0a]"
+                                            container.name === "Untitled"
+                                                ? (isDark ? "text-gray-400 italic" : "text-gray-500 italic")
+                                                : (isDark ? "text-[#d1d5db]" : "text-[#0c0e0a]")
                                         )}>
                                             {container.name}
                                         </h3>
                                         <div className="flex items-center space-x-3 mt-1">
-                                            <span className={textStyles({ size: 'xs', color: 'secondary' })}>
+                                            <span className={textStyles(isDark, { size: 'xs', color: 'secondary' })}>
                                                 v{container.version || '0.0.0'}
                                             </span>
-                                            <span className={cn(textStyles({ size: 'xs', color: 'muted' }), "flex items-center")}>
-                                                <ClockIcon className={cn(iconStyles('sm'), "mr-1 h-3 w-3")} />
+                                            <span className={cn(textStyles(isDark, { size: 'xs', color: 'muted' }), "flex items-center")}>
+                                                <ClockIcon className={cn(iconStyles(isDark, 'sm'), "mr-1 h-3 w-3")} />
                                                 {formatTimeAgo(container.lastModified)}
                                             </span>
                                         </div>
                                         <div className="flex items-center space-x-2 mt-1">
-                                            <span className={textStyles({ size: 'xs', color: 'muted' })}>
+                                            <span className={textStyles(isDark, { size: 'xs', color: 'muted' })}>
                                                 {container.data.build.directives?.length || 0} build steps
                                             </span>
                                             {!isPublishedContainer(container.data.name) && (
-                                                <span className={cn(textStyles({ size: 'xs' }), "bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full")}>
+                                                <span className={cn(textStyles(isDark, { size: 'xs' }), "bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full")}>
                                                     Unpublished
                                                 </span>
                                             )}
@@ -378,16 +397,16 @@ function LocalContainersList({
                                     <div className="flex items-center space-x-2 flex-shrink-0">
                                         <button
                                             onClick={() => onLoadContainer(container.data, container.id)}
-                                            className={cn(BUTTONS.primary, "rounded-lg")}
+                                            className={cn(buttonStyles(isDark, 'primary', 'md'), "rounded-lg")}
                                         >
                                             Open
                                         </button>
                                         <button
                                             onClick={(e) => handleDelete(container.id, e)}
-                                            className={cn(BUTTONS.icon, "hover:text-red-600")}
+                                            className={cn(buttonStyles(isDark, 'ghost', 'sm'), "hover:text-red-600")}
                                             title="Delete container"
                                         >
-                                            <TrashIcon className={iconStyles('sm')} />
+                                            <TrashIcon className={iconStyles(isDark, 'sm')} />
                                         </button>
                                     </div>
                                 </div>
@@ -400,23 +419,23 @@ function LocalContainersList({
             {/* Confirmation Dialog */}
             {confirmDeleteId && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className={cn(CARDS.default, "p-6 max-w-sm mx-4")}>
-                        <h3 className={cn(textStyles({ size: 'lg', weight: 'semibold', color: 'primary' }), "mb-3")}>
+                    <div className={cn(styles.cards.default, "p-6 max-w-sm mx-4")}>
+                        <h3 className={cn(textStyles(isDark, { size: 'lg', weight: 'semibold', color: 'primary' }), "mb-3")}>
                             Delete Container?
                         </h3>
-                        <p className={cn(textStyles({ color: 'secondary' }), "mb-6")}>
+                        <p className={cn(textStyles(isDark, { color: 'secondary' }), "mb-6")}>
                             This action cannot be undone. The container will be permanently removed from your browser.
                         </p>
                         <div className="flex space-x-3">
                             <button
                                 onClick={cancelDelete}
-                                className={cn(BUTTONS.secondary, "flex-1")}
+                                className={cn(buttonStyles(isDark, 'secondary', 'md'), "flex-1")}
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={confirmDelete}
-                                className={cn(BUTTONS.danger, "flex-1")}
+                                className={cn(buttonStyles(isDark, 'danger', 'md'), "flex-1")}
                             >
                                 Delete
                             </button>
@@ -439,6 +458,7 @@ function RemoteContainersList({
     filesystemMode: 'local' | 'remote';
     onFilesystemModeChange: (mode: 'local' | 'remote') => void;
 }) {
+    const { isDark } = useTheme();
     const { files, loading, error, refetch, clearCache } = useGitHubFiles("neurodesk", "neurocontainers", "main");
     const [loadingRecipe, setLoadingRecipe] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
@@ -501,20 +521,26 @@ function RemoteContainersList({
     };
 
     return (
-        <div className={cn(CARDS.elevated, "h-fit")}>
+        <div className={cn(cardStyles(isDark, 'elevated'), "h-fit")}>
             {/* Header */}
-            <div className="border-b border-[#e6f1d6] p-4">
+            <div
+                className={cn("border-b p-4", isDark ? "border-[#2d4222]" : "border-[#f0f7e7]")}
+            >
                 <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center space-x-2">
                         {filesystemMode === 'remote' ? (
-                            <CloudIcon className={iconStyles('md', 'secondary')} />
+                            <CloudIcon className={iconStyles(isDark, 'md', 'secondary')} />
                         ) : (
-                            <ComputerDesktopIcon className={iconStyles('md', 'secondary')} />
+                            <ComputerDesktopIcon className={iconStyles(isDark, 'md', 'secondary')} />
                         )}
-                        <h2 className={textStyles({ size: 'lg', weight: 'semibold', color: 'primary' })}>
+                        <h2 className={textStyles(isDark, { size: 'lg', weight: 'semibold', color: 'primary' })}>
                             {filesystemMode === 'remote' ? 'Published Containers' : 'Local Repository'}
                         </h2>
-                        <div className={cn("px-2 py-1 rounded-full", textStyles({ size: 'xs' }), "bg-[#f0f7e7] text-[#4f7b38]")}>
+                        <div className={cn(
+                            "px-2 py-1 rounded-full",
+                            textStyles(isDark, { size: 'xs' }),
+                            isDark ? "bg-[#2d4222] text-[#7bb33a]" : "bg-[#f0f7e7] text-[#4f7b38]"
+                        )}>
                             {filesystemMode === 'remote' ? 'NeuroContainers' : 'Local Files'}
                         </div>
                     </div>
@@ -524,17 +550,17 @@ function RemoteContainersList({
                                 <button
                                     onClick={refetch}
                                     disabled={loading}
-                                    className={cn(BUTTONS.icon, "disabled:opacity-50")}
+                                    className={cn(buttonStyles(isDark, 'ghost', 'sm'), "disabled:opacity-50")}
                                     title="Refresh recipes"
                                 >
-                                    <ArrowPathIcon className={cn(iconStyles('sm'), loading && 'animate-spin')} />
+                                    <ArrowPathIcon className={cn(iconStyles(isDark, 'sm'), loading && 'animate-spin')} />
                                 </button>
                                 <button
                                     onClick={clearCache}
-                                    className={cn(BUTTONS.icon, "hover:text-red-600")}
+                                    className={cn(buttonStyles(isDark, 'ghost', 'sm'), "hover:text-red-600")}
                                     title="Clear cache"
                                 >
-                                    <TrashIcon className={iconStyles('sm')} />
+                                    <TrashIcon className={iconStyles(isDark, 'sm')} />
                                 </button>
                             </>
                         )}
@@ -548,23 +574,38 @@ function RemoteContainersList({
                         }
                     </p>
                     {/* Mode Toggle Switch */}
-                    <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
+                    <div className={cn(
+                        "flex items-center space-x-1 rounded-lg p-1",
+                        isDark ? "bg-[#2d4222]" : "bg-gray-100"
+                    )}>
                         <button
                             onClick={() => onFilesystemModeChange('remote')}
-                            className={`flex items-center px-2 py-1 rounded text-xs font-medium transition-colors ${filesystemMode === 'remote'
-                                ? 'bg-white text-[#6aa329] shadow-sm'
-                                : 'text-gray-600 hover:text-gray-900'
-                                }`}
+                            className={cn(
+                                "flex items-center px-2 py-1 rounded text-xs font-medium transition-colors",
+                                filesystemMode === 'remote'
+                                    ? (isDark
+                                        ? 'bg-[#161a0e] text-[#7bb33a] shadow-sm'
+                                        : 'bg-white text-[#6aa329] shadow-sm')
+                                    : (isDark
+                                        ? 'text-[#d1d5db] hover:text-[#f9fafb]'
+                                        : 'text-gray-600 hover:text-gray-900')
+                            )}
                         >
                             <CloudIcon className="h-3 w-3 mr-1" />
                             GitHub
                         </button>
                         <button
                             onClick={() => onFilesystemModeChange('local')}
-                            className={`flex items-center px-2 py-1 rounded text-xs font-medium transition-colors ${filesystemMode === 'local'
-                                ? 'bg-white text-[#6aa329] shadow-sm'
-                                : 'text-gray-600 hover:text-gray-900'
-                                }`}
+                            className={cn(
+                                "flex items-center px-2 py-1 rounded text-xs font-medium transition-colors",
+                                filesystemMode === 'local'
+                                    ? (isDark
+                                        ? 'bg-[#161a0e] text-[#7bb33a] shadow-sm'
+                                        : 'bg-white text-[#6aa329] shadow-sm')
+                                    : (isDark
+                                        ? 'text-[#d1d5db] hover:text-[#f9fafb]'
+                                        : 'text-gray-600 hover:text-gray-900')
+                            )}
                         >
                             <ComputerDesktopIcon className="h-3 w-3 mr-1" />
                             Local
@@ -576,7 +617,12 @@ function RemoteContainersList({
             {filesystemMode === 'remote' ? (
                 <>
                     {/* Search */}
-                    <div className="p-4 border-b border-[#f0f7e7]">
+                    <div
+                        className={cn("p-4 border-b", isDark
+                            ? "border-[#2d4222]"
+                            : "border-[#f0f7e7]"
+                        )}
+                    >
                         <div className="relative">
                             <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                             <input
@@ -584,7 +630,7 @@ function RemoteContainersList({
                                 placeholder="Search recipes..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:border-transparent text-sm"
+                                className={cn(inputStyles(isDark), "pl-9")}
                             />
                         </div>
                         {searchTerm && (
@@ -628,15 +674,25 @@ function RemoteContainersList({
                                 )}
                             </div>
                         ) : (
-                            <div className="divide-y divide-[#f0f7e7]">
+                            <div className={cn("divide-y", isDark ? "divide-[#2d4222]" : "divide-[#f0f7e7]")}>
                                 {filteredFiles.map((file) => (
                                     <div
                                         key={file.path}
-                                        className="group p-4 hover:bg-[#fafdfb] transition-colors"
+                                        className={cn(
+                                            "group p-4 transition-colors",
+                                            isDark ? "hover:bg-[#1f2616]" : "hover:bg-[#f0f7e7]"
+                                        )}
                                     >
                                         <div className="flex items-center justify-between">
                                             <div className="flex-1 min-w-0 mr-3">
-                                                <h3 className="font-medium text-sm truncate text-[#0c0e0a]">
+                                                <h3
+                                                    // className={cn("font-medium text-sm truncate", isDark ? "text-[#161a0e]" : "text-[#0c0e0a]")}
+                                                    className={cn(
+                                                        textStyles(isDark, { size: 'sm', weight: 'medium' }),
+                                                        "truncate",
+                                                        isDark ? "text-[#d1d5db]" : "text-[#0c0e0a]"
+                                                    )}
+                                                >
                                                     {getRecipeName(file.path)}
                                                 </h3>
                                                 <div className="text-xs text-gray-500 mt-1 font-mono truncate">
@@ -647,7 +703,12 @@ function RemoteContainersList({
                                                 <button
                                                     onClick={() => handleLoadRecipe(file)}
                                                     disabled={loadingRecipe === file.path}
-                                                    className="px-3 py-1.5 bg-[#6aa329] text-white rounded-lg text-xs font-medium hover:bg-[#4f7b38] transition-colors disabled:opacity-50"
+                                                    className={cn(
+                                                        "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50",
+                                                        isDark
+                                                            ? "bg-[#7bb33a] text-white hover:bg-[#4f7b38]"
+                                                            : "bg-[#6aa329] text-white hover:bg-[#4f7b38]"
+                                                    )}
                                                 >
                                                     {loadingRecipe === file.path ? (
                                                         <div className="animate-spin h-3 w-3 border border-white border-t-transparent rounded-full"></div>
@@ -685,13 +746,23 @@ function RemoteContainersList({
 }
 
 function Footer() {
+    const { isDark } = useTheme();
     return (
-        <footer className="bg-white border-t border-[#e6f1d6] mt-12">
+        <footer className={cn(
+            "border-t mt-12",
+            isDark
+                ? "bg-[#161a0e] border-[#2d4222]"
+                : "bg-white border-[#e6f1d6]"
+        )}>
             <div className="max-w-6xl mx-auto px-6 py-8">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
                     {/* Main Site */}
                     <div>
-                        <h3 className="text-sm font-semibold text-[#0c0e0a] mb-3">Neurodesk</h3>
+                        <h3 className={cn(
+                            "text-sm font-semibold",
+                            isDark ? "text-[#d1d5db]" : "text-[#0c0e0a]",
+                            "mb-3"
+                        )}>Neurodesk</h3>
                         <a
                             href="https://neurodesk.org"
                             target="_blank"
@@ -708,7 +779,11 @@ function Footer() {
 
                     {/* Containers Repository */}
                     <div>
-                        <h3 className="text-sm font-semibold text-[#0c0e0a] mb-3">Containers</h3>
+                        <h3 className={cn(
+                            "text-sm font-semibold",
+                            isDark ? "text-[#d1d5db]" : "text-[#0c0e0a]",
+                            "mb-3"
+                        )}>Containers</h3>
                         <a
                             href="https://github.com/neurodesk/neurocontainers"
                             target="_blank"
@@ -725,7 +800,11 @@ function Footer() {
 
                     {/* UI Repository */}
                     <div>
-                        <h3 className="text-sm font-semibold text-[#0c0e0a] mb-3">Builder UI</h3>
+                        <h3 className={cn(
+                            "text-sm font-semibold",
+                            isDark ? "text-[#d1d5db]" : "text-[#0c0e0a]",
+                            "mb-3"
+                        )}>Builder UI</h3>
                         <a
                             href="https://github.com/neurodesk/neurocontainers-ui"
                             target="_blank"
@@ -742,7 +821,12 @@ function Footer() {
                 </div>
 
                 {/* Bottom Bar */}
-                <div className="border-t border-[#f0f7e7] mt-8 pt-6 text-center">
+                <div
+                    className={cn(
+                        "border-t mt-8 pt-6 text-center",
+                        isDark ? "border-[#2d4222]" : "border-[#e6f1d6]"
+                    )}
+                >
                     <p className="text-xs text-gray-500">
                         Built for the neuroimaging community by the Neurodesk team.
                     </p>
@@ -785,6 +869,14 @@ function SideNavigation({
     isLocalFilesystemConnected?: boolean;
     onSaveToLocalFilesystem?: () => void;
 }) {
+    const { isDark } = useTheme();
+    const actionStyle = cn(
+        "w-full flex items-center space-x-2 px-3 py-2",
+        "text-sm font-medium",
+        isDark ? "text-[#d1d5db] hover:text-[#f9fafb]" : "text-[#1e2a16] hover:bg-[#e6f1d6]",
+        "rounded-md transition-colors",
+        "disabled:opacity-50 disabled:cursor-not-allowed",
+    );
     return (
         <>
             {/* Overlay for mobile */}
@@ -797,26 +889,37 @@ function SideNavigation({
 
             {/* Sidebar */}
             <nav
-                className={`
-                    fixed lg:sticky top-0 left-0 h-full lg:h-screen
-                    w-full lg:w-64 bg-white border-r border-[#e6f1d6] 
-                    transform transition-transform duration-300 ease-in-out z-50
-                    ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
-                    flex flex-col
-                `}
+                className={cn(
+                    "fixed lg:sticky top-0 left-0 h-full lg:h-screen",
+                    "w-full lg:w-64 border-r",
+                    "transform transition-transform duration-300 ease-in-out z-50",
+                    "flex flex-col",
+                    isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+                    isDark
+                        ? "bg-[#161a0e] border-[#2d4222]"
+                        : "bg-white border-[#e6f1d6]"
+                )}
             >
                 {/* Header with Title */}
-                <div className="p-4 border-b border-[#e6f1d6] bg-[#0c0e0a] text-white">
+                <div className={cn(
+                    "p-4 border-b text-white",
+                    isDark
+                        ? "border-[#2d4222] bg-[#0a0c08]"
+                        : "border-[#e6f1d6] bg-[#0c0e0a]"
+                )}>
                     <div className="flex items-center justify-between">
                         <h1 className="text-base font-bold">
                             Neurocontainers Builder
                         </h1>
-                        <button
-                            onClick={onToggle}
-                            className="lg:hidden p-1 rounded-md hover:bg-[#1e2a16]"
-                        >
-                            <XMarkIcon className="h-4 w-4" />
-                        </button>
+                        <div className="flex items-center space-x-2">
+                            <ThemeToggleIcon />
+                            <button
+                                onClick={onToggle}
+                                className="lg:hidden p-1 rounded-md hover:bg-[#1e2a16]"
+                            >
+                                <XMarkIcon className="h-4 w-4" />
+                            </button>
+                        </div>
                     </div>
                     {/* Save Status */}
                     {yamlData && (
@@ -827,17 +930,20 @@ function SideNavigation({
                 </div>
 
                 {/* Action Buttons */}
-                <div className="p-3 border-b border-[#e6f1d6] bg-[#f8fdf2]">
+                <div className={cn(
+                    "p-3 border-b border-[#e6f1d6]",
+                    isDark ? "bg-[#1e2a16]" : "bg-[#f8fdf2]",
+                )}>
                     <div className="space-y-1">
                         <button
-                            className="w-full flex items-center space-x-2 px-3 py-2 text-sm font-medium text-[#1e2a16] hover:bg-[#e6f1d6] rounded-md transition-colors"
+                            className={actionStyle}
                             onClick={onNewContainer}
                         >
                             <RectangleStackIcon className="h-4 w-4" />
                             <span>Container Library</span>
                         </button>
                         <button
-                            className="w-full flex items-center space-x-2 px-3 py-2 text-sm font-medium text-[#1e2a16] hover:bg-[#e6f1d6] rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className={actionStyle}
                             onClick={onExportYAML}
                             disabled={!yamlData}
                         >
@@ -849,7 +955,7 @@ function SideNavigation({
                                 href={githubUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="w-full flex items-center space-x-2 px-3 py-2 text-sm font-medium text-[#1e2a16] hover:bg-[#e6f1d6] rounded-md transition-colors"
+                                className={actionStyle}
                             >
                                 <EyeIcon className="h-4 w-4" />
                                 <span>View on GitHub</span>
@@ -858,7 +964,7 @@ function SideNavigation({
                         ) : (<></>)}
                         {filesystemMode === 'local' && isLocalFilesystemConnected && (
                             <button
-                                className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-[#1e2a16] hover:bg-[#e6f1d6] rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className={actionStyle}
                                 onClick={onSaveToLocalFilesystem}
                                 disabled={!yamlData}
                             >
@@ -870,7 +976,7 @@ function SideNavigation({
                             </button>
                         )}
                         <button
-                            className="w-full flex items-center space-x-2 px-3 py-2 text-sm font-medium text-[#1e2a16] hover:bg-[#e6f1d6] rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className={actionStyle}
                             onClick={onOpenGitHub}
                             disabled={!yamlData}
                         >
@@ -881,7 +987,7 @@ function SideNavigation({
                             href="https://github.com/neurodesk/neurocontainers-ui/issues/new"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-full flex items-center space-x-2 px-3 py-2 text-sm font-medium text-[#1e2a16] hover:bg-[#e6f1d6] rounded-md transition-colors"
+                            className={actionStyle}
                         >
                             <ExclamationTriangleIcon className="h-4 w-4" />
                             <span>Report an Issue</span>
@@ -891,7 +997,7 @@ function SideNavigation({
 
                 {/* Unpublished Warning */}
                 {yamlData && !isPublished && (
-                    <div className="p-3 border-b border-[#e6f1d6] bg-orange-50">
+                    <div className={cn("p-3 border-b", isDark ? "bg-orange-900 border-orange-800" : "border-[#e6f1d6] bg-orange-50")}>
                         <div className="flex items-start space-x-2">
                             <ExclamationTriangleIcon className="h-4 w-4 text-orange-600 flex-shrink-0 mt-0.5" />
                             <div>
@@ -906,12 +1012,14 @@ function SideNavigation({
 
                 {/* Modified Warning */}
                 {yamlData && isPublished && isModified && (
-                    <div className="p-3 border-b border-[#e6f1d6] bg-yellow-50">
+                    <div className={cn("p-3 border-b", isDark ? "bg-yellow-900 border-yellow-800" : "border-[#e6f1d6] bg-yellow-50")}>
                         <div className="flex items-start space-x-2">
                             <ExclamationTriangleIcon className="h-4 w-4 text-yellow-600 flex-shrink-0 mt-0.5" />
                             <div>
-                                <p className="text-xs font-medium text-yellow-800">Modified Container</p>
-                                <p className="text-xs text-yellow-700 mt-1">
+                                <p className={cn("text-xs font-medium", isDark ? "text-yellow-300" : "text-yellow-800")}>
+                                    Modified Container
+                                </p>
+                                <p className={cn("text-xs mt-1", isDark ? "text-yellow-200" : "text-yellow-700")}>
                                     This container has been modified from the published version. Your changes are only saved locally.
                                 </p>
                             </div>
@@ -920,8 +1028,8 @@ function SideNavigation({
                 )}
 
                 {/* Build Steps Header */}
-                <div className="p-3 border-b border-[#e6f1d6]">
-                    <h2 className="text-sm font-semibold text-[#0c0e0a]">
+                <div className={cn("p-3 border-b border-[#e6f1d6]")}>
+                    <h2 className={cn("text-sm font-semibold", isDark ? "text-[#d1d5db]" : "text-[#0c0e0a]")}>
                         Build Steps
                     </h2>
                     <p className="text-xs text-[#4f7b38] mt-1">
@@ -945,24 +1053,30 @@ function SideNavigation({
                                         onToggle();
                                     }
                                 }}
-                                className={`
-                                    w-full text-left p-3 rounded-md transition-all duration-200
-                                    flex items-start space-x-3 group relative
-                                    ${isActive
-                                        ? "bg-[#6aa329] text-white shadow-sm"
-                                        : "hover:bg-[#f0f7e7] text-[#1e2a16]"
-                                    }
-                                `}
+                                className={cn(
+                                    "w-full text-left p-3 rounded-md transition-all duration-200",
+                                    "flex items-start space-x-3 group relative",
+                                    isActive
+                                        ? (isDark
+                                            ? "bg-[#7bb33a] text-white shadow-sm"
+                                            : "bg-[#6aa329] text-white shadow-sm")
+                                        : (isDark
+                                            ? "hover:bg-[#1f2e18] text-[#e5e7eb]"
+                                            : "hover:bg-[#f0f7e7] text-[#1e2a16]")
+                                )}
                             >
                                 {/* Step number */}
                                 <div
-                                    className={`
-                                        flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-xs font-semibold
-                                        ${isActive
-                                            ? "bg-white text-[#6aa329]"
-                                            : "bg-[#e6f1d6] text-[#4f7b38] group-hover:bg-[#d3e7b6]"
-                                        }
-                                    `}
+                                    className={cn(
+                                        "flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-xs font-semibold",
+                                        isActive
+                                            ? (isDark
+                                                ? "bg-[#161a0e] text-[#7bb33a]"
+                                                : "bg-white text-[#6aa329]")
+                                            : (isDark
+                                                ? "bg-[#2d4222] text-[#91c84a] group-hover:bg-[#3a5c29]"
+                                                : "bg-[#e6f1d6] text-[#4f7b38] group-hover:bg-[#d3e7b6]")
+                                    )}
                                 >
                                     {index + 1}
                                 </div>
@@ -975,13 +1089,12 @@ function SideNavigation({
                                         </div>
                                     </div>
                                     <div
-                                        className={`
-                                            text-xs leading-tight
-                                            ${isActive
+                                        className={cn(
+                                            "text-xs leading-tight",
+                                            isActive
                                                 ? "text-white/90"
-                                                : "text-[#4f7b38]"
-                                            }
-                                        `}
+                                                : (isDark ? "text-[#91c84a]" : "text-[#4f7b38]")
+                                        )}
                                     >
                                         {section.description}
                                     </div>
@@ -989,7 +1102,10 @@ function SideNavigation({
 
                                 {/* Active indicator */}
                                 {isActive && (
-                                    <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-1 h-6 bg-white rounded-l-full" />
+                                    <div className={cn(
+                                        "absolute right-0 top-1/2 transform -translate-y-1/2 w-1 h-6 rounded-l-full",
+                                        isDark ? "bg-[#161a0e]" : "bg-white"
+                                    )} />
                                 )}
                             </button>
                         );
@@ -1017,14 +1133,23 @@ function TopNavigation({
     saveStatus: SaveStatus;
     filesystemMode?: 'local' | 'remote';
 }) {
+    const { isDark } = useTheme();
     return (
-        <div className="fixed top-0 left-0 right-0 bg-[#0c0e0a] border-b border-[#1e2a16] p-3 lg:hidden z-30">
+        <div className={cn(
+            "fixed top-0 left-0 right-0 border-b p-3 lg:hidden z-30",
+            isDark
+                ? "bg-[#0a0c08] border-[#1f2e18]"
+                : "bg-[#0c0e0a] border-[#1e2a16]"
+        )}>
             {/* Header */}
             <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-3">
                     <button
                         onClick={onSidebarToggle}
-                        className="p-2 rounded-md hover:bg-[#1e2a16] text-white"
+                        className={cn(
+                            "p-2 rounded-md text-white",
+                            isDark ? "hover:bg-[#1f2e18]" : "hover:bg-[#1e2a16]"
+                        )}
                     >
                         <Bars3Icon className="h-5 w-5" />
                     </button>
@@ -1040,14 +1165,25 @@ function TopNavigation({
 
                 {/* Action buttons for mobile */}
                 <div className="flex items-center space-x-2">
+                    <ThemeToggleIcon />
                     <button
-                        className="bg-[#1e2a16] hover:bg-[#161c10] px-3 py-1 rounded-md text-xs font-medium transition-colors text-white"
+                        className={cn(
+                            "px-3 py-1 rounded-md text-xs font-medium transition-colors text-white",
+                            isDark
+                                ? "bg-[#1f2e18] hover:bg-[#171e13]"
+                                : "bg-[#1e2a16] hover:bg-[#161c10]"
+                        )}
                         onClick={onNewContainer}
                     >
                         New
                     </button>
                     <button
-                        className="bg-[#4f7b38] hover:bg-[#6aa329] px-3 py-1 rounded-md text-xs font-medium transition-colors text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                        className={cn(
+                            "px-3 py-1 rounded-md text-xs font-medium transition-colors text-white disabled:opacity-50 disabled:cursor-not-allowed",
+                            isDark
+                                ? "bg-[#5a8f23] hover:bg-[#7bb33a]"
+                                : "bg-[#4f7b38] hover:bg-[#6aa329]"
+                        )}
                         onClick={onOpenGitHub}
                         disabled={!yamlData}
                     >
@@ -1068,13 +1204,17 @@ function SectionHeader({
     title: string;
     description: string;
 }) {
+    const { isDark } = useTheme();
     return (
         <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-[#6aa329] rounded-lg shadow-sm">
+            <div className={cn(
+                "p-2 rounded-lg shadow-sm",
+                isDark ? "bg-[#7bb33a]" : "bg-[#6aa329]"
+            )}>
                 <Icon className="h-5 w-5 text-white" />
             </div>
             <div>
-                <h2 className="text-xl font-bold text-[#0c0e0a]">
+                <h2 className={cn("text-xl font-bold", isDark ? "text-white" : "text-[#0c0e0a]")}>
                     {title}
                 </h2>
                 <p className="text-[#4f7b38] mt-1">
@@ -1086,6 +1226,8 @@ function SectionHeader({
 }
 
 export default function Home() {
+    const { isDark } = useTheme();
+    const styles = useThemeStyles(isDark);
     const [yamlData, setYamlData] = useState<ContainerRecipe | null>(null);
     const [loading, setLoading] = useState(true);
     const [loadingContainer, setLoadingContainer] = useState<string | null>(null);
@@ -1629,31 +1771,31 @@ export default function Home() {
     };
 
     return (
-        <div className="min-h-screen bg-[#f8fdf2] flex">
+        <div className={cn("min-h-screen flex", isDark ? "bg-[#161a0e]" : "bg-[#f8fdf2]")}>
             {loading ? (
                 <div className="flex-1 flex items-center justify-center">
-                    <div className="bg-white rounded-lg shadow-md p-8 text-center">
-                        <div className="animate-pulse text-[#4f7b38] text-lg">
+                    <div className={cn("rounded-lg shadow-md p-8 text-center", styles.cards.default)}>
+                        <div className={cn("animate-pulse text-lg", isDark ? "text-[#91c84a]" : "text-[#4f7b38]")}>
                             Loading...
                         </div>
                     </div>
                 </div>
             ) : loadingContainer ? (
                 <div className="flex-1 flex items-center justify-center">
-                    <div className="bg-white rounded-lg shadow-md p-8 text-center max-w-md">
-                        <div className="animate-spin h-12 w-12 border-4 border-[#6aa329] border-t-transparent rounded-full mx-auto mb-4"></div>
-                        <h2 className="text-lg font-semibold text-[#0c0e0a] mb-2">Loading Container</h2>
-                        <p className="text-[#4f7b38]">
+                    <div className={cn("rounded-lg shadow-md p-8 text-center max-w-md", styles.cards.default)}>
+                        <div className={cn("animate-spin h-12 w-12 border-4 border-t-transparent rounded-full mx-auto mb-4", isDark ? "border-[#7bb33a]" : "border-[#6aa329]")}></div>
+                        <h2 className={cn("text-lg font-semibold mb-2", isDark ? "text-[#e8f5d0]" : "text-[#0c0e0a]")}>Loading Container</h2>
+                        <p className={cn(isDark ? "text-[#91c84a]" : "text-[#4f7b38]")}>
                             Loading &ldquo;{loadingContainer}&rdquo; from repository...
                         </p>
                     </div>
                 </div>
             ) : containerError && !isEditingName && !isUpdatingUrl ? (
                 <div className="flex-1 flex items-center justify-center">
-                    <div className="bg-white rounded-lg shadow-md p-8 text-center max-w-md">
+                    <div className={cn("rounded-lg shadow-md p-8 text-center max-w-md", styles.cards.default)}>
                         <ExclamationTriangleIcon className="h-16 w-16 text-red-500 mx-auto mb-4" />
-                        <h2 className="text-lg font-semibold text-[#0c0e0a] mb-2">Container Not Found</h2>
-                        <p className="text-red-600 mb-6">
+                        <h2 className={cn("text-lg font-semibold mb-2", isDark ? "text-[#e8f5d0]" : "text-[#0c0e0a]")}>Container Not Found</h2>
+                        <p className={cn("mb-6", isDark ? "text-red-400" : "text-red-600")}>
                             {containerError}
                         </p>
                         <div className="space-y-3">
@@ -1674,7 +1816,12 @@ export default function Home() {
                                         setLoadingContainer(null);
                                         updateUrl(newContainer);
                                     }}
-                                    className="w-full bg-[#6aa329] text-white px-4 py-2 rounded-md hover:bg-[#5a8f23] transition-colors font-medium"
+                                    className={cn(
+                                        "w-full px-4 py-2 rounded-md transition-colors font-medium",
+                                        isDark
+                                            ? "bg-[#7bb33a] text-white hover:bg-[#5a8f23]"
+                                            : "bg-[#6aa329] text-white hover:bg-[#5a8f23]"
+                                    )}
                                 >
                                     Create New Container &ldquo;{currentRoute}&rdquo;
                                 </button>
@@ -1774,29 +1921,52 @@ export default function Home() {
                                 {/* YAML Preview */}
                                 <section className="mb-6">
                                     <div
-                                        className="p-4 bg-gradient-to-r from-[#f8fdf2] to-[#f0f7e7] rounded-t-lg flex justify-between items-center cursor-pointer hover:from-[#f0f7e7] hover:to-[#e6f1d6] transition-colors"
+                                        className={cn(
+                                            "p-4 flex justify-between items-center cursor-pointer transition-colors",
+                                            isDark
+                                                ? "bg-[#1e2a16] text-[#e8f5d0]"
+                                                : "text-[#0c0e0a]"
+                                        )}
                                         onClick={() =>
                                             document
                                                 .getElementById("yaml-preview")
                                                 ?.classList.toggle("hidden")
                                         }
                                     >
-                                        <h3 className="font-semibold text-[#0c0e0a]">
+                                        <h3
+                                            className="font-semibold"
+                                        >
                                             YAML Preview
                                         </h3>
                                         <ChevronDownIcon className="h-5 w-5 text-[#4f7b38]" />
                                     </div>
 
-                                    <div id="yaml-preview" className="hidden p-4">
+                                    <div id="yaml-preview"
+                                        // className="hidden p-4"
+                                        className={cn(
+                                            "p-4 shadow-md",
+                                            isDark ? "text-white bg-[#1e2a16]" : "text-black bg-white"
+                                        )}
+                                    >
                                         <textarea
-                                            className="w-full h-64 px-3 py-2 font-mono text-sm bg-[#1e2a16] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6aa329]"
+                                            className={cn(
+                                                "w-full h-64 px-3 py-2 font-mono text-sm rounded-lg focus:outline-none focus:ring-2 border",
+                                                isDark
+                                                    ? "focus:ring-[#7bb33a] border-[#2d4222] bg-[#161a0e] text-white"
+                                                    : "focus:ring-[#6aa329] border-[#e6f1d6] bg-white text-black"
+                                            )}
                                             value={yamlText}
                                             onChange={(e) => setYamlText(e.target.value)}
                                             onBlur={updateFromYamlText}
                                         ></textarea>
                                         <div className="mt-3 text-right">
                                             <button
-                                                className="bg-[#6aa329] text-white px-4 py-2 rounded-lg hover:bg-[#4f7b38] transition-colors font-medium"
+                                                className={cn(
+                                                    "px-4 py-2 rounded-lg transition-colors font-medium",
+                                                    isDark
+                                                        ? "bg-[#7bb33a] hover:bg-[#4f7b38] text-white"
+                                                        : "bg-[#6aa329] hover:bg-[#4f7b38] text-white"
+                                                )}
                                                 onClick={updateFromYamlText}
                                             >
                                                 Apply YAML Changes
@@ -1813,15 +1983,18 @@ export default function Home() {
                     <div className="max-w-6xl mx-auto">
                         {/* Hero Section */}
                         <div className="text-center mb-8">
-                            <div className="inline-flex items-center justify-center w-16 h-16 bg-[#6aa329] rounded-2xl mb-6">
+                            <div className={cn(
+                                "inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-6",
+                                isDark ? "bg-[#7bb33a]" : "bg-[#6aa329]"
+                            )}>
                                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                                 </svg>
                             </div>
-                            <h1 className={cn(textStyles({ size: '2xl', weight: 'bold', color: 'primary' }), "mb-4 text-4xl")}>
+                            <h1 className={cn(textStyles(isDark, { size: '2xl', weight: 'bold', color: 'primary' }), "mb-4 text-4xl")}>
                                 Neurocontainers Builder
                             </h1>
-                            <p className={cn(textStyles({ size: 'xl', color: 'secondary' }), "mb-8 max-w-2xl mx-auto")}>
+                            <p className={cn(textStyles(isDark, { size: 'xl', color: 'secondary' }), "mb-8 max-w-2xl mx-auto")}>
                                 Create reproducible neuroimaging containers with ease. Build, validate, and publish
                                 containerized neuroimaging tools using our intuitive visual interface.
                             </p>
@@ -1830,7 +2003,7 @@ export default function Home() {
                         {/* Action Cards at Top */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
                             <button
-                                className={cn(CARDS.theme, "group p-6 border-2 hover:border-[#6aa329] hover:shadow-lg transition-all duration-300 text-left")}
+                                className={cn(styles.cards.theme, "group p-6 border-2 hover:border-[#6aa329] hover:shadow-lg transition-all duration-300 text-left")}
                                 onClick={() => {
                                     const newContainer = getNewContainerYAML();
                                     setYamlData(newContainer);
@@ -1846,14 +2019,17 @@ export default function Home() {
                                 }}
                             >
                                 <div className="flex items-center mb-4">
-                                    <div className="flex items-center justify-center w-10 h-10 bg-[#6aa329] rounded-lg mr-4 group-hover:scale-110 transition-transform">
+                                    <div className={cn(
+                                        "flex items-center justify-center w-10 h-10 rounded-lg mr-4 group-hover:scale-110 transition-transform",
+                                        isDark ? "bg-[#7bb33a]" : "bg-[#6aa329]"
+                                    )}>
                                         <PlusIcon className="h-5 w-5 text-white" />
                                     </div>
                                     <div>
-                                        <h3 className={textStyles({ size: 'lg', weight: 'semibold', color: 'primary' })}>
+                                        <h3 className={textStyles(isDark, { size: 'lg', weight: 'semibold', color: 'primary' })}>
                                             Create New Container
                                         </h3>
-                                        <p className={textStyles({ size: 'sm', color: 'secondary' })}>
+                                        <p className={textStyles(isDark, { size: 'sm', color: 'secondary' })}>
                                             Start from scratch with guided workflow
                                         </p>
                                     </div>
@@ -1861,7 +2037,12 @@ export default function Home() {
                             </button>
 
                             <div
-                                className="group p-6 bg-white border-2 border-dashed border-[#e6f1d6] rounded-xl hover:border-[#6aa329] hover:shadow-lg transition-all duration-300 cursor-pointer text-left"
+                                className={cn(
+                                    "group p-6 border-2 border-dashed rounded-xl hover:shadow-lg transition-all duration-300 cursor-pointer text-left",
+                                    isDark
+                                        ? "bg-[#161a0e] border-[#2d4222] hover:border-[#7bb33a]"
+                                        : "bg-white border-[#e6f1d6] hover:border-[#6aa329]"
+                                )}
                                 onClick={() => {
                                     const input = document.createElement("input");
                                     input.type = "file";
@@ -1918,14 +2099,17 @@ export default function Home() {
                                 }}
                             >
                                 <div className="flex items-center mb-4">
-                                    <div className="flex items-center justify-center w-10 h-10 bg-[#1e2a16] rounded-lg mr-4 group-hover:scale-110 transition-transform">
+                                    <div className={cn(
+                                        "flex items-center justify-center w-10 h-10 rounded-lg mr-4 group-hover:scale-110 transition-transform",
+                                        isDark ? "bg-[#1f2e18]" : "bg-[#1e2a16]"
+                                    )}>
                                         <ArrowUpTrayIcon className="h-5 w-5 text-white" />
                                     </div>
                                     <div>
-                                        <h3 className={textStyles({ size: 'lg', weight: 'semibold', color: 'primary' })}>
+                                        <h3 className={textStyles(isDark, { size: 'lg', weight: 'semibold', color: 'primary' })}>
                                             Upload YAML Recipe
                                         </h3>
-                                        <p className={textStyles({ size: 'sm', color: 'secondary' })}>
+                                        <p className={textStyles(isDark, { size: 'sm', color: 'secondary' })}>
                                             Import existing recipe file or drag & drop
                                         </p>
                                     </div>

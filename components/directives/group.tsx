@@ -8,7 +8,8 @@ import { Directive, GroupDirective } from "@/components/common";
 import DirectiveComponent from "./factory";
 import { registerDirective, DirectiveMetadata } from "./registry";
 import { DirectiveContainer, FormField, Input, ToggleButtonGroup, TagEditor } from "@/components/ui";
-import { BUTTONS, iconStyles, textStyles, cn } from "@/lib/styles";
+import { getButtons, iconStyles, textStyles, cn } from "@/lib/styles";
+import { useTheme } from "@/lib/ThemeContext";
 import { DirectiveControllers } from "../ui/DirectiveContainer";
 
 // Lazy import to avoid circular dependency
@@ -44,7 +45,7 @@ const groupEditors: Map<string, GroupEditor> = new Map();
 export interface GroupEditor {
     metadata: DirectiveMetadata;
     arguments: GroupEditorArgument[];
-    helpContent: () => JSX.Element;
+    helpContent: (isDark: boolean) => JSX.Element;
     updateDirective: (args: Record<string, unknown>) => GroupDirective;
 }
 
@@ -61,6 +62,7 @@ export function createGroupEditorComponent(editorInfo: GroupEditor) {
         customParams?: Record<string, unknown>;
         controllers: DirectiveControllers;
     }) {
+        const { isDark } = useTheme();
         const [showAdvanced, setShowAdvanced] = useState(false);
         const initializedRef = useRef(false);
 
@@ -199,12 +201,12 @@ export function createGroupEditorComponent(editorInfo: GroupEditor) {
         return (
             <DirectiveContainer
                 title={editorInfo.metadata.label}
-                helpContent={editorInfo.helpContent()}
+                helpContent={editorInfo.helpContent(isDark)}
                 controllers={controllers}
             >
                 <div className="space-y-4">
                     <div className="flex justify-between items-center">
-                        <h4 className={textStyles({ size: 'sm', weight: 'medium', color: 'secondary' })}>
+                        <h4 className={textStyles(isDark, { size: 'sm', weight: 'medium', color: 'secondary' })}>
                             {editorInfo.metadata.label} Configuration
                         </h4>
                         <button
@@ -212,7 +214,7 @@ export function createGroupEditorComponent(editorInfo: GroupEditor) {
                                 // Remove custom properties and switch to advanced mode
                                 onChangeWrapper(group, {});
                             }}
-                            className={cn(BUTTONS.secondary, "text-xs")}
+                            className={cn(getButtons(isDark).secondary, "text-xs")}
                             title="Switch to advanced mode for full control (cannot be undone)"
                         >
                             Switch to Advanced Mode
@@ -226,10 +228,10 @@ export function createGroupEditorComponent(editorInfo: GroupEditor) {
                     advancedArgs.length > 0 && (
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
-                                <h4 className={textStyles({ size: 'sm', weight: 'medium', color: 'secondary' })}>Advanced Settings</h4>
+                                <h4 className={textStyles(isDark, { size: 'sm', weight: 'medium', color: 'secondary' })}>Advanced Settings</h4>
                                 <button
                                     onClick={() => setShowAdvanced(!showAdvanced)}
-                                    className={cn(BUTTONS.secondary, "text-xs")}
+                                    className={cn(getButtons(isDark).secondary, "text-xs")}
                                 >
                                     {showAdvanced ? 'Hide' : 'Show'} Advanced
                                 </button>
@@ -278,12 +280,13 @@ export default function GroupDirectiveComponent({
     onChange: (group: Directive[]) => void;
     condition?: string;
     onConditionChange?: (condition: string | undefined) => void;
-    headerColor?: string;
-    borderColor?: string;
-    iconColor?: string;
+    headerColor?: { light: string, dark: string };
+    borderColor?: { light: string, dark: string };
+    iconColor?: { light: string, dark: string };
     icon?: React.ComponentType<{ className?: string }>;
     controllers: DirectiveControllers,
 }) {
+    const { isDark } = useTheme();
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
     const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
     const [deleteConfirmIndex, setDeleteConfirmIndex] = useState<number | null>(
@@ -505,7 +508,7 @@ export default function GroupDirectiveComponent({
                         <div className="p-6">
                             <div className="flex items-center gap-3 mb-4">
                                 <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                                    <TrashIcon className={cn(iconStyles('lg'), "text-red-600")} />
+                                    <TrashIcon className={cn(iconStyles(isDark, 'lg'), "text-red-600")} />
                                 </div>
                                 <div>
                                     <h3 className="text-lg font-medium text-gray-900">
@@ -522,7 +525,7 @@ export default function GroupDirectiveComponent({
                             </p>
                             <div className="flex gap-3 justify-end">
                                 <button
-                                    className={cn(BUTTONS.secondary, "text-sm")}
+                                    className={cn(getButtons(isDark).secondary, "text-sm")}
                                     onClick={cancelDelete}
                                 >
                                     Cancel
@@ -550,10 +553,10 @@ export const groupDirectiveMetadata: DirectiveMetadata = {
     label: "Group",
     description: "Group related directives together",
     icon: FolderIcon,
-    color: "bg-blue-50 border-blue-200 hover:bg-blue-100",
-    headerColor: "bg-blue-50",
-    borderColor: "border-blue-200",
-    iconColor: "text-blue-600",
+    color: { light: "bg-green-50 border-green-200 hover:bg-green-100", dark: "bg-green-900 border-green-700 hover:bg-green-800" },
+    headerColor: { light: "bg-green-50", dark: "bg-green-900" },
+    borderColor: { light: "border-green-200", dark: "border-green-700" },
+    iconColor: { light: "text-green-600", dark: "text-green-400" },
     defaultValue: { group: [] as Directive[] },
     keywords: ["group", "folder", "organize", "collection"],
     component: GroupDirectiveComponent,

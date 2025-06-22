@@ -3,7 +3,8 @@ import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
 import { TestInfo, ScriptTest, BuiltinTest } from "@/components/common";
 import { BeakerIcon } from "@heroicons/react/24/outline";
 import { registerDirective, DirectiveMetadata } from "./registry";
-import { HELP_SECTION, cn } from "@/lib/styles";
+import { cn, getHelpSection } from "@/lib/styles";
+import { useTheme } from "@/lib/ThemeContext";
 
 export default function TestDirectiveComponent({
     test,
@@ -20,12 +21,13 @@ export default function TestDirectiveComponent({
     onChange: (test: TestInfo) => void,
     condition?: string;
     onConditionChange?: (condition: string | undefined) => void;
-    headerColor?: string;
-    borderColor?: string;
-    iconColor?: string;
+    headerColor?: { light: string, dark: string };
+    borderColor?: { light: string, dark: string };
+    iconColor?: { light: string, dark: string };
     icon?: React.ComponentType<{ className?: string }>;
     controllers: DirectiveControllers;
 }) {
+    const { isDark } = useTheme();
     const isBuiltin = 'builtin' in test;
 
     const updateName = (value: string) => {
@@ -40,10 +42,10 @@ export default function TestDirectiveComponent({
 
     const helpContent = (
         <>
-            <h3 className={HELP_SECTION.title}>
+            <h3 className={getHelpSection(isDark).title}>
                 TEST Directive
             </h3>
-            <div className={cn(HELP_SECTION.text, "space-y-2")}>
+            <div className={cn(getHelpSection(isDark).text, "space-y-2")}>
                 <p>
                     The TEST directive defines test scripts to validate the container functionality.
                 </p>
@@ -56,7 +58,7 @@ export default function TestDirectiveComponent({
                 </div>
                 <div>
                     <strong>Examples:</strong>
-                    <div className={HELP_SECTION.code}>
+                    <div className={getHelpSection(isDark).code}>
                         <div><strong>Script:</strong> echo &quot;Hello World&quot; && exit 0</div>
                         <div><strong>Builtin:</strong> System-provided test scripts</div>
                     </div>
@@ -93,7 +95,10 @@ export default function TestDirectiveComponent({
                 description={isBuiltin ? 'This test uses a predefined builtin script' : 'Write your custom test script'}
             >
                 {isBuiltin ? (
-                    <div className="px-3 py-1.5 border border-gray-200 bg-gray-50 rounded-md text-gray-500 font-mono text-sm">
+                    <div className={cn(
+                        "px-3 py-1.5 border rounded-md font-mono text-sm",
+                        isDark ? "border-[#2d4222] bg-[#161a0e] text-[#575c4e]" : "border-gray-200 bg-gray-50 text-gray-500"
+                    )}>
                         {(test as BuiltinTest).builtin}
                     </div>
                 ) : (
@@ -116,10 +121,10 @@ export const testDirectiveMetadata: DirectiveMetadata = {
     label: "Test",
     description: "Define test scripts to validate container functionality",
     icon: BeakerIcon,
-    color: "bg-violet-50 border-violet-200 hover:bg-violet-100",
-    headerColor: "bg-violet-50",
-    borderColor: "border-violet-200",
-    iconColor: "text-violet-600",
+    color: { light: "bg-violet-50 border-violet-200 hover:bg-violet-100", dark: "bg-violet-900 border-violet-700 hover:bg-violet-800" },
+    headerColor: { light: "bg-violet-50", dark: "bg-violet-900" },
+    borderColor: { light: "border-violet-200", dark: "border-violet-700" },
+    iconColor: { light: "text-violet-600", dark: "text-violet-400" },
     defaultValue: { test: { name: "", script: "" } },
     keywords: ["test", "testing", "validation", "check", "verify"],
     component: TestDirectiveComponent,

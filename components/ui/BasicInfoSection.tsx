@@ -1,4 +1,5 @@
 import { FormField, Input } from "./FormField";
+import { useTheme } from "@/lib/ThemeContext";
 
 interface BasicInfoSectionProps {
     name: string;
@@ -23,6 +24,7 @@ export default function BasicInfoSection({
     onNameEditStart,
     onNameEditFinish,
 }: BasicInfoSectionProps) {
+    const { isDark } = useTheme();
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             <FormField
@@ -41,7 +43,9 @@ export default function BasicInfoSection({
                     placeholder="e.g., fsl"
                     className={
                         showValidation && nameError
-                            ? "border-red-300 focus:ring-red-500 focus:border-red-500 bg-red-50"
+                            ? (isDark 
+                                ? "border-red-500 focus:ring-red-400 focus:border-red-400 bg-red-900/20"
+                                : "border-red-300 focus:ring-red-500 focus:border-red-500 bg-red-50")
                             : ""
                     }
                 />
@@ -61,7 +65,9 @@ export default function BasicInfoSection({
                     placeholder="e.g., 1.0.0"
                     className={
                         showValidation && versionError
-                            ? "border-red-300 focus:ring-red-500 focus:border-red-500 bg-red-50"
+                            ? (isDark 
+                                ? "border-red-500 focus:ring-red-400 focus:border-red-400 bg-red-900/20"
+                                : "border-red-300 focus:ring-red-500 focus:border-red-500 bg-red-50")
                             : ""
                     }
                 />

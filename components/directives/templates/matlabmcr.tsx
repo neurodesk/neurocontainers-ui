@@ -7,8 +7,8 @@ registerNeuroDockerTemplate({
         label: "MATLAB MCR",
         description: "MATLAB Compiler Runtime",
         icon: DocumentDuplicateIcon,
-        color: "bg-cyan-50 border-cyan-200 hover:bg-cyan-100",
-        iconColor: "text-cyan-600",
+        color: { light: "bg-cyan-50 border-cyan-200 hover:bg-cyan-100", dark: "bg-cyan-900 border-cyan-700 hover:bg-cyan-800" },
+        iconColor: { light: "text-cyan-600", dark: "text-cyan-400" },
         defaultValue: {
             template: {
                 name: "matlabmcr",

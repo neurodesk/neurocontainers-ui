@@ -7,8 +7,8 @@ registerNeuroDockerTemplate({
         label: "FreeSurfer",
         description: "Cortical reconstruction and analysis",
         icon: DocumentDuplicateIcon,
-        color: "bg-red-50 border-red-200 hover:bg-red-100",
-        iconColor: "text-red-600",
+        color: { light: "bg-red-50 border-red-200 hover:bg-red-100", dark: "bg-red-900 border-red-700 hover:bg-red-800" },
+        iconColor: { light: "text-red-600", dark: "text-red-400" },
         defaultValue: {
             template: {
                 name: "freesurfer",

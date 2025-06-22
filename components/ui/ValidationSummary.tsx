@@ -1,5 +1,6 @@
 import { ExclamationCircleIcon } from "@heroicons/react/24/outline";
 import { iconStyles, textStyles, cn } from "@/lib/styles";
+import { useTheme } from "@/lib/ThemeContext";
 
 interface ValidationSummaryProps {
     errors: (string | null)[];
@@ -7,21 +8,37 @@ interface ValidationSummaryProps {
 }
 
 export default function ValidationSummary({ errors, show }: ValidationSummaryProps) {
+    const { isDark } = useTheme();
     const validErrors = errors.filter(Boolean) as string[];
-    
+
     if (!show || validErrors.length === 0) {
         return null;
     }
 
     return (
-        <div className="p-4 bg-red-50 border-b border-red-200 rounded-t-lg">
+        <div className={cn(
+            "p-4 border-b rounded-t-lg",
+            isDark ? "bg-red-900/20 border-red-700" : "bg-red-50 border-red-200"
+        )}>
             <div className="flex items-start gap-3">
-                <ExclamationCircleIcon className={cn(iconStyles('md'), "text-red-500 flex-shrink-0 mt-0.5")} />
+                <ExclamationCircleIcon className={cn(
+                    iconStyles(isDark, 'md'),
+                    "flex-shrink-0 mt-0.5",
+                    isDark ? "text-red-400" : "text-red-500"
+                )} />
                 <div>
-                    <h4 className={cn(textStyles({ size: 'sm', weight: 'medium' }), "text-red-800 mb-2")}>
+                    <h4 className={cn(
+                        textStyles(isDark, { size: 'sm', weight: 'medium' }),
+                        "mb-2",
+                        isDark ? "text-red-400" : "text-red-800"
+                    )}>
                         Please fix the following issues:
                     </h4>
-                    <ul className={cn(textStyles({ size: 'sm' }), "text-red-700 space-y-1")}>
+                    <ul className={cn(
+                        textStyles(isDark, { size: 'sm' }),
+                        "space-y-1",
+                        isDark ? "text-red-300" : "text-red-700"
+                    )}>
                         {validErrors.map((error, index) => (
                             <li key={index}>• {error}</li>
                         ))}

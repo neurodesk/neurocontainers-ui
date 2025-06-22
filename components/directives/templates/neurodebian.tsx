@@ -7,8 +7,8 @@ registerNeuroDockerTemplate({
         label: "NeuroDebian",
         description: "NeuroDebian repository setup",
         icon: DocumentDuplicateIcon,
-        color: "bg-amber-50 border-amber-200 hover:bg-amber-100",
-        iconColor: "text-amber-600",
+        color: { light: "bg-amber-50 border-amber-200 hover:bg-amber-100", dark: "bg-amber-900 border-amber-700 hover:bg-amber-800" },
+        iconColor: { light: "text-amber-600", dark: "text-amber-400" },
         defaultValue: {
             template: {
                 name: "neurodebian",

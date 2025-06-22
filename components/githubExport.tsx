@@ -3,7 +3,8 @@ import { useRef, useState, useEffect } from "react";
 import { ContainerRecipe, NEUROCONTAINERS_REPO } from "./common";
 import { useGitHubFiles } from '@/lib/useGithub';
 import * as pako from "pako";
-import { CARDS, BUTTONS, iconStyles, textStyles, cn } from "@/lib/styles";
+import { iconStyles, textStyles, cn, cardStyles, buttonStyles } from "@/lib/styles";
+import { useTheme } from "@/lib/ThemeContext";
 
 // GitHub modal component
 export default function GitHubModal({
@@ -17,6 +18,7 @@ export default function GitHubModal({
     yamlData: ContainerRecipe | null;
     yamlText: string;
 }) {
+    const { isDark } = useTheme();
     const modalRef = useRef(null);
     const [clipboardContent, setClipboardContent] = useState("");
     const [isCopied, setIsCopied] = useState(false);
@@ -103,30 +105,36 @@ Please paste the compressed YAML content from your clipboard below:
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+        <div className={cn(
+            "fixed inset-0 flex items-center justify-center z-50 p-4",
+            isDark ? "bg-black/90" : "bg-black/80"
+        )}>
             <div
                 ref={modalRef}
-                className={cn(CARDS.default, "max-w-md w-full p-4 sm:p-6")}
+                className={cn(cardStyles(isDark, 'default', 'md'), "max-w-md w-full p-4 sm:p-6")}
             >
                 <h3 className={cn(
-                    textStyles({ size: 'xl', weight: 'semibold', color: 'primary' }),
+                    textStyles(isDark, { size: 'xl', weight: 'semibold', color: 'primary' }),
                     "mb-4"
                 )}>
                     Contribute to GitHub
                 </h3>
 
-                <div className="mb-4 p-4 bg-[#f0f7e7] rounded-md flex items-start">
-                    <ExclamationCircleIcon className={cn(iconStyles('lg', 'secondary'), "mr-3 flex-shrink-0 mt-0.5")} />
+                <div className={cn(
+                    "mb-4 p-4 rounded-md flex items-start",
+                    isDark ? "bg-[#1f2e18]" : "bg-[#f0f7e7]"
+                )}>
+                    <ExclamationCircleIcon className={cn(iconStyles(isDark, 'lg', 'secondary'), "mr-3 flex-shrink-0 mt-0.5")} />
                     <div>
-                        <p className={cn(textStyles({ color: 'primary' }), "mb-2")}>
+                        <p className={cn(textStyles(isDark, { color: 'primary' }), "mb-2")}>
                             You&apos;ll need to be logged into GitHub to complete this action.
                         </p>
                         {isContentTooLarge ? (
-                            <p className={cn(textStyles({ size: 'sm', color: 'primary' }))}>
+                            <p className={cn(textStyles(isDark, { size: 'sm', color: 'primary' }))}>
                                 Your YAML content is too large to include in the URL. You&apos;ll need to copy the compressed content to your clipboard and paste it into the GitHub issue after clicking the button.
                             </p>
                         ) : (
-                            <p className={cn(textStyles({ size: 'sm', color: 'primary' }))}>
+                            <p className={cn(textStyles(isDark, { size: 'sm', color: 'primary' }))}>
                                 This will create a GitHub issue with your container recipe (base64 deflate compressed) that contributors can review and accept.
                             </p>
                         )}
@@ -134,8 +142,14 @@ Please paste the compressed YAML content from your clipboard below:
                 </div>
 
                 {containerExists && (
-                    <div className="mb-4 p-3 bg-blue-50 rounded-md border border-blue-200">
-                        <p className={cn(textStyles({ size: 'sm' }), "text-blue-800")}>
+                    <div className={cn(
+                        "mb-4 p-3 rounded-md border",
+                        isDark ? "bg-blue-900/20 border-blue-700" : "bg-blue-50 border-blue-200"
+                    )}>
+                        <p className={cn(
+                            textStyles(isDark, { size: 'sm' }),
+                            isDark ? "text-blue-400" : "text-blue-800"
+                        )}>
                             <strong>Note:</strong> A container with this name already exists in the repository.
                         </p>
                     </div>
@@ -147,8 +161,10 @@ Please paste the compressed YAML content from your clipboard below:
                             className={cn(
                                 "w-full py-2 px-4 rounded-md transition-colors",
                                 isCopied
-                                    ? "bg-[#4f7b38] text-white"
-                                    : "bg-[#e6f1d6] text-[#4f7b38] hover:bg-[#d3e7b6]"
+                                    ? (isDark ? "bg-[#6ea232] text-white" : "bg-[#4f7b38] text-white")
+                                    : (isDark
+                                        ? "bg-[#2d4222] text-[#91c84a] hover:bg-[#3f5b2e]"
+                                        : "bg-[#e6f1d6] text-[#4f7b38] hover:bg-[#d3e7b6]")
                             )}
                             onClick={copyToClipboard}
                         >
@@ -160,18 +176,18 @@ Please paste the compressed YAML content from your clipboard below:
                 <div className="space-y-3 mb-6">
                     {containerExists ? (
                         <button
-                            className={cn(BUTTONS.primary, "w-full justify-center gap-2 px-4 py-3")}
+                            className={cn(buttonStyles(isDark, 'primary', 'md'), "w-full justify-center gap-2 px-4 py-3")}
                             onClick={() => handleCreateIssue(true)}
                         >
-                            <PencilIcon className={iconStyles('sm')} />
+                            <PencilIcon className={iconStyles(isDark, 'sm')} />
                             Update Existing Container
                         </button>
                     ) : (
                         <button
-                            className={cn(BUTTONS.primary, "w-full justify-center gap-2 px-4 py-3")}
+                            className={cn(buttonStyles(isDark, 'primary', 'md'), "w-full justify-center gap-2 px-4 py-3")}
                             onClick={() => handleCreateIssue(false)}
                         >
-                            <PlusIcon className={iconStyles('sm')} />
+                            <PlusIcon className={iconStyles(isDark, 'sm')} />
                             Add New Container
                         </button>
                     )}
@@ -179,7 +195,7 @@ Please paste the compressed YAML content from your clipboard below:
 
                 <div className="flex justify-end">
                     <button
-                        className={BUTTONS.secondary}
+                        className={buttonStyles(isDark, 'secondary', 'md')}
                         onClick={onClose}
                     >
                         Cancel

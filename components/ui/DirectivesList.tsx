@@ -6,7 +6,8 @@ import {
 import { Directive } from "@/components/common";
 import DirectiveComponent from "@/components/directives/factory";
 import AddDirectiveButton from "@/components/add";
-import { iconStyles, textStyles, buttonStyles, cn, HELP_SECTION } from "@/lib/styles";
+import { iconStyles, textStyles, buttonStyles, cn, getHelpSection } from "@/lib/styles";
+import { useTheme } from "@/lib/ThemeContext";
 
 interface DirectivesListProps {
     directives: Directive[];
@@ -31,33 +32,46 @@ function DirectiveDeleteModal({
     onConfirm,
     onCancel,
 }: DirectiveDeleteModalProps) {
+    const { isDark } = useTheme();
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+        <div className={cn(
+            "fixed inset-0 flex items-center justify-center z-50 p-4",
+            isDark ? "bg-black/90" : "bg-black/80"
+        )}>
+            <div className={cn(
+                "rounded-lg shadow-xl max-w-md w-full",
+                isDark ? "bg-[#161a0e]" : "bg-white"
+            )}>
                 <div className="p-6">
                     <div className="flex items-center gap-3 mb-4">
-                        <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                            <TrashIcon className={cn(iconStyles('lg'), "text-red-600")} />
+                        <div className={cn(
+                            "flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center",
+                            isDark ? "bg-red-900/30" : "bg-red-100"
+                        )}>
+                            <TrashIcon className={cn(
+                                iconStyles(isDark, 'lg'),
+                                isDark ? "text-red-400" : "text-red-600"
+                            )} />
                         </div>
                         <div>
-                            <h3 className={textStyles({ size: 'lg', weight: 'medium' })}>Delete Directive</h3>
-                            <p className={textStyles({ size: 'sm', color: 'muted' })}>Step {directiveIndex + 1}</p>
+                            <h3 className={textStyles(isDark, { size: 'lg', weight: 'medium' })}>Delete Directive</h3>
+                            <p className={textStyles(isDark, { size: 'sm', color: 'muted' })}>Step {directiveIndex + 1}</p>
                         </div>
                     </div>
-                    <p className={cn(textStyles({ color: 'muted' }), "mb-6")}>
+                    <p className={cn(textStyles(isDark, { color: 'muted' }), "mb-6")}>
                         Are you sure you want to delete this directive? This action cannot be undone.
                     </p>
                     <div className="flex gap-3 justify-end">
                         <button
-                            className={buttonStyles('secondary', 'md')}
+                            className={buttonStyles(isDark, 'secondary', 'md')}
                             onClick={onCancel}
                         >
                             Cancel
                         </button>
                         <button
-                            className={buttonStyles('danger', 'md')}
+                            className={buttonStyles(isDark, 'danger', 'md')}
                             onClick={onConfirm}
                         >
                             Delete
@@ -78,6 +92,7 @@ export default function DirectivesList({
     onMoveDirective,
     onReorderDirectives,
 }: DirectivesListProps) {
+    const { isDark } = useTheme();
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
     const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
     const [deleteConfirmIndex, setDeleteConfirmIndex] = useState<number | null>(null);
@@ -168,8 +183,8 @@ export default function DirectivesList({
 
     const directivesHelpContent = (
         <>
-            <h4 className={HELP_SECTION.title}>Directives</h4>
-            <div className={cn(HELP_SECTION.text, "space-y-2")}>
+            <h4 className={getHelpSection(isDark).title}>Directives</h4>
+            <div className={cn(getHelpSection(isDark).text, "space-y-2")}>
                 <p>
                     Directives define the software and configurations to install in your container.
                 </p>
@@ -192,46 +207,52 @@ export default function DirectivesList({
     return (
         <div className="mb-6">
             <div className="flex items-center gap-2 mb-4">
-                <h3 className={textStyles({ size: 'lg', weight: 'medium', color: 'primary' })}>Directives</h3>
-                <div className={cn(textStyles({ size: 'xs', color: 'muted' }), "bg-gray-100 px-2 py-1 rounded")}>
+                <h3 className={textStyles(isDark, { size: 'lg', weight: 'medium', color: 'primary' })}>Directives</h3>
+                <div className={cn(
+                    textStyles(isDark, { size: 'xs', color: 'muted' }),
+                    "px-2 py-1 rounded",
+                    isDark ? "bg-[#2d4222]" : "bg-gray-100"
+                )}>
                     {directives.length} directive{directives.length !== 1 ? "s" : ""}
                 </div>
                 <button
                     type="button"
                     className={cn(
                         "p-1 transition-colors",
-                        iconStyles('sm', 'primary'),
-                        "hover:text-[#6aa329]",
-                        showDirectivesHelp && "text-[#6aa329]"
+                        iconStyles(isDark, 'sm', 'primary'),
+                        isDark
+                            ? "hover:text-[#7bb33a]"
+                            : "hover:text-[#6aa329]",
+                        showDirectivesHelp && (isDark ? "text-[#7bb33a]" : "text-[#6aa329]")
                     )}
                     onClick={() => setShowDirectivesHelp(!showDirectivesHelp)}
                     title={showDirectivesHelp ? "Hide documentation" : "Show documentation"}
                 >
-                    <InformationCircleIcon className={iconStyles('sm')} />
+                    <InformationCircleIcon className={iconStyles(isDark, 'sm')} />
                 </button>
             </div>
 
             {showDirectivesHelp && (
-                <div className={cn(HELP_SECTION.container, "mb-4")}>
+                <div className={cn(getHelpSection(isDark).container, "mb-4")}>
                     {directivesHelpContent}
                 </div>
             )}
 
             <div className="space-y-2">
                 {directives.length === 0 ? (
-                    <AddDirectiveButton 
-                        onAddDirective={handleAddDirective} 
-                        variant="empty" 
-                        index={0} 
+                    <AddDirectiveButton
+                        onAddDirective={handleAddDirective}
+                        variant="empty"
+                        index={0}
                     />
                 ) : (
                     <>
                         {/* First add button - only shows when there are directives */}
                         <div className="py-1">
-                            <AddDirectiveButton 
-                                onAddDirective={handleAddDirective} 
-                                variant="inline" 
-                                index={0} 
+                            <AddDirectiveButton
+                                onAddDirective={handleAddDirective}
+                                variant="inline"
+                                index={0}
                             />
                         </div>
 
@@ -240,43 +261,41 @@ export default function DirectivesList({
                                 {/* Directive */}
                                 <div
                                     ref={index === directives.length - 1 ? lastDirectiveRef : null}
-                                    className={`transition-all duration-200 ${
-                                        draggedIndex === index ? "opacity-50" : ""
-                                    } ${
-                                        dragOverIndex === index &&
-                                        !document.body.hasAttribute("data-list-editor-dragging")
-                                            ? "border-t-2 border-[#6aa329] pt-2"
+                                    className={`transition-all duration-200 ${draggedIndex === index ? "opacity-50" : ""
+                                        } ${dragOverIndex === index &&
+                                            !document.body.hasAttribute("data-list-editor-dragging")
+                                            ? (isDark ? "border-t-2 border-[#7bb33a] pt-2" : "border-t-2 border-[#6aa329] pt-2")
                                             : ""
-                                    }`}
+                                        }`}
                                 >
                                     {/* Directive Content with Integrated Controls */}
-                                        <DirectiveComponent
-                                            directive={directive}
-                                            baseImage={baseImage}
-                                            onChange={(updated) => onUpdateDirective(index, updated)}
-                                            controllers={{
-                                                onMoveUp: () => onMoveDirective(index, "up"),
-                                                onMoveDown: () => onMoveDirective(index, "down"),
-                                                onDelete: () => handleDeleteClick(index),
-                                                canMoveUp: index !== 0,
-                                                canMoveDown: index !== directives.length - 1,
-                                                stepNumber: index + 1,
-                                                draggable: true,
-                                                onDragStart: (e) => handleDragStart(e, index),
-                                                onDragOver: (e) => handleDragOver(e, index),
-                                                onDragLeave: handleDragLeave,
-                                                onDrop: (e) => handleDrop(e, index),
-                                                onDragEnd: handleDragEnd,
-                                            }}
-                                        />
+                                    <DirectiveComponent
+                                        directive={directive}
+                                        baseImage={baseImage}
+                                        onChange={(updated) => onUpdateDirective(index, updated)}
+                                        controllers={{
+                                            onMoveUp: () => onMoveDirective(index, "up"),
+                                            onMoveDown: () => onMoveDirective(index, "down"),
+                                            onDelete: () => handleDeleteClick(index),
+                                            canMoveUp: index !== 0,
+                                            canMoveDown: index !== directives.length - 1,
+                                            stepNumber: index + 1,
+                                            draggable: true,
+                                            onDragStart: (e) => handleDragStart(e, index),
+                                            onDragOver: (e) => handleDragOver(e, index),
+                                            onDragLeave: handleDragLeave,
+                                            onDrop: (e) => handleDrop(e, index),
+                                            onDragEnd: handleDragEnd,
+                                        }}
+                                    />
                                 </div>
 
                                 {/* Add button after this directive */}
                                 <div className="py-1">
-                                    <AddDirectiveButton 
-                                        onAddDirective={handleAddDirective} 
-                                        variant="inline" 
-                                        index={index + 1} 
+                                    <AddDirectiveButton
+                                        onAddDirective={handleAddDirective}
+                                        variant="inline"
+                                        index={index + 1}
                                     />
                                 </div>
                             </div>

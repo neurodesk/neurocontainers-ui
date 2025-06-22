@@ -2,6 +2,7 @@ import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useState, useRef } from "react";
 import { Input } from "./FormField";
 import { iconStyles, textStyles, cn } from "@/lib/styles";
+import { useTheme } from "@/lib/ThemeContext";
 
 interface TagEditorProps {
     tags: string[];
@@ -24,6 +25,7 @@ export default function TagEditor({
     suggestions = [],
     onSuggestionClick,
 }: TagEditorProps) {
+    const { isDark } = useTheme();
     const [inputValue, setInputValue] = useState("");
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -62,7 +64,7 @@ export default function TagEditor({
     };
 
     const filteredSuggestions = suggestions.filter(
-        suggestion => 
+        suggestion =>
             suggestion.toLowerCase().includes(inputValue.toLowerCase()) &&
             (allowDuplicates || !tags.includes(suggestion))
     );
@@ -75,22 +77,36 @@ export default function TagEditor({
                         {tags.map((tag, index) => (
                             <button
                                 key={index}
-                                className="flex items-center bg-[#f0f7e7] px-3 py-2 rounded-md border border-[#e6f1d6] group hover:bg-[#e8f4d9] transition-colors focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:ring-offset-1"
+                                className={cn(
+                                    "flex items-center px-3 py-2 rounded-md border group transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1",
+                                    isDark
+                                        ? "bg-[#1f2e18] border-[#2d4222] hover:bg-[#2a3d20] focus:ring-[#7bb33a]"
+                                        : "bg-[#f0f7e7] border-[#e6f1d6] hover:bg-[#e8f4d9] focus:ring-[#6aa329]"
+                                )}
                                 onClick={() => removeTag(index)}
                                 onKeyDown={(e) => handleTagKeyDown(e, index)}
                                 title={`Remove ${tag} (Enter or Space)`}
                             >
-                                <span className={cn(textStyles({ size: 'sm', color: 'primary' }), "font-mono mr-2 break-all")}>
+                                <span className={cn(textStyles(isDark, { size: 'sm', color: 'primary' }), "font-mono mr-2 break-all")}>
                                     {tag}
                                 </span>
-                                <XMarkIcon className={cn(iconStyles('sm'), "text-[#4f7b38] group-hover:text-[#3a5c29] opacity-60 group-hover:opacity-100 transition-opacity flex-shrink-0")} />
+                                <XMarkIcon className={cn(
+                                    iconStyles(isDark, 'sm'),
+                                    "opacity-60 group-hover:opacity-100 transition-opacity flex-shrink-0",
+                                    isDark
+                                        ? "text-[#91c84a] group-hover:text-[#7bb33a]"
+                                        : "text-[#4f7b38] group-hover:text-[#3a5c29]"
+                                )} />
                             </button>
                         ))}
                     </div>
                 </div>
             ) : emptyMessage ? (
-                <div className="mb-4 p-4 bg-gray-50 rounded-md border border-gray-200">
-                    <p className={cn(textStyles({ size: 'sm', color: 'muted' }), "text-center")}>
+                <div className={cn(
+                    "mb-4 p-4 rounded-md border",
+                    isDark ? "bg-[#2d4222] border-[#374151]" : "bg-gray-50 border-gray-200"
+                )}>
+                    <p className={cn(textStyles(isDark, { size: 'sm', color: 'muted' }), "text-center")}>
                         {emptyMessage}
                     </p>
                 </div>
@@ -109,13 +125,19 @@ export default function TagEditor({
 
                 {filteredSuggestions.length > 0 && inputValue && (
                     <div className="mt-2 space-y-1">
-                        <p className={cn(textStyles({ size: 'xs', color: 'muted' }), "mb-2")}>Suggestions:</p>
+                        <p className={cn(textStyles(isDark, { size: 'xs', color: 'muted' }), "mb-2")}>Suggestions:</p>
                         <div className="flex flex-wrap gap-1">
                             {filteredSuggestions.slice(0, 6).map((suggestion) => (
                                 <button
                                     key={suggestion}
                                     type="button"
-                                    className={cn(textStyles({ size: 'xs' }), "px-2 py-1 bg-gray-100 hover:bg-[#f0f7e7] border border-gray-200 rounded transition-colors")}
+                                    className={cn(
+                                        textStyles(isDark, { size: 'xs' }),
+                                        "px-2 py-1 border rounded transition-colors",
+                                        isDark
+                                            ? "bg-[#2d4222] hover:bg-[#1f2e18] border-[#374151]"
+                                            : "bg-gray-100 hover:bg-[#f0f7e7] border-gray-200"
+                                    )}
                                     onClick={() => {
                                         addTag(suggestion);
                                         onSuggestionClick?.(suggestion);

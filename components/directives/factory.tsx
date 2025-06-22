@@ -255,7 +255,7 @@ export default function DirectiveComponent({
         />;
     } else {
         return (
-            <div className="bg-white rounded-md shadow-sm border border-red-200 mb-4 p-4 text-red-500">
+            <div className="bg-white rounded-md shadow-sm border border-red-200 mb-4 p-4 text-red-500 dark:bg-red-900 dark:border-red-700 dark:text-red-300">
                 Unknown Directive: {Object.keys(directive).join(", ")}
             </div>
         );

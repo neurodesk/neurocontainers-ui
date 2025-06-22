@@ -7,8 +7,8 @@ registerNeuroDockerTemplate({
         label: "MRIcron",
         description: "Medical image viewer",
         icon: DocumentDuplicateIcon,
-        color: "bg-rose-50 border-rose-200 hover:bg-rose-100",
-        iconColor: "text-rose-600",
+        color: { light: "bg-rose-50 border-rose-200 hover:bg-rose-100", dark: "bg-rose-900 border-rose-700 hover:bg-rose-800" },
+        iconColor: { light: "text-rose-600", dark: "text-rose-400" },
         defaultValue: {
             template: {
                 name: "mricron",

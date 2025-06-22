@@ -7,8 +7,8 @@ registerNeuroDockerTemplate({
         label: "PETPVC",
         description: "PET Partial Volume Correction",
         icon: DocumentDuplicateIcon,
-        color: "bg-pink-50 border-pink-200 hover:bg-pink-100",
-        iconColor: "text-pink-600",
+        color: { light: "bg-pink-50 border-pink-200 hover:bg-pink-100", dark: "bg-pink-900 border-pink-700 hover:bg-pink-800" },
+        iconColor: { light: "text-pink-600", dark: "text-pink-400" },
         defaultValue: {
             template: {
                 name: "petpvc",

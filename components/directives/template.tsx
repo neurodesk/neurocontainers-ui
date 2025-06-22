@@ -5,7 +5,8 @@ import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
 import { Template } from "@/components/common";
 import { VariableComponent } from "@/components/directives/variable";
 import { registerDirective, DirectiveMetadata, getDirective } from "./registry";
-import { HELP_SECTION, BUTTONS, iconStyles, textStyles, cn } from "@/lib/styles";
+import { iconStyles, textStyles, cn, getHelpSection, useThemeStyles } from "@/lib/styles";
+import { useTheme } from "@/lib/ThemeContext";
 
 interface BaseNeuroDockerArgument {
     name: string;
@@ -61,12 +62,14 @@ export function createNeuroDockerTemplateComponent(templateInfo: NeuroDockerTemp
         onChange: (template: Template) => void,
         condition?: string;
         onConditionChange?: (condition: string | undefined) => void;
-        headerColor?: string;
-        borderColor?: string;
-        iconColor?: string;
+        headerColor?: { light: string, dark: string };
+        borderColor?: { light: string, dark: string };
+        iconColor?: { light: string, dark: string };
         icon?: React.ComponentType<{ className?: string }>;
         controllers: DirectiveControllers;
     }) {
+        const { isDark } = useTheme();
+        const styles = useThemeStyles(isDark);
         const [showAdvanced, setShowAdvanced] = useState(false);
 
         const updateParam = (key: string, value: unknown) => {
@@ -159,15 +162,15 @@ export function createNeuroDockerTemplateComponent(templateInfo: NeuroDockerTemp
         };
 
         const helpContent = (
-            <div className={HELP_SECTION.container}>
-                <h3 className={HELP_SECTION.title}>
+            <div className={getHelpSection(isDark).container}>
+                <h3 className={getHelpSection(isDark).title}>
                     {templateInfo.metadata.label} Template
                 </h3>
-                <div className={HELP_SECTION.text}>
+                <div className={getHelpSection(isDark).text}>
                     <p>{templateInfo.description}</p>
                     {templateInfo.alert && (
                         <div className="bg-yellow-50 border border-yellow-200 rounded-md p-2">
-                            <p className={cn(textStyles({ size: 'xs', weight: 'medium' }), "text-yellow-800")}>⚠️ {templateInfo.alert}</p>
+                            <p className={cn(textStyles(isDark, { size: 'xs', weight: 'medium' }), "text-yellow-800")}>⚠️ {templateInfo.alert}</p>
                         </div>
                     )}
                     {templateInfo.url && (
@@ -176,7 +179,7 @@ export function createNeuroDockerTemplateComponent(templateInfo: NeuroDockerTemp
                                 href={templateInfo.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className={cn(textStyles({ color: 'secondary' }), "hover:underline")}
+                                className={cn(textStyles(isDark, { color: 'secondary' }), "hover:underline")}
                             >
                                 Documentation →
                             </a>
@@ -242,16 +245,16 @@ export function createNeuroDockerTemplateComponent(templateInfo: NeuroDockerTemp
                 {advancedArgs.length > 0 && (
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                            <h4 className={textStyles({ size: 'sm', weight: 'medium', color: 'secondary' })}>Advanced Settings</h4>
+                            <h4 className={textStyles(isDark, { size: 'sm', weight: 'medium', color: 'secondary' })}>Advanced Settings</h4>
                             <button
                                 onClick={() => setShowAdvanced(!showAdvanced)}
-                                className={cn(BUTTONS.secondary, "text-xs")}
+                                className={cn(styles.buttons.secondary, "text-xs")}
                             >
                                 {showAdvanced ? 'Hide' : 'Show'} Advanced
                             </button>
                         </div>
                         {showAdvanced && (
-                            <div className="space-y-4 border-l-4 border-[#d3e7b6] pl-4">
+                            <div className="space-y-4 border-l-4 border-[#d3e7b6] pl-4 bg-gray-50 dark:bg-gray-800">
                                 {advancedArgs.map(renderArgument)}
                             </div>
                         )}
@@ -286,12 +289,14 @@ export default function TemplateDirectiveComponent({
     onChange: (template: Template) => void,
     condition?: string;
     onConditionChange?: (condition: string | undefined) => void;
-    headerColor?: string;
-    borderColor?: string;
-    iconColor?: string;
+    headerColor?: { light: string, dark: string };
+    borderColor?: { light: string, dark: string };
+    iconColor?: { light: string, dark: string };
     icon?: React.ComponentType<{ className?: string }>;
     controllers: DirectiveControllers;
 }) {
+    const { isDark } = useTheme();
+    const styles = useThemeStyles(isDark);
     const [newParamKey, setNewParamKey] = useState("");
 
     // Check if there's a special editor for this template name
@@ -337,11 +342,11 @@ export default function TemplateDirectiveComponent({
     };
 
     const helpContent = (
-        <div className={HELP_SECTION.container}>
-            <h3 className={HELP_SECTION.title}>
+        <div className={getHelpSection(isDark).container}>
+            <h3 className={getHelpSection(isDark).title}>
                 TEMPLATE Directive
             </h3>
-            <div className={HELP_SECTION.text}>
+            <div className={getHelpSection(isDark).text}>
                 <p>
                     The TEMPLATE directive defines reusable templates with configurable parameters.
                 </p>
@@ -355,7 +360,7 @@ export default function TemplateDirectiveComponent({
                 </div>
                 <div>
                     <strong>Examples:</strong>
-                    <div className={HELP_SECTION.code}>
+                    <div className={getHelpSection(isDark).code}>
                         <div><strong>version:</strong> &quot;1.0.0&quot;</div>
                         <div><strong>ports:</strong> [8080, 3000]</div>
                         <div><strong>config:</strong> {"{"}&quot;debug&quot;: true{"}"}</div>
@@ -395,15 +400,15 @@ export default function TemplateDirectiveComponent({
                             <div className="flex justify-between items-center">
                                 <span>{key}</span>
                                 <button
-                                    className={cn(BUTTONS.icon, "ml-2")}
+                                    className={cn(styles.buttons.icon, "ml-2")}
                                     onClick={() => removeParam(key)}
                                     title={`Remove parameter ${key}`}
                                 >
-                                    <TrashIcon className={iconStyles('md')} />
+                                    <TrashIcon className={iconStyles(isDark, 'md')} />
                                 </button>
                             </div>
                         }
-                        className="border-l-4 border-[#d3e7b6] pl-4"
+                        className="border-l-4 border-[#d3e7b6] pl-4 dark:border-[#d3e7b6]"
                     >
                         <VariableComponent
                             variable={value}
@@ -423,7 +428,7 @@ export default function TemplateDirectiveComponent({
                         onKeyDown={(e) => e.key === 'Enter' && addParam()}
                     />
                     <button
-                        className={cn(BUTTONS.primary, "rounded-r-md rounded-l-none")}
+                        className={cn(styles.buttons.primary, "rounded-r-md rounded-l-none")}
                         onClick={addParam}
                         disabled={!newParamKey.trim() || newParamKey === 'name'}
                     >
@@ -441,10 +446,10 @@ export const templateDirectiveMetadata: DirectiveMetadata = {
     label: "Template",
     description: "Create reusable templates with parameters",
     icon: DocumentDuplicateIcon,
-    color: "bg-pink-50 border-pink-200 hover:bg-pink-100",
-    headerColor: "bg-pink-50",
-    borderColor: "border-pink-200",
-    iconColor: "text-pink-600",
+    color: { light: "bg-pink-50 border-pink-200 hover:bg-pink-100", dark: "bg-pink-900 border-pink-700 hover:bg-pink-800" },
+    headerColor: { light: "bg-pink-50", dark: "bg-pink-900" },
+    borderColor: { light: "border-pink-200", dark: "border-pink-700" },
+    iconColor: { light: "text-pink-600", dark: "text-pink-400" },
     defaultValue: { template: { name: "new-template" } },
     keywords: ["template", "reusable", "pattern", "blueprint"],
     component: TemplateDirectiveComponent,

@@ -7,8 +7,8 @@ registerNeuroDockerTemplate({
         label: "MRtrix3",
         description: "Diffusion MRI analysis package",
         icon: DocumentDuplicateIcon,
-        color: "bg-violet-50 border-violet-200 hover:bg-violet-100",
-        iconColor: "text-violet-600",
+        color: { light: "bg-violet-50 border-violet-200 hover:bg-violet-100", dark: "bg-violet-900 border-violet-700 hover:bg-violet-800" },
+        iconColor: { light: "text-violet-600", dark: "text-violet-400" },
         defaultValue: {
             template: {
                 name: "mrtrix3",

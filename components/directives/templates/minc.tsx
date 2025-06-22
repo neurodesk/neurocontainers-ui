@@ -7,8 +7,8 @@ registerNeuroDockerTemplate({
         label: "MINC",
         description: "Medical Image NetCDF toolkit",
         icon: DocumentDuplicateIcon,
-        color: "bg-emerald-50 border-emerald-200 hover:bg-emerald-100",
-        iconColor: "text-emerald-600",
+        color: { light: "bg-emerald-50 border-emerald-200 hover:bg-emerald-100", dark: "bg-emerald-900 border-emerald-700 hover:bg-emerald-800" },
+        iconColor: { light: "text-emerald-600", dark: "text-emerald-400" },
         defaultValue: {
             template: {
                 name: "minc",

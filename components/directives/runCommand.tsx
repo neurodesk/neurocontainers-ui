@@ -3,7 +3,8 @@ import { DirectiveContainer, ListEditor, Textarea } from "@/components/ui";
 import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
 import { PlayIcon } from "@heroicons/react/24/outline";
 import { registerDirective, DirectiveMetadata } from "./registry";
-import { HELP_SECTION, textareaStyles, cn } from "@/lib/styles";
+import { textareaStyles, cn, getHelpSection } from "@/lib/styles";
+import { useTheme } from "@/lib/ThemeContext";
 
 export default function RunCommandDirectiveComponent({
     run,
@@ -20,12 +21,13 @@ export default function RunCommandDirectiveComponent({
     onChange: (run: string[]) => void;
     condition?: string;
     onConditionChange?: (condition: string | undefined) => void;
-    headerColor?: string;
-    borderColor?: string;
-    iconColor?: string;
+    headerColor?: { light: string, dark: string };
+    borderColor?: { light: string, dark: string };
+    iconColor?: { light: string, dark: string };
     icon?: React.ComponentType<{ className?: string }>;
     controllers: DirectiveControllers;
 }) {
+    const { isDark } = useTheme();
     const textareaRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
     const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
 
@@ -44,10 +46,10 @@ export default function RunCommandDirectiveComponent({
         const paddingBottom = parseInt(computedStyle.paddingBottom) || 6; // py-1.5 = 6px
         const borderTop = parseInt(computedStyle.borderTopWidth) || 0;
         const borderBottom = parseInt(computedStyle.borderBottomWidth) || 0;
-        
+
         const minHeight = lineHeight + paddingTop + paddingBottom + borderTop + borderBottom;
         const newHeight = Math.max(minHeight, scrollHeight);
-        
+
         textarea.style.height = newHeight + "px";
     };
 
@@ -90,11 +92,11 @@ export default function RunCommandDirectiveComponent({
     }, [run]);
 
     const helpContent = (
-        <div className={HELP_SECTION.container}>
-            <h3 className={HELP_SECTION.title}>
+        <div className={getHelpSection(isDark).container}>
+            <h3 className={getHelpSection(isDark).title}>
                 RUN Directive
             </h3>
-            <div className={HELP_SECTION.text}>
+            <div className={getHelpSection(isDark).text}>
                 <p>
                     The RUN instruction executes commands in a new layer on top
                     of the current image and commits the results.
@@ -110,7 +112,7 @@ export default function RunCommandDirectiveComponent({
                 </div>
                 <div>
                     <strong>Examples:</strong>
-                    <pre className={HELP_SECTION.code}>
+                    <pre className={getHelpSection(isDark).code}>
                         {`mkdir -p /app/data`}
                     </pre>
                 </div>
@@ -142,7 +144,7 @@ export default function RunCommandDirectiveComponent({
                     <Textarea
                         ref={(el) => { (textareaRefs.current[index] = el) }}
                         className={cn(
-                            textareaStyles({
+                            textareaStyles(isDark, {
                                 monospace: true,
                                 height: 'min-h-[2.5rem]'
                             }),
@@ -169,10 +171,10 @@ export const runDirectiveMetadata: DirectiveMetadata = {
     label: "Run Commands",
     description: "Execute shell commands during container build",
     icon: PlayIcon,
-    color: "bg-red-50 border-red-200 hover:bg-red-100",
-    headerColor: "bg-red-50",
-    borderColor: "border-red-200",
-    iconColor: "text-red-600",
+    color: { light: "bg-red-50 border-red-200 hover:bg-red-100", dark: "bg-red-900 border-red-700 hover:bg-red-800" },
+    headerColor: { light: "bg-red-50", dark: "bg-red-900" },
+    borderColor: { light: "border-red-200", dark: "border-red-700" },
+    iconColor: { light: "text-red-600", dark: "text-red-400" },
     defaultValue: { run: [] as string[] },
     keywords: ["run", "command", "execute", "bash"],
     component: RunCommandDirectiveComponent,

@@ -10,7 +10,8 @@ import {
 import { usePyodide } from "@/lib/python";
 import { loadBuilder, Builder, type BuildOptions } from "@/lib/builder";
 import { ContainerRecipe } from "@/components/common";
-import { CARDS, BUTTONS, iconStyles, textStyles, inputStyles, cn } from "@/lib/styles";
+import { getCards, getButtons, iconStyles, textStyles, inputStyles, cn } from "@/lib/styles";
+import { useTheme } from "@/lib/ThemeContext";
 
 interface ValidationResult {
     success: boolean;
@@ -28,6 +29,7 @@ export default function ContainerValidator({
 }: {
     recipe: ContainerRecipe;
 }) {
+    const { isDark } = useTheme();
     const { pyodide, loading: pyodideLoading, error: pyodideError, loadPyodide } = usePyodide();
     const [builder, setBuilder] = useState<Builder | null>(null);
     const [builderLoading, setBuilderLoading] = useState(false);
@@ -175,34 +177,41 @@ export default function ContainerValidator({
     }, [loadBuilderInstance]);
 
     return (
-        <div className={CARDS.minimal}>
+        <div className={getCards(isDark).minimal}>
             <div className="p-4 sm:p-6">
                 {/* Status Section */}
                 <div className="mb-6">
-                    <h3 className={cn(textStyles({ size: 'lg', weight: 'medium', color: 'primary' }), "mb-3")}>Status</h3>
+                    <h3 className={cn(textStyles(isDark, { size: 'lg', weight: 'medium', color: 'primary' }), "mb-3")}>Status</h3>
                     <div className="space-y-2">
                         {/* Pyodide Status */}
-                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-md">
+                        <div className={cn(
+                            "flex items-center gap-3 p-3 rounded-md",
+                            isDark ? "bg-[#2d4222]" : "bg-gray-50"
+                        )}>
                             <div className="flex-shrink-0">
                                 {pyodideLoading ? (
-                                    <ArrowPathIcon className={cn(iconStyles('md'), "text-blue-500 animate-spin")} />
+                                    <ArrowPathIcon className={cn(iconStyles(isDark, 'md'), "text-blue-500 animate-spin")} />
                                 ) : pyodideError ? (
-                                    <ExclamationTriangleIcon className={cn(iconStyles('md'), "text-red-500")} />
+                                    <ExclamationTriangleIcon className={cn(iconStyles(isDark, 'md'), "text-red-500")} />
                                 ) : pyodide ? (
-                                    <CheckCircleIcon className={cn(iconStyles('md'), "text-green-500")} />
+                                    <CheckCircleIcon className={cn(iconStyles(isDark, 'md'), "text-green-500")} />
                                 ) : (
                                     <div className="h-5 w-5 bg-gray-300 rounded-full" />
                                 )}
                             </div>
                             <div className="flex-1">
-                                <p className={textStyles({ size: 'sm', weight: 'medium' })}>
+                                <p className={textStyles(isDark, { size: 'sm', weight: 'medium' })}>
                                     Pyodide Runtime
                                     {pyodideLoading && " (Loading...)"}
                                     {pyodideError && " (Error)"}
                                     {pyodide && " (Ready)"}
                                 </p>
                                 {pyodideError && (
-                                    <p className={cn(textStyles({ size: 'xs' }), "text-red-600 mt-1")}>
+                                    <p className={cn(
+                                        textStyles(isDark, { size: 'xs' }),
+                                        "mt-1",
+                                        isDark ? "text-red-400" : "text-red-600"
+                                    )}>
                                         {pyodideError.message}
                                     </p>
                                 )}
@@ -210,7 +219,7 @@ export default function ContainerValidator({
                             {!pyodide && !pyodideLoading && (
                                 <button
                                     onClick={loadPyodide}
-                                    className={cn(BUTTONS.secondary, "px-3 py-1 text-xs")}
+                                    className={cn(getButtons(isDark).secondary, "px-3 py-1 text-xs")}
                                 >
                                     Load Pyodide
                                 </button>
@@ -218,33 +227,42 @@ export default function ContainerValidator({
                         </div>
 
                         {/* Builder Status */}
-                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-md">
+                        <div className={cn(
+                            "flex items-center gap-3 p-3 rounded-md",
+                            isDark ? "bg-[#2d4222]" : "bg-gray-50"
+                        )}>
                             <div className="flex-shrink-0">
                                 {builderLoading ? (
-                                    <ArrowPathIcon className={cn(iconStyles('md'), "text-blue-500 animate-spin")} />
+                                    <ArrowPathIcon className={cn(iconStyles(isDark, 'md'), "text-blue-500 animate-spin")} />
                                 ) : builderError ? (
-                                    <ExclamationTriangleIcon className={cn(iconStyles('md'), "text-red-500")} />
+                                    <ExclamationTriangleIcon className={cn(iconStyles(isDark, 'md'), "text-red-500")} />
                                 ) : builder ? (
-                                    <CheckCircleIcon className={cn(iconStyles('md'), "text-green-500")} />
+                                    <CheckCircleIcon className={cn(iconStyles(isDark, 'md'), "text-green-500")} />
                                 ) : (
                                     <div className="h-5 w-5 bg-gray-300 rounded-full" />
                                 )}
                             </div>
                             <div className="flex-1">
-                                <p className={textStyles({ size: 'sm', weight: 'medium' })}>
+                                <p className={textStyles(isDark, { size: 'sm', weight: 'medium' })}>
                                     Container Builder
                                     {builderLoading && " (Loading...)"}
                                     {builderError && " (Error)"}
                                     {builder && " (Ready)"}
                                 </p>
                                 {builderError && (
-                                    <p className={cn(textStyles({ size: 'xs' }), "text-red-600 mt-1")}>{builderError}</p>
+                                    <p className={cn(
+                                        textStyles(isDark, { size: 'xs' }),
+                                        "mt-1",
+                                        isDark ? "text-red-400" : "text-red-600"
+                                    )}>
+                                        {builderError}
+                                    </p>
                                 )}
                             </div>
                             {pyodide && !builder && !builderLoading && (
                                 <button
                                     onClick={retryLoadBuilder}
-                                    className={cn(BUTTONS.secondary, "px-3 py-1 text-xs")}
+                                    className={cn(getButtons(isDark).secondary, "px-3 py-1 text-xs")}
                                 >
                                     {builderError ? "Retry" : "Load Builder"}
                                 </button>
@@ -256,20 +274,25 @@ export default function ContainerValidator({
                 {/* Build Options */}
                 {isReady && (
                     <div className="mb-6">
-                        <h3 className={cn(textStyles({ size: 'lg', weight: 'medium', color: 'primary' }), "mb-3")}>
+                        <h3 className={cn(textStyles(isDark, { size: 'lg', weight: 'medium', color: 'primary' }), "mb-3")}>
                             Build Options
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className={cn(textStyles({ size: 'sm', weight: 'medium' }), "block text-gray-700 mb-1")}>
+                                <label className={cn(
+                                    textStyles(isDark, { size: 'sm', weight: 'medium' }),
+                                    "block mb-1",
+                                    isDark ? "text-[#d1d5db]" : "text-gray-700"
+                                )}>
                                     Architecture
                                 </label>
                                 <select
                                     className={cn(
-                                        inputStyles(),
+                                        inputStyles(isDark),
                                         "w-full",
-                                        "text-[#0c0e0a] bg-white",
-                                        "focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
+                                        isDark
+                                            ? "text-[#e8f5d0] bg-[#161a0e] focus:ring-1 focus:ring-[#7bb33a] focus:border-[#7bb33a]"
+                                            : "text-[#0c0e0a] bg-white focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
                                     )}
                                     value={buildOptions.architecture}
                                     onChange={(e) =>
@@ -284,7 +307,11 @@ export default function ContainerValidator({
                                 </select>
                             </div>
                             <div>
-                                <label className={cn(textStyles({ size: 'sm', weight: 'medium' }), "block text-gray-700 mb-1")}>
+                                <label className={cn(
+                                    textStyles(isDark, { size: 'sm', weight: 'medium' }),
+                                    "block mb-1",
+                                    isDark ? "text-[#d1d5db]" : "text-gray-700"
+                                )}>
                                     Max Parallel Jobs
                                 </label>
                                 <input
@@ -292,10 +319,11 @@ export default function ContainerValidator({
                                     min="1"
                                     max="16"
                                     className={cn(
-                                        inputStyles(),
+                                        inputStyles(isDark),
                                         "w-full",
-                                        "text-[#0c0e0a]",
-                                        "focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
+                                        isDark
+                                            ? "text-[#e8f5d0] bg-[#161a0e] focus:ring-1 focus:ring-[#7bb33a] focus:border-[#7bb33a]"
+                                            : "text-[#0c0e0a] focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
                                     )}
                                     value={buildOptions.maxParallelJobs}
                                     onChange={(e) =>
@@ -311,7 +339,12 @@ export default function ContainerValidator({
                             <label className="flex items-center">
                                 <input
                                     type="checkbox"
-                                    className="mr-2 text-[#6aa329] focus:ring-[#6aa329]"
+                                    className={cn(
+                                        "mr-2",
+                                        isDark
+                                            ? "text-[#7bb33a] focus:ring-[#7bb33a]"
+                                            : "text-[#6aa329] focus:ring-[#6aa329]"
+                                    )}
                                     checked={buildOptions.ignoreArchitecture}
                                     onChange={(e) =>
                                         setBuildOptions({
@@ -320,7 +353,10 @@ export default function ContainerValidator({
                                         })
                                     }
                                 />
-                                <span className={cn(textStyles({ size: 'sm' }), "text-gray-700")}>
+                                <span className={cn(
+                                    textStyles(isDark, { size: 'sm' }),
+                                    isDark ? "text-[#d1d5db]" : "text-gray-700"
+                                )}>
                                     Ignore Architecture Constraints
                                 </span>
                             </label>
@@ -331,29 +367,35 @@ export default function ContainerValidator({
                 {/* Validation Section */}
                 <div className="mb-6">
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
-                        <h3 className={textStyles({ size: 'lg', weight: 'medium', color: 'primary' })}>Validation</h3>
+                        <h3 className={textStyles(isDark, { size: 'lg', weight: 'medium', color: 'primary' })}>Validation</h3>
                         <button
                             onClick={validateRecipe}
                             disabled={!canValidate}
                             className={cn(
                                 "flex items-center gap-2 px-4 py-2 rounded-md font-medium transition-colors",
                                 canValidate
-                                    ? "bg-[#6aa329] text-white hover:bg-[#5a8f23]"
-                                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                    ? (isDark ? "bg-[#7bb33a] text-white hover:bg-[#6ea232]" : "bg-[#6aa329] text-white hover:bg-[#5a8f23]")
+                                    : (isDark ? "bg-[#374151] text-[#9ca3af] cursor-not-allowed" : "bg-gray-300 text-gray-500 cursor-not-allowed")
                             )}
                         >
                             {validating ? (
-                                <ArrowPathIcon className={iconStyles('sm')} />
+                                <ArrowPathIcon className={iconStyles(isDark, 'sm')} />
                             ) : (
-                                <PlayIcon className={iconStyles('sm')} />
+                                <PlayIcon className={iconStyles(isDark, 'sm')} />
                             )}
                             {validating ? "Validating..." : "Validate & Generate"}
                         </button>
                     </div>
 
                     {!isReady && (
-                        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-                            <p className={cn(textStyles({ size: 'sm' }), "text-yellow-800")}>
+                        <div className={cn(
+                            "p-4 border rounded-md",
+                            isDark ? "bg-yellow-900/20 border-yellow-700" : "bg-yellow-50 border-yellow-200"
+                        )}>
+                            <p className={cn(
+                                textStyles(isDark, { size: 'sm' }),
+                                isDark ? "text-yellow-400" : "text-yellow-800"
+                            )}>
                                 Please load Pyodide and the builder to validate your recipe.
                             </p>
                         </div>
@@ -364,25 +406,25 @@ export default function ContainerValidator({
                             className={cn(
                                 "p-4 rounded-md border",
                                 validationResult.success
-                                    ? "bg-green-50 border-green-200"
-                                    : "bg-red-50 border-red-200"
+                                    ? (isDark ? "bg-green-900/20 border-green-700" : "bg-green-50 border-green-200")
+                                    : (isDark ? "bg-red-900/20 border-red-700" : "bg-red-50 border-red-200")
                             )}
                         >
                             <div className="flex items-start gap-3">
                                 <div className="flex-shrink-0 mt-0.5">
                                     {validationResult.success ? (
-                                        <CheckCircleIcon className={cn(iconStyles('md'), "text-green-500")} />
+                                        <CheckCircleIcon className={cn(iconStyles(isDark, 'md'), "text-green-500")} />
                                     ) : (
-                                        <ExclamationTriangleIcon className={cn(iconStyles('md'), "text-red-500")} />
+                                        <ExclamationTriangleIcon className={cn(iconStyles(isDark, 'md'), "text-red-500")} />
                                     )}
                                 </div>
                                 <div className="flex-1">
                                     <p
                                         className={cn(
-                                            textStyles({ size: 'sm', weight: 'medium' }),
+                                            textStyles(isDark, { size: 'sm', weight: 'medium' }),
                                             validationResult.success
-                                                ? "text-green-800"
-                                                : "text-red-800"
+                                                ? (isDark ? "text-green-400" : "text-green-800")
+                                                : (isDark ? "text-red-400" : "text-red-800")
                                         )}
                                     >
                                         {validationResult.success
@@ -391,12 +433,19 @@ export default function ContainerValidator({
                                     </p>
                                     {validationResult.error && (
                                         /* Display the error message as a code block with newlines */
-                                        <pre className="mt-2 text-sm text-red-700 whitespace-pre-wrap">
+                                        <pre className={cn(
+                                            "mt-2 text-sm whitespace-pre-wrap",
+                                            isDark ? "text-red-400" : "text-red-700"
+                                        )}>
                                             {validationResult.error}
                                         </pre>
                                     )}
                                     {validationResult.success && (
-                                        <div className={cn("mt-2 space-y-1", textStyles({ size: 'sm' }), "text-green-700")}>
+                                        <div className={cn(
+                                            "mt-2 space-y-1",
+                                            textStyles(isDark, { size: 'sm' }),
+                                            isDark ? "text-green-400" : "text-green-700"
+                                        )}>
                                             <p>✓ Dockerfile generated successfully</p>
                                             {validationResult.deployBins &&
                                                 validationResult.deployBins.length > 0 && (
@@ -425,31 +474,34 @@ export default function ContainerValidator({
                     <div className="mb-6">
                         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
                             <h3 className={cn(
-                                textStyles({ size: 'lg', weight: 'medium', color: 'primary' }),
+                                textStyles(isDark, { size: 'lg', weight: 'medium', color: 'primary' }),
                                 "flex items-center gap-2"
                             )}>
-                                <DocumentTextIcon className={iconStyles('md')} />
+                                <DocumentTextIcon className={iconStyles(isDark, 'md')} />
                                 Generated Dockerfile
                             </h3>
                             <div className="flex gap-2">
                                 <button
                                     onClick={copyDockerfile}
-                                    className={cn(BUTTONS.secondary, "px-3 py-1 text-sm")}
+                                    className={cn(getButtons(isDark).secondary, "px-3 py-1 text-sm")}
                                 >
-                                    <ClipboardDocumentIcon className={iconStyles('sm')} />
+                                    <ClipboardDocumentIcon className={iconStyles(isDark, 'sm')} />
                                     Copy
                                 </button>
                                 <button
                                     onClick={downloadDockerfile}
-                                    className={cn(BUTTONS.secondary, "px-3 py-1 text-sm")}
+                                    className={cn(getButtons(isDark).secondary, "px-3 py-1 text-sm")}
                                 >
-                                    <DocumentTextIcon className={iconStyles('sm')} />
+                                    <DocumentTextIcon className={iconStyles(isDark, 'sm')} />
                                     Download
                                 </button>
                                 <button
                                     onClick={() => setShowDockerfile(!showDockerfile)}
                                     className={cn(
-                                        "px-3 py-1 text-sm font-medium text-gray-600 border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                                        "px-3 py-1 text-sm font-medium rounded transition-colors border",
+                                        isDark
+                                            ? "text-[#d1d5db] border-[#2d4222] hover:bg-[#2d4222]"
+                                            : "text-gray-600 border-gray-300 hover:bg-gray-50"
                                     )}
                                 >
                                     {showDockerfile ? "Hide" : "Show"}
@@ -458,20 +510,33 @@ export default function ContainerValidator({
                         </div>
 
                         {showDockerfile && (
-                            <div className="bg-gray-900 rounded-lg overflow-hidden">
-                                <div className="bg-gray-800 px-4 py-2 flex items-center justify-between">
-                                    <span className={cn(textStyles({ size: 'sm', weight: 'medium' }), "text-gray-300")}>
+                            <div className={cn(
+                                "rounded-lg overflow-hidden",
+                                isDark ? "bg-[#0f172a]" : "bg-gray-900"
+                            )}>
+                                <div className={cn(
+                                    "px-4 py-2 flex items-center justify-between",
+                                    isDark ? "bg-[#1e293b]" : "bg-gray-800"
+                                )}>
+                                    <span className={cn(
+                                        textStyles(isDark, { size: 'sm', weight: 'medium' }),
+                                        isDark ? "text-[#e2e8f0]" : "text-gray-300"
+                                    )}>
                                         Dockerfile
                                     </span>
-                                    <span className={cn(textStyles({ size: 'xs' }), "text-gray-400")}>
+                                    <span className={cn(
+                                        textStyles(isDark, { size: 'xs' }),
+                                        isDark ? "text-[#94a3b8]" : "text-gray-400"
+                                    )}>
                                         {validationResult.dockerfile.split('\n').length} lines
                                     </span>
                                 </div>
                                 <pre
                                     ref={dockerfileRef}
                                     className={cn(
-                                        "p-4 text-gray-100 overflow-x-auto max-h-96 overflow-y-auto",
-                                        textStyles({ size: 'sm' })
+                                        "p-4 overflow-x-auto max-h-96 overflow-y-auto",
+                                        textStyles(isDark, { size: 'sm' }),
+                                        isDark ? "text-[#e2e8f0]" : "text-gray-100"
                                     )}
                                     style={{ fontFamily: 'Monaco, "Courier New", monospace' }}
                                 >
@@ -485,11 +550,18 @@ export default function ContainerValidator({
                 {/* Additional Information */}
                 {validationResult?.success && validationResult.readme && (
                     <div className="mb-6">
-                        <h3 className={cn(textStyles({ size: 'lg', weight: 'medium', color: 'primary' }), "mb-3")}>
+                        <h3 className={cn(textStyles(isDark, { size: 'lg', weight: 'medium', color: 'primary' }), "mb-3")}>
                             Build Information
                         </h3>
-                        <div className="bg-gray-50 rounded-lg p-4">
-                            <pre className={cn(textStyles({ size: 'sm' }), "text-gray-700 whitespace-pre-wrap")}>
+                        <div className={cn(
+                            "rounded-lg p-4",
+                            isDark ? "bg-[#2d4222]" : "bg-gray-50"
+                        )}>
+                            <pre className={cn(
+                                textStyles(isDark, { size: 'sm' }),
+                                "whitespace-pre-wrap",
+                                isDark ? "text-[#d1d5db]" : "text-gray-700"
+                            )}>
                                 {validationResult.readme}
                             </pre>
                         </div>

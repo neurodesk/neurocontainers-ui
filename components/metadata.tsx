@@ -9,7 +9,8 @@ import {
     LicenseSection,
     ValidationSummary,
 } from "@/components/ui";
-import { CARDS, HELP_SECTION, BUTTONS, iconStyles, textStyles, cn } from "@/lib/styles";
+import { iconStyles, textStyles, cn, cardStyles, buttonStyles, getHelpSection } from "@/lib/styles";
+import { useTheme } from "@/lib/ThemeContext";
 
 // Validation functions
 function validateName(name: string): string | null {
@@ -62,6 +63,7 @@ export default function ContainerMetadata({
     onNameEditStart?: () => void;
     onNameEditFinish?: () => void;
 }) {
+    const { isDark } = useTheme();
     const [showInputTypeWarning, setShowInputTypeWarning] = useState(false);
     const [pendingInputType, setPendingInputType] = useState<"content" | "url" | null>(null);
     const [showValidation, setShowValidation] = useState(false);
@@ -207,8 +209,8 @@ export default function ContainerMetadata({
 
     const basicInfoHelpContent = (
         <>
-            <h4 className={HELP_SECTION.title}>Basic Information</h4>
-            <div className={cn(HELP_SECTION.text, "space-y-2")}>
+            <h4 className={getHelpSection(isDark).title}>Basic Information</h4>
+            <div className={cn(getHelpSection(isDark).text, "space-y-2")}>
                 <div>
                     <strong>Container Name:</strong>
                     <ul className="list-disc list-inside mt-1 space-y-1">
@@ -232,13 +234,13 @@ export default function ContainerMetadata({
 
     const architectureHelpContent = (
         <>
-            <h4 className={HELP_SECTION.title}>Target Architectures</h4>
-            <div className={cn(HELP_SECTION.text, "space-y-2")}>
+            <h4 className={getHelpSection(isDark).title}>Target Architectures</h4>
+            <div className={cn(getHelpSection(isDark).text, "space-y-2")}>
                 <p>Choose the processor architectures your container should support:</p>
                 <div className="space-y-2">
                     <div>
                         <strong>x86_64 (Intel/AMD):</strong> Most common architecture
-                        <ul className={cn("list-disc list-inside ml-4 mt-1", textStyles({ size: 'xs' }))}>
+                        <ul className={cn("list-disc list-inside ml-4 mt-1", textStyles(isDark, { size: 'xs' }))}>
                             <li>Desktop computers, most laptops</li>
                             <li>Most cloud instances (AWS EC2, Google Cloud, Azure)</li>
                             <li>Traditional servers and workstations</li>
@@ -246,14 +248,14 @@ export default function ContainerMetadata({
                     </div>
                     <div>
                         <strong>aarch64 (ARM 64-bit):</strong> Growing in popularity
-                        <ul className={cn("list-disc list-inside ml-4 mt-1", textStyles({ size: 'xs' }))}>
+                        <ul className={cn("list-disc list-inside ml-4 mt-1", textStyles(isDark, { size: 'xs' }))}>
                             <li>Apple Silicon Macs (M1, M2, M3)</li>
                             <li>AWS Graviton instances</li>
                             <li>Raspberry Pi 4+ and other ARM devices</li>
                         </ul>
                     </div>
                 </div>
-                <p className={textStyles({ size: 'xs' })}>
+                <p className={textStyles(isDark, { size: 'xs' })}>
                     💡 <strong>Tip:</strong> Select both for maximum compatibility, or just x86_64 if you&apos;re unsure.
                 </p>
             </div>
@@ -262,8 +264,8 @@ export default function ContainerMetadata({
 
     const documentationHelpContent = (
         <>
-            <h4 className={HELP_SECTION.title}>Documentation</h4>
-            <div className={cn(HELP_SECTION.text, "space-y-2")}>
+            <h4 className={getHelpSection(isDark).title}>Documentation</h4>
+            <div className={cn(getHelpSection(isDark).text, "space-y-2")}>
                 <p>Provide documentation for your container users:</p>
                 <div>
                     <strong>Options:</strong>
@@ -280,8 +282,8 @@ export default function ContainerMetadata({
 
     const licenseHelpContent = (
         <>
-            <h4 className={HELP_SECTION.title}>License Information</h4>
-            <div className={cn(HELP_SECTION.text, "space-y-2")}>
+            <h4 className={getHelpSection(isDark).title}>License Information</h4>
+            <div className={cn(getHelpSection(isDark).text, "space-y-2")}>
                 <p>Specify licenses for your container and any included software:</p>
                 <div>
                     <strong>Options:</strong>
@@ -298,7 +300,7 @@ export default function ContainerMetadata({
 
     return (
         <>
-            <div className={cn(CARDS.minimal, "mb-6")}>
+            <div className={cn(cardStyles(isDark, 'elevated', 'sm'), "mb-6")}>
                 <ValidationSummary
                     errors={[nameError, versionError, documentationError, architectureError, categoryError]}
                     show={showValidation && hasErrors}
@@ -308,13 +310,15 @@ export default function ContainerMetadata({
                     {/* Basic Information Section */}
                     <div className="mb-8">
                         <div className="flex items-center gap-2 mb-4">
-                            <h3 className={textStyles({ size: 'lg', weight: 'medium', color: 'primary' })}>Basic Information</h3>
+                            <h3 className={textStyles(isDark, { size: 'lg', weight: 'medium', color: 'primary' })}>Basic Information</h3>
                             <button
                                 type="button"
                                 className={cn(
-                                    BUTTONS.icon,
+                                    buttonStyles(isDark, 'ghost', 'sm'),
                                     "p-1 transition-colors",
-                                    showBasicInfoHelp ? 'text-[#6aa329]' : 'text-[#4f7b38] hover:text-[#6aa329]'
+                                    showBasicInfoHelp
+                                        ? (isDark ? 'text-[#7bb33a]' : 'text-[#6aa329]')
+                                        : (isDark ? 'text-[#91c84a] hover:text-[#7bb33a]' : 'text-[#4f7b38] hover:text-[#6aa329]')
                                 )}
                                 onClick={(e) => {
                                     e.stopPropagation();
@@ -322,12 +326,12 @@ export default function ContainerMetadata({
                                 }}
                                 title={showBasicInfoHelp ? "Hide documentation" : "Show documentation"}
                             >
-                                <InformationCircleIcon className={iconStyles('sm')} />
+                                <InformationCircleIcon className={iconStyles(isDark, 'sm')} />
                             </button>
                         </div>
 
                         {showBasicInfoHelp && (
-                            <div className={cn(HELP_SECTION.container, "mb-4")}>
+                            <div className={cn(getHelpSection(isDark).container, "mb-4")}>
                                 {basicInfoHelpContent}
                             </div>
                         )}
@@ -348,15 +352,17 @@ export default function ContainerMetadata({
                     {/* Architecture Section */}
                     <div className="mb-8">
                         <div className="flex items-center gap-2 mb-4">
-                            <h3 className={textStyles({ size: 'lg', weight: 'medium', color: 'primary' })}>
+                            <h3 className={textStyles(isDark, { size: 'lg', weight: 'medium', color: 'primary' })}>
                                 Target Architectures *
                             </h3>
                             <button
                                 type="button"
                                 className={cn(
-                                    BUTTONS.icon,
+                                    buttonStyles(isDark, 'ghost', 'sm'),
                                     "p-1 transition-colors",
-                                    showArchitectureHelp ? 'text-[#6aa329]' : 'text-[#4f7b38] hover:text-[#6aa329]'
+                                    showArchitectureHelp
+                                        ? (isDark ? 'text-[#7bb33a]' : 'text-[#6aa329]')
+                                        : (isDark ? 'text-[#91c84a] hover:text-[#7bb33a]' : 'text-[#4f7b38] hover:text-[#6aa329]')
                                 )}
                                 onClick={(e) => {
                                     e.stopPropagation();
@@ -364,12 +370,12 @@ export default function ContainerMetadata({
                                 }}
                                 title={showArchitectureHelp ? "Hide documentation" : "Show documentation"}
                             >
-                                <InformationCircleIcon className={iconStyles('sm')} />
+                                <InformationCircleIcon className={iconStyles(isDark, 'sm')} />
                             </button>
                         </div>
 
                         {showArchitectureHelp && (
-                            <div className={cn(HELP_SECTION.container, "mb-4")}>
+                            <div className={cn(getHelpSection(isDark).container, "mb-4")}>
                                 {architectureHelpContent}
                             </div>
                         )}
@@ -385,15 +391,17 @@ export default function ContainerMetadata({
                     {/* Category Section */}
                     <div className="mb-8">
                         <div className="flex items-center gap-2 mb-4">
-                            <h3 className={textStyles({ size: 'lg', weight: 'medium', color: 'primary' })}>
+                            <h3 className={textStyles(isDark, { size: 'lg', weight: 'medium', color: 'primary' })}>
                                 Categories *
                             </h3>
                             <button
                                 type="button"
                                 className={cn(
-                                    BUTTONS.icon,
+                                    buttonStyles(isDark, 'ghost', 'sm'),
                                     "p-1 transition-colors",
-                                    showCategoryHelp ? 'text-[#6aa329]' : 'text-[#4f7b38] hover:text-[#6aa329]'
+                                    showCategoryHelp
+                                        ? (isDark ? 'text-[#7bb33a]' : 'text-[#6aa329]')
+                                        : (isDark ? 'text-[#91c84a] hover:text-[#7bb33a]' : 'text-[#4f7b38] hover:text-[#6aa329]')
                                 )}
                                 onClick={(e) => {
                                     e.stopPropagation();
@@ -401,14 +409,14 @@ export default function ContainerMetadata({
                                 }}
                                 title={showCategoryHelp ? "Hide documentation" : "Show documentation"}
                             >
-                                <InformationCircleIcon className={iconStyles('sm')} />
+                                <InformationCircleIcon className={iconStyles(isDark, 'sm')} />
                             </button>
                         </div>
 
                         {showCategoryHelp && (
-                            <div className={cn(HELP_SECTION.container, "mb-4")}>
-                                <h4 className={HELP_SECTION.title}>Container Categories</h4>
-                                <div className={cn(HELP_SECTION.text, "space-y-2")}>
+                            <div className={cn(getHelpSection(isDark).container, "mb-4")}>
+                                <h4 className={getHelpSection(isDark).title}>Container Categories</h4>
+                                <div className={cn(getHelpSection(isDark).text, "space-y-2")}>
                                     <p>Select one or more categories that best describe your container&apos;s functionality:</p>
                                     <ul className="list-disc list-inside mt-1 space-y-1">
                                         <li>Categories help users discover and understand your container</li>
@@ -430,13 +438,15 @@ export default function ContainerMetadata({
                     {/* Documentation Section */}
                     <div className="mb-8">
                         <div className="flex items-center gap-2 mb-4">
-                            <h3 className={textStyles({ size: 'lg', weight: 'medium', color: 'primary' })}>Documentation *</h3>
+                            <h3 className={textStyles(isDark, { size: 'lg', weight: 'medium', color: 'primary' })}>Documentation *</h3>
                             <button
                                 type="button"
                                 className={cn(
-                                    BUTTONS.icon,
+                                    buttonStyles(isDark, 'ghost', 'sm'),
                                     "p-1 transition-colors",
-                                    showDocumentationHelp ? 'text-[#6aa329]' : 'text-[#4f7b38] hover:text-[#6aa329]'
+                                    showDocumentationHelp
+                                        ? (isDark ? 'text-[#7bb33a]' : 'text-[#6aa329]')
+                                        : (isDark ? 'text-[#91c84a] hover:text-[#7bb33a]' : 'text-[#4f7b38] hover:text-[#6aa329]')
                                 )}
                                 onClick={(e) => {
                                     e.stopPropagation();
@@ -444,12 +454,12 @@ export default function ContainerMetadata({
                                 }}
                                 title={showDocumentationHelp ? "Hide documentation" : "Show documentation"}
                             >
-                                <InformationCircleIcon className={iconStyles('sm')} />
+                                <InformationCircleIcon className={iconStyles(isDark, 'sm')} />
                             </button>
                         </div>
 
                         {showDocumentationHelp && (
-                            <div className={cn(HELP_SECTION.container, "mb-4")}>
+                            <div className={cn(getHelpSection(isDark).container, "mb-4")}>
                                 {documentationHelpContent}
                             </div>
                         )}
@@ -471,13 +481,15 @@ export default function ContainerMetadata({
                     {/* License Section */}
                     <div>
                         <div className="flex items-center gap-2 mb-4">
-                            <h3 className={textStyles({ size: 'lg', weight: 'medium', color: 'primary' })}>License Information</h3>
+                            <h3 className={textStyles(isDark, { size: 'lg', weight: 'medium', color: 'primary' })}>License Information</h3>
                             <button
                                 type="button"
                                 className={cn(
-                                    BUTTONS.icon,
+                                    buttonStyles(isDark, 'ghost', 'sm'),
                                     "p-1 transition-colors",
-                                    showLicenseHelp ? 'text-[#6aa329]' : 'text-[#4f7b38] hover:text-[#6aa329]'
+                                    showLicenseHelp
+                                        ? (isDark ? 'text-[#7bb33a]' : 'text-[#6aa329]')
+                                        : (isDark ? 'text-[#91c84a] hover:text-[#7bb33a]' : 'text-[#4f7b38] hover:text-[#6aa329]')
                                 )}
                                 onClick={(e) => {
                                     e.stopPropagation();
@@ -485,12 +497,12 @@ export default function ContainerMetadata({
                                 }}
                                 title={showLicenseHelp ? "Hide documentation" : "Show documentation"}
                             >
-                                <InformationCircleIcon className={iconStyles('sm')} />
+                                <InformationCircleIcon className={iconStyles(isDark, 'sm')} />
                             </button>
                         </div>
 
                         {showLicenseHelp && (
-                            <div className={cn(HELP_SECTION.container, "mb-4")}>
+                            <div className={cn(getHelpSection(isDark).container, "mb-4")}>
                                 {licenseHelpContent}
                             </div>
                         )}
@@ -509,15 +521,15 @@ export default function ContainerMetadata({
 
             {/* Input Type Switch Warning Modal */}
             {showInputTypeWarning && (
-                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-                    <div className={cn(CARDS.default, "max-w-md w-full")}>
+                <div className={cn("fixed inset-0 flex items-center justify-center z-50 p-4", isDark ? "bg-black/90" : "bg-black/80")}>
+                    <div className={cn(cardStyles(isDark, 'default', 'md'), "max-w-md w-full")}>
                         <div className="p-6">
                             <div className="flex items-center gap-3 mb-4">
-                                <div className="flex-shrink-0 w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
-                                    <ExclamationTriangleIcon className={iconStyles('lg', 'muted')} />
+                                <div className={cn("flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center", isDark ? "bg-yellow-900/30" : "bg-yellow-100")}>
+                                    <ExclamationTriangleIcon className={iconStyles(isDark, 'lg', 'muted')} />
                                 </div>
                                 <div>
-                                    <h3 className={textStyles({
+                                    <h3 className={textStyles(isDark, {
                                         size: 'lg',
                                         weight: 'medium',
                                         color: 'primary'
@@ -526,7 +538,7 @@ export default function ContainerMetadata({
                                     </h3>
                                 </div>
                             </div>
-                            <p className={cn(textStyles({ color: 'secondary' }), "mb-6")}>
+                            <p className={cn(textStyles(isDark, { color: 'secondary' }), "mb-6")}>
                                 You have existing documentation content. Switching to{" "}
                                 {pendingInputType === "content" ? "content entry" : "URL input"} will
                                 clear your current{" "}
@@ -535,13 +547,13 @@ export default function ContainerMetadata({
                             </p>
                             <div className="flex gap-3 justify-end">
                                 <button
-                                    className={BUTTONS.secondary}
+                                    className={buttonStyles(isDark, 'secondary', 'md')}
                                     onClick={cancelInputTypeSwitch}
                                 >
                                     Cancel
                                 </button>
                                 <button
-                                    className="px-4 py-2 text-sm font-medium text-white bg-yellow-600 hover:bg-yellow-700 rounded-md transition-colors"
+                                    className={cn("px-4 py-2 text-sm font-medium text-white rounded-md transition-colors", isDark ? "bg-yellow-500 hover:bg-yellow-600" : "bg-yellow-600 hover:bg-yellow-700")}
                                     onClick={confirmInputTypeSwitch}
                                 >
                                     Switch Anyway

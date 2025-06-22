@@ -2,7 +2,8 @@ import { DirectiveContainer, Input } from "@/components/ui";
 import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
 import { FolderOpenIcon } from "@heroicons/react/24/outline";
 import { registerDirective, DirectiveMetadata } from "./registry";
-import { HELP_SECTION } from "@/lib/styles";
+import { getHelpSection } from "@/lib/styles";
+import { useTheme } from "@/lib/ThemeContext";
 
 export default function WorkingDirectoryDirectiveComponent({
     workdir,
@@ -19,18 +20,19 @@ export default function WorkingDirectoryDirectiveComponent({
     onChange: (workdir: string) => void,
     condition?: string;
     onConditionChange?: (condition: string | undefined) => void;
-    headerColor?: string;
-    borderColor?: string;
-    iconColor?: string;
+    headerColor?: { light: string, dark: string };
+    borderColor?: { light: string, dark: string };
+    iconColor?: { light: string, dark: string };
     icon?: React.ComponentType<{ className?: string }>;
     controllers: DirectiveControllers;
 }) {
+    const { isDark } = useTheme();
     const helpContent = (
-        <div className={HELP_SECTION.container}>
-            <h3 className={HELP_SECTION.title}>
+        <div className={getHelpSection(isDark).container}>
+            <h3 className={getHelpSection(isDark).title}>
                 WORKDIR Directive
             </h3>
-            <div className={HELP_SECTION.text}>
+            <div className={getHelpSection(isDark).text}>
                 <p>
                     The WORKDIR directive sets the working directory for any subsequent ADD, COPY, ENTRYPOINT, CMD, and RUN instructions.
                 </p>
@@ -47,14 +49,14 @@ export default function WorkingDirectoryDirectiveComponent({
                     <strong>Best Practices:</strong>
                     <ul className="list-disc list-inside mt-1 space-y-1">
                         <li>Use absolute paths for clarity and predictability</li>
-                        <li>Avoid using <code className={HELP_SECTION.code}>cd</code> in RUN instructions; use WORKDIR instead</li>
+                        <li>Avoid using <code className={getHelpSection(isDark).code}>cd</code> in RUN instructions; use WORKDIR instead</li>
                         <li>Set WORKDIR early in your Dockerfile for organization</li>
                         <li>Use meaningful directory names (e.g., /app, /usr/src/app)</li>
                     </ul>
                 </div>
                 <div>
                     <strong>Examples:</strong>
-                    <div className={HELP_SECTION.code}>
+                    <div className={getHelpSection(isDark).code}>
                         <div><strong>Application:</strong> /app</div>
                         <div><strong>Source code:</strong> /usr/src/app</div>
                         <div><strong>Data directory:</strong> /data</div>
@@ -93,10 +95,10 @@ export const workdirDirectiveMetadata: DirectiveMetadata = {
     label: "Working Directory",
     description: "Set the working directory for subsequent commands",
     icon: FolderOpenIcon,
-    color: "bg-yellow-50 border-yellow-200 hover:bg-yellow-100",
-    headerColor: "bg-yellow-50",
-    borderColor: "border-yellow-200",
-    iconColor: "text-yellow-600",
+    color: { light: "bg-yellow-50 border-yellow-200 hover:bg-yellow-100", dark: "bg-yellow-900 border-yellow-700 hover:bg-yellow-800" },
+    headerColor: { light: "bg-yellow-50", dark: "bg-yellow-900" },
+    borderColor: { light: "border-yellow-200", dark: "border-yellow-700" },
+    iconColor: { light: "text-yellow-600", dark: "text-yellow-400" },
     defaultValue: { workdir: "" },
     keywords: ["workdir", "directory", "folder", "path", "cd"],
     component: WorkingDirectoryDirectiveComponent,

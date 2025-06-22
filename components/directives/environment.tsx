@@ -2,7 +2,8 @@ import { DirectiveContainer, KeyValueEditor } from "@/components/ui";
 import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
 import { CogIcon } from "@heroicons/react/24/outline";
 import { registerDirective, DirectiveMetadata } from "./registry";
-import { HELP_SECTION } from "@/lib/styles";
+import { getHelpSection } from "@/lib/styles";
+import { useTheme } from "@/lib/ThemeContext";
 
 export default function EnvironmentDirectiveComponent({
     environment,
@@ -19,18 +20,19 @@ export default function EnvironmentDirectiveComponent({
     onChange: (environment: { [key: string]: string }) => void
     condition?: string;
     onConditionChange?: (condition: string | undefined) => void;
-    headerColor?: string;
-    borderColor?: string;
-    iconColor?: string;
+    headerColor?: { light: string, dark: string };
+    borderColor?: { light: string, dark: string };
+    iconColor?: { light: string, dark: string };
     icon?: React.ComponentType<{ className?: string }>;
     controllers: DirectiveControllers;
 }) {
+    const { isDark } = useTheme();
     const helpContent = (
-        <div className={HELP_SECTION.container}>
-            <h3 className={HELP_SECTION.title}>
+        <div className={getHelpSection(isDark).container}>
+            <h3 className={getHelpSection(isDark).title}>
                 ENVIRONMENT Directive
             </h3>
-            <div className={HELP_SECTION.text}>
+            <div className={getHelpSection(isDark).text}>
                 <p>
                     The ENVIRONMENT directive sets environment variables that will be available in the container.
                 </p>
@@ -45,7 +47,7 @@ export default function EnvironmentDirectiveComponent({
                 </div>
                 <div>
                     <strong>Common Examples:</strong>
-                    <div className={HELP_SECTION.code}>
+                    <div className={getHelpSection(isDark).code}>
                         <div><strong>PATH:</strong> /usr/local/bin:/usr/bin:/bin</div>
                         <div><strong>APP_ENV:</strong> production</div>
                         <div><strong>DATABASE_URL:</strong> postgresql://user:pass@localhost/db</div>
@@ -89,10 +91,10 @@ export const environmentDirectiveMetadata: DirectiveMetadata = {
     label: "Environment",
     description: "Set environment variables",
     icon: CogIcon,
-    color: "bg-green-50 border-green-200 hover:bg-green-100",
-    headerColor: "bg-green-50",
-    borderColor: "border-green-200",
-    iconColor: "text-green-600",
+    color: { light: "bg-green-50 border-green-200 hover:bg-green-100", dark: "bg-green-900 border-green-700 hover:bg-green-800" },
+    headerColor: { light: "bg-green-50", dark: "bg-green-900" },
+    borderColor: { light: "border-green-200", dark: "border-green-700" },
+    iconColor: { light: "text-green-600", dark: "text-green-400" },
     defaultValue: { environment: {} },
     keywords: ["environment", "env", "variables", "config", "settings"],
     component: EnvironmentDirectiveComponent,

@@ -1,6 +1,7 @@
 import { NeuroDockerBuildRecipe, Directive } from "@/components/common";
 import { BaseImageSelector, DirectivesList } from "@/components/ui";
-import { CARDS } from "@/lib/styles";
+import { cardStyles } from "@/lib/styles";
+import { useTheme } from "@/lib/ThemeContext";
 
 export default function NeuroDockerBuildRecipeComponent({
     recipe,
@@ -9,6 +10,7 @@ export default function NeuroDockerBuildRecipeComponent({
     recipe: NeuroDockerBuildRecipe;
     onChange: (recipe: NeuroDockerBuildRecipe) => void;
 }) {
+    const { isDark } = useTheme();
     const onChangeWrapper = (updatedRecipe: NeuroDockerBuildRecipe, cause: string) => {
         console.log(`Recipe updated via ${cause}:`, updatedRecipe);
         onChange(updatedRecipe);
@@ -75,7 +77,7 @@ export default function NeuroDockerBuildRecipeComponent({
     };
 
     return (
-        <div className={CARDS.minimal}>
+        <div className={cardStyles(isDark, 'elevated', 'sm')}>
             <div className="p-4 sm:p-6">
                 {/* Base Image Section */}
                 <div className="mb-8">

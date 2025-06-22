@@ -2,6 +2,7 @@ import { TrashIcon, PlusIcon, Bars3Icon } from "@heroicons/react/24/outline";
 import { useState, ReactNode } from "react";
 import { iconStyles, textStyles, buttonStyles, cardStyles, cn } from "@/lib/styles";
 import { colors } from "@/lib/theme";
+import { useTheme } from "@/lib/ThemeContext";
 
 interface ListEditorProps<T> {
     items: T[];
@@ -26,6 +27,7 @@ export default function ListEditor<T>({
     className = "",
     focusedIndex = null,
 }: ListEditorProps<T>) {
+    const { isDark } = useTheme();
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
     const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
@@ -129,19 +131,19 @@ export default function ListEditor<T>({
     if (items.length === 0 && emptyMessage) {
         return (
             <div className={className}>
-                <div className={cn(cardStyles('default', 'md'), "mb-3")}>
-                    <p className={cn(textStyles({ size: 'sm', color: 'muted' }), "text-center")}>
+                <div className={cn(cardStyles(isDark, 'default', 'md'), "mb-3")}>
+                    <p className={cn(textStyles(isDark, { size: 'sm', color: 'muted' }), "text-center")}>
                         {emptyMessage}
                     </p>
                 </div>
                 <button
                     className={cn(
-                        buttonStyles('ghost', 'sm'),
+                        buttonStyles(isDark, 'ghost', 'sm'),
                         "flex items-center gap-1 px-0"
                     )}
                     onClick={addItem}
                 >
-                    <PlusIcon className={iconStyles('sm')} />
+                    <PlusIcon className={iconStyles(isDark, 'sm')} />
                     {addButtonText}
                 </button>
             </div>
@@ -162,16 +164,23 @@ export default function ListEditor<T>({
                             <div key={index}>
                                 {/* Drop indicator before current item */}
                                 {showPlaceholderBefore && (
-                                    <div className={`h-0.5 rounded-full mx-3 mb-1 opacity-75 transition-opacity duration-150`}
-                                        style={{ backgroundColor: colors.primary[500] }}></div>
+                                    <div
+                                        className="h-0.5 rounded-full mx-3 mb-1 opacity-75 transition-opacity duration-150"
+                                        style={{
+                                            backgroundColor: isDark ? colors.primaryDark[500] : colors.primary[500]
+                                        }}
+                                    ></div>
                                 )}
 
                                 <div
                                     className={cn(
-                                        "flex transition-all duration-150 border rounded-md will-change-transform bg-white",
+                                        "flex transition-all duration-150 border rounded-md will-change-transform",
+                                        isDark ? "bg-[#161a0e]" : "bg-white",
                                         focusedIndex === index
-                                            ? `border-[${colors.primary[500]}] shadow-sm`
-                                            : "border-gray-200",
+                                            ? (isDark
+                                                ? "border-[#7bb33a] shadow-sm"
+                                                : "border-[#6aa329] shadow-sm")
+                                            : (isDark ? "border-[#374151]" : "border-gray-200"),
                                         draggedIndex === index && "opacity-30 scale-95"
                                     )}
                                     onDragOver={allowReorder ? (e) => handleDragOver(e, index) : undefined}
@@ -182,14 +191,16 @@ export default function ListEditor<T>({
                                         <div
                                             className={cn(
                                                 "flex items-start px-2 py-2 rounded-l-md cursor-grab active:cursor-grabbing touch-manipulation select-none transition-colors",
-                                                "bg-gray-50 hover:bg-gray-100"
+                                                isDark
+                                                    ? "bg-[#2d4222] hover:bg-[#374151]"
+                                                    : "bg-gray-50 hover:bg-gray-100"
                                             )}
                                             draggable
                                             onDragStart={(e) => handleDragStart(e, index)}
                                             onDragEnd={handleDragEnd}
                                             onTouchStart={(e) => e.stopPropagation()}
                                         >
-                                            <Bars3Icon className={cn(iconStyles('sm', 'muted'))} />
+                                            <Bars3Icon className={cn(iconStyles(isDark, 'sm', 'muted'))} />
                                         </div>
                                     )}
                                     <div className={`flex-grow ${allowReorder ? "" : "rounded-l-md"}`}>
@@ -198,18 +209,24 @@ export default function ListEditor<T>({
                                     <button
                                         className={cn(
                                             "px-2 py-2 rounded-r-md flex items-start transition-colors",
-                                            `bg-[${colors.primary[50]}] text-gray-400 hover:text-[${colors.primary[600]}]`
+                                            isDark
+                                                ? "bg-[#1f2e18] text-[#9ca3af] hover:text-[#7bb33a]"
+                                                : "bg-[#f0f8e8] text-gray-400 hover:text-[#4f7b38]"
                                         )}
                                         onClick={() => removeItem(index)}
                                     >
-                                        <TrashIcon className={cn(iconStyles('sm'), "mt-0.5")} />
+                                        <TrashIcon className={cn(iconStyles(isDark, 'sm'), "mt-0.5")} />
                                     </button>
                                 </div>
 
                                 {/* Drop indicator after current item (only for last item) */}
                                 {showPlaceholderAfter && (
-                                    <div className={`h-0.5 rounded-full mx-3 mt-1 opacity-75 transition-opacity duration-150`}
-                                        style={{ backgroundColor: colors.primary[500] }}></div>
+                                    <div
+                                        className="h-0.5 rounded-full mx-3 mt-1 opacity-75 transition-opacity duration-150"
+                                        style={{
+                                            backgroundColor: isDark ? colors.primaryDark[500] : colors.primary[500]
+                                        }}
+                                    ></div>
                                 )}
                             </div>
                         );
@@ -219,12 +236,12 @@ export default function ListEditor<T>({
 
             <button
                 className={cn(
-                    buttonStyles('ghost', 'sm'),
+                    buttonStyles(isDark, 'ghost', 'sm'),
                     "flex items-center gap-1 px-0"
                 )}
                 onClick={addItem}
             >
-                <PlusIcon className={iconStyles('sm')} />
+                <PlusIcon className={iconStyles(isDark, 'sm')} />
                 {addButtonText}
             </button>
         </div>

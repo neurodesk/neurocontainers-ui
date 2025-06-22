@@ -7,8 +7,9 @@ import {
     TrashIcon,
 } from "@heroicons/react/24/outline";
 import { useState, ReactNode } from "react";
-import { presets, iconStyles, cardStyles, textStyles, cn } from "@/lib/styles";
+import { getThemePresets, iconStyles, textStyles, cn, useThemeStyles } from "@/lib/styles";
 import { colors } from "@/lib/theme";
+import { useTheme } from "@/lib/ThemeContext";
 import { Input } from "./FormField";
 
 export interface DirectiveControllers {
@@ -34,9 +35,9 @@ interface DirectiveContainerProps {
     condition?: string;
     onConditionChange?: (condition: string | undefined) => void;
     showConditionOption?: boolean;
-    headerColor?: string;
-    borderColor?: string;
-    iconColor?: string;
+    headerColor?: { light: string, dark: string };
+    borderColor?: { light: string, dark: string };
+    iconColor?: { light: string, dark: string };
     icon?: React.ComponentType<{ className?: string }>;
     // Unified drag controllers
     controllers: DirectiveControllers;
@@ -56,12 +57,18 @@ export default function DirectiveContainer({
     icon: Icon,
     controllers,
 }: DirectiveContainerProps) {
+    const { isDark } = useTheme();
+    const styles = useThemeStyles(isDark);
     const [showHelp, setShowHelp] = useState(false);
     const [showCondition, setShowCondition] = useState(false);
 
     return (
         <div
-            className={cn(cardStyles("default", "zero"), borderColor || "border-gray-200", className)}
+            className={cn(
+                styles.card("default", "zero"),
+                isDark ? borderColor?.dark || "border-[#2d4222]" : borderColor?.light || "border-gray-200",
+                className,
+            )}
             draggable={controllers?.draggable}
             onDragStart={controllers?.onDragStart}
             onDragOver={controllers?.onDragOver}
@@ -69,7 +76,10 @@ export default function DirectiveContainer({
             onDrop={controllers?.onDrop}
             onDragEnd={controllers?.onDragEnd}
         >
-            <div className={cn("flex items-center w-full p-1 rounded-t-md", headerColor || "bg-[#f0f7e7]")}>
+            <div className={cn(
+                "flex items-center w-full p-1 rounded-t-md",
+                isDark ? headerColor?.dark || "bg-[#1f2e18]" : headerColor?.light || "bg-[#f0f7e7]",
+            )}>
                 {/* Left-aligned Controls */}
                 {controllers && (
                     <div className="flex items-center gap-0.5 mr-2 flex-shrink-0">
@@ -77,19 +87,19 @@ export default function DirectiveContainer({
                         <button
                             className={cn(
                                 "cursor-grab active:cursor-grabbing transition-colors p-1 flex items-center justify-center",
-                                `text-gray-400 hover:text-[${colors.primary[600]}]`
+                                isDark ? "text-[#9ca3af] hover:text-[#91c84a]" : `text-gray-400 hover:text-[${colors.primary[600]}]`
                             )}
                             onMouseDown={(e) => e.stopPropagation()}
                             title="Drag to reorder"
                         >
-                            <Bars3Icon className={iconStyles('sm')} />
+                            <Bars3Icon className={iconStyles(isDark, 'sm')} />
                         </button>
 
                         {/* Step Number */}
                         {controllers.stepNumber && (
                             <div className={cn(
                                 "px-1.5 py-0.5 rounded text-xs font-medium min-w-[1.5rem] text-center flex items-center justify-center",
-                                "bg-gray-200 text-gray-600"
+                                isDark ? "bg-[#374151] text-[#d1d5db]" : "bg-gray-200 text-gray-600"
                             )}>
                                 {controllers.stepNumber}
                             </div>
@@ -100,10 +110,10 @@ export default function DirectiveContainer({
                             <button
                                 className={cn(
                                     "transition-colors p-0.5 flex items-center justify-center",
-                                    iconStyles('sm'),
+                                    iconStyles(isDark, 'sm'),
                                     controllers.canMoveUp
-                                        ? `text-gray-600 hover:text-[${colors.primary[600]}]`
-                                        : "text-gray-300 cursor-not-allowed"
+                                        ? (isDark ? "text-[#d1d5db] hover:text-[#91c84a]" : `text-gray-600 hover:text-[${colors.primary[600]}]`)
+                                        : (isDark ? "text-[#6b7280] cursor-not-allowed" : "text-gray-300 cursor-not-allowed")
                                 )}
                                 onClick={controllers.onMoveUp}
                                 disabled={!controllers.canMoveUp}
@@ -114,10 +124,10 @@ export default function DirectiveContainer({
                             <button
                                 className={cn(
                                     "transition-colors p-0.5 flex items-center justify-center",
-                                    iconStyles('sm'),
+                                    iconStyles(isDark, 'sm'),
                                     controllers.canMoveDown
-                                        ? `text-gray-600 hover:text-[${colors.primary[600]}]`
-                                        : "text-gray-300 cursor-not-allowed"
+                                        ? (isDark ? "text-[#d1d5db] hover:text-[#91c84a]" : `text-gray-600 hover:text-[${colors.primary[600]}]`)
+                                        : (isDark ? "text-[#6b7280] cursor-not-allowed" : "text-gray-300 cursor-not-allowed")
                                 )}
                                 onClick={controllers.onMoveDown}
                                 disabled={!controllers.canMoveDown}
@@ -134,16 +144,19 @@ export default function DirectiveContainer({
                             onClick={controllers.onDelete}
                             title="Delete directive"
                         >
-                            <TrashIcon className={iconStyles('sm')} />
+                            <TrashIcon className={iconStyles(isDark, 'sm')} />
                         </button>
                     </div>
                 )}
 
                 {/* Icon and Title */}
                 {Icon && (
-                    <Icon className={cn(iconStyles('md'), "mr-2", iconColor || "text-gray-600")} />
+                    <Icon className={cn(
+                        iconStyles(isDark, 'md'), "mr-2",
+                        isDark ? iconColor?.dark || "text-gray-400" : iconColor?.light || "text-gray-600"
+                    )} />
                 )}
-                <h2 className={cn(textStyles({ size: 'base', weight: 'medium', color: 'primary' }), "flex-1")}>{title}</h2>
+                <h2 className={cn(textStyles(isDark, { size: 'base', weight: 'medium', color: 'primary' }), "flex-1")}>{title}</h2>
 
                 {/* Right-aligned Controls */}
                 <div className="flex items-center gap-1 flex-shrink-0 pr-1">
@@ -151,7 +164,7 @@ export default function DirectiveContainer({
                         <button
                             className={cn(
                                 "transition-colors",
-                                iconStyles('md', 'primary'),
+                                iconStyles(isDark, 'md', 'primary'),
                                 "hover:text-black text-gray-600",
                                 showCondition && "text-black"
                             )}
@@ -161,14 +174,14 @@ export default function DirectiveContainer({
                             }}
                             title={showCondition ? "Hide condition" : "Add condition"}
                         >
-                            <QuestionMarkCircleIcon className={iconStyles('md')} />
+                            <QuestionMarkCircleIcon className={iconStyles(isDark, 'md')} />
                         </button>
                     )}
                     {helpContent && (
                         <button
                             className={cn(
                                 "transition-colors",
-                                iconStyles('md', 'primary'),
+                                iconStyles(isDark, 'md', 'primary'),
                                 "hover:text-[#6aa329]",
                                 showHelp && "text-[#6aa329]"
                             )}
@@ -178,7 +191,7 @@ export default function DirectiveContainer({
                             }}
                             title={showHelp ? "Hide documentation" : "Show documentation"}
                         >
-                            <InformationCircleIcon className={iconStyles('md')} />
+                            <InformationCircleIcon className={iconStyles(isDark, 'md')} />
                         </button>
                     )}
                 </div>
@@ -186,9 +199,12 @@ export default function DirectiveContainer({
 
             <div className="border-t border-[#e6f1d6]">
                 {(showCondition || condition) && onConditionChange && (
-                    <div className="px-4 py-3 bg-[#f8faf6] border-b border-[#e6f1d6]">
+                    <div className={cn(
+                        "px-4 py-3 border-b",
+                        isDark ? "bg-[#1f2e18] border-[#374151]" : "bg-[#f8faf6] border-[#e6f1d6]",
+                    )}>
                         <div className="flex flex-col gap-2">
-                            <label className={presets.formLabel}>
+                            <label className={getThemePresets(isDark).formLabel}>
                                 Condition
                             </label>
                             <Input
@@ -197,9 +213,9 @@ export default function DirectiveContainer({
                                 placeholder='e.g., arch=="x86_64" or platform=="linux"'
                                 onClick={(e) => e.stopPropagation()}
                                 monospace
-                                className={cn("bg-white")}
+                                className={cn(isDark ? "bg-grey-600" : "bg-white")}
                             />
-                            <p className={textStyles({ size: 'xs', color: 'muted' })}>
+                            <p className={textStyles(isDark, { size: 'xs', color: 'muted' })}>
                                 This directive will only be executed when the condition is true. Leave empty to always execute.
                             </p>
                         </div>

@@ -4,7 +4,8 @@ import { Variable } from "@/components/common";
 import { TrashIcon, CubeTransparentIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import { registerDirective, DirectiveMetadata } from "./registry";
-import { HELP_SECTION, BUTTONS, cn, iconStyles } from "@/lib/styles";
+import { cn, getHelpSection, useThemeStyles } from "@/lib/styles";
+import { useTheme } from "@/lib/ThemeContext";
 
 export function VariableComponent({ variable, onChange }: { variable: Variable, onChange?: (variable: Variable) => void }) {
     if (typeof variable === 'string') {
@@ -63,7 +64,13 @@ export function VariableComponent({ variable, onChange }: { variable: Variable, 
                     }
                 }}
                 placeholder="Enter JSON object"
-                className="w-full min-h-[80px] px-3 py-2 border border-gray-200 rounded-md text-[#0c0e0a] focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329] resize-none font-mono text-sm"
+                className={cn(
+                    "w-full min-h-[80px] px-3 py-2",
+                    "border border-gray-200 rounded-md dark:border-gray-700",
+                    "text-[#0c0e0a] dark:text-gray-200",
+                    "focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329] dark:focus:ring-[#6aa329] dark:focus:border-[#6aa329]",
+                    "resize-none font-mono text-sm",
+                )}
             />
         );
     }
@@ -84,12 +91,14 @@ export default function VariableDirectiveComponent({
     onChange: (variables: { [key: string]: Variable }) => void,
     condition?: string;
     onConditionChange?: (condition: string | undefined) => void;
-    headerColor?: string;
-    borderColor?: string;
-    iconColor?: string;
+    headerColor?: { light: string, dark: string };
+    borderColor?: { light: string, dark: string };
+    iconColor?: { light: string, dark: string };
     icon?: React.ComponentType<{ className?: string }>;
     controllers: DirectiveControllers;
 }) {
+    const { isDark } = useTheme();
+    const styles = useThemeStyles(isDark);
     const [newVarKey, setNewVarKey] = useState("");
 
     const updateVariable = (key: string, value: Variable) => {
@@ -111,10 +120,10 @@ export default function VariableDirectiveComponent({
 
     const helpContent = (
         <>
-            <h3 className={HELP_SECTION.title}>
+            <h3 className={getHelpSection(isDark).title}>
                 VARIABLE Directive
             </h3>
-            <div className={cn(HELP_SECTION.text, "space-y-2")}>
+            <div className={cn(getHelpSection(isDark).text, "space-y-2")}>
                 <p>
                     The VARIABLE directive defines variables that can be used throughout the container build.
                 </p>
@@ -128,7 +137,7 @@ export default function VariableDirectiveComponent({
                 </div>
                 <div>
                     <strong>Examples:</strong>
-                    <div className={HELP_SECTION.code}>
+                    <div className={getHelpSection(isDark).code}>
                         <div><strong>String:</strong> &quot;myvalue&quot; or hello_world</div>
                         <div><strong>Array:</strong> [&quot;item1&quot;, &quot;item2&quot;, &quot;item3&quot;]</div>
                         <div><strong>Object:</strong> {"{"}&quot;key&quot;: &quot;value&quot;, &quot;number&quot;: 42{"}"}</div>
@@ -157,11 +166,11 @@ export default function VariableDirectiveComponent({
                         <div className="flex justify-between items-center">
                             <span>{key}</span>
                             <button
-                                className={cn(BUTTONS.icon, "ml-2")}
+                                className={cn(styles.buttons.icon, "ml-2")}
                                 onClick={() => removeVariable(key)}
                                 title={`Remove variable ${key}`}
                             >
-                                <TrashIcon className={iconStyles('sm')} />
+                                <TrashIcon className={styles.icon("sm")} />
                             </button>
                         </div>
                     }
@@ -184,7 +193,7 @@ export default function VariableDirectiveComponent({
                         onKeyDown={(e) => e.key === 'Enter' && addVariable()}
                     />
                     <button
-                        className={cn(BUTTONS.primary, "rounded-l-none rounded-r-md")}
+                        className={cn(styles.buttons.primary, "rounded-l-none rounded-r-md")}
                         onClick={addVariable}
                         disabled={!newVarKey.trim()}
                     >
@@ -202,10 +211,10 @@ export const variablesDirectiveMetadata: DirectiveMetadata = {
     label: "Variables",
     description: "Define template variables for dynamic values",
     icon: CubeTransparentIcon,
-    color: "bg-indigo-50 border-indigo-200 hover:bg-indigo-100",
-    headerColor: "bg-indigo-50",
-    borderColor: "border-indigo-200",
-    iconColor: "text-indigo-600",
+    color: { light: "bg-green-50 border-green-200 hover:bg-green-100", dark: "bg-green-900 border-green-700 hover:bg-green-800" },
+    headerColor: { light: "bg-green-50", dark: "bg-green-900" },
+    borderColor: { light: "border-green-200", dark: "border-green-700" },
+    iconColor: { light: "text-green-600", dark: "text-green-400" },
     defaultValue: { variables: {} },
     keywords: ["variables", "var", "template", "placeholder", "substitution"],
     component: VariableDirectiveComponent,

@@ -6,10 +6,10 @@ export interface DirectiveMetadata {
     label: string;
     description: string;
     icon: ComponentType<{ className?: string }>;
-    color: string;
-    headerColor?: string; // Optional separate color for the header background
-    borderColor?: string; // Optional separate color for the container border
-    iconColor: string;
+    color: { dark: string, light: string };
+    headerColor?: { dark: string, light: string }; // Optional separate color for the header background
+    borderColor?: { dark: string, light: string }; // Optional separate color for the container border
+    iconColor: { dark: string, light: string };
     defaultValue: Directive;
     keywords: string[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

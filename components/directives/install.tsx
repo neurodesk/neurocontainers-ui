@@ -5,7 +5,8 @@ import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
 import PackageTagEditor from "@/components/ui/PackageTagEditor";
 import { CommandLineIcon } from "@heroicons/react/24/outline";
 import { registerDirective, DirectiveMetadata } from "./registry";
-import { HELP_SECTION } from "@/lib/styles";
+import { cn, getHelpSection } from "@/lib/styles";
+import { useTheme } from "@/lib/ThemeContext";
 
 type PackageManager = "system";
 
@@ -37,12 +38,13 @@ export default function InstallDirectiveComponent({
     onChange: (install: string) => void;
     condition?: string;
     onConditionChange?: (condition: string | undefined) => void;
-    headerColor?: string;
-    borderColor?: string;
-    iconColor?: string;
+    headerColor?: { light: string, dark: string };
+    borderColor?: { light: string, dark: string };
+    iconColor?: { light: string, dark: string };
     icon?: React.ComponentType<{ className?: string }>;
     controllers: DirectiveControllers;
 }) {
+    const { isDark } = useTheme();
     const [packages, setPackages] = useState<string[]>([]);
     const [packageManager, setPackageManager] = useState<PackageManager>("system");
     const [isLoadingDatabase, setIsLoadingDatabase] = useState(true);
@@ -87,22 +89,22 @@ export default function InstallDirectiveComponent({
     };
 
     const helpContent = (
-        <div className={HELP_SECTION.container}>
-            <h3 className={HELP_SECTION.title}>
+        <div className={getHelpSection(isDark).container}>
+            <h3 className={getHelpSection(isDark).title}>
                 INSTALL Directive
             </h3>
-            <div className={HELP_SECTION.text}>
+            <div className={getHelpSection(isDark).text}>
                 <p>
                     Search from {databaseLoaded ? packageDatabase.length.toLocaleString() : '80,000+'} Ubuntu 24.04 packages.
                 </p>
                 <div>
                     <strong>Keyboard Shortcuts:</strong>
                     <ul className="list-disc list-inside mt-1 space-y-1 text-xs">
-                        <li><kbd className={HELP_SECTION.code}>Enter</kbd> - Add package</li>
-                        <li><kbd className={HELP_SECTION.code}>↑/↓</kbd> - Navigate suggestions</li>
-                        <li><kbd className={HELP_SECTION.code}>Tab</kbd> - Autocomplete</li>
-                        <li><kbd className={HELP_SECTION.code}>Backspace</kbd> - Remove last (when empty)</li>
-                        <li><kbd className={HELP_SECTION.code}>Esc</kbd> - Close suggestions</li>
+                        <li><kbd className={getHelpSection(isDark).code}>Enter</kbd> - Add package</li>
+                        <li><kbd className={getHelpSection(isDark).code}>↑/↓</kbd> - Navigate suggestions</li>
+                        <li><kbd className={getHelpSection(isDark).code}>Tab</kbd> - Autocomplete</li>
+                        <li><kbd className={getHelpSection(isDark).code}>Backspace</kbd> - Remove last (when empty)</li>
+                        <li><kbd className={getHelpSection(isDark).code}>Esc</kbd> - Close suggestions</li>
                     </ul>
                 </div>
             </div>
@@ -126,7 +128,7 @@ export default function InstallDirectiveComponent({
                     value={packageManager}
                     disabled={true} // Disable for now, only system package manager supported
                     onChange={(e) => setPackageManager(e.target.value as PackageManager)}
-                    className="text-gray-500 bg-gray-100 cursor-not-allowed"
+                    className={cn("cursor-not-allowed", isDark ? "bg-[#2d4222] text-[#e8f5d0]" : "text-gray-500 bg-gray-100")}
                 >
                     {packageManagers.map((pm) => (
                         <option key={pm.value} value={pm.value}>
@@ -154,10 +156,10 @@ export const installDirectiveMetadata: DirectiveMetadata = {
     label: "Install",
     description: "Install packages or dependencies",
     icon: CommandLineIcon,
-    color: "bg-purple-50 border-purple-200 hover:bg-purple-100",
-    headerColor: "bg-purple-50",
-    borderColor: "border-purple-200",
-    iconColor: "text-purple-600",
+    color: { light: "bg-purple-50 border-purple-200 hover:bg-purple-100", dark: "bg-purple-900 border-purple-700 hover:bg-purple-800" },
+    headerColor: { light: "bg-purple-50", dark: "bg-purple-900" },
+    borderColor: { light: "border-purple-200", dark: "border-purple-700" },
+    iconColor: { light: "text-purple-600", dark: "text-purple-400" },
     defaultValue: { install: "" },
     keywords: ["install", "package", "dependency", "apt", "yum", "npm"],
     component: InstallDirectiveComponent,

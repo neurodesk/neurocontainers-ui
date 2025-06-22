@@ -7,8 +7,8 @@ registerNeuroDockerTemplate({
         label: "CAT12",
         description: "Computational Anatomy Toolbox",
         icon: DocumentDuplicateIcon,
-        color: "bg-orange-50 border-orange-200 hover:bg-orange-100",
-        iconColor: "text-orange-600",
+        color: { light: "bg-orange-50 border-orange-200 hover:bg-orange-100", dark: "bg-orange-900 border-orange-700 hover:bg-orange-800" },
+        iconColor: { light: "text-orange-600", dark: "text-orange-400" },
         defaultValue: {
             template: {
                 name: "cat12",

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
-import { presets, iconStyles, textStyles, cn, HELP_SECTION } from "@/lib/styles";
+import { getThemePresets, getHelpSection, iconStyles, textStyles, cn } from "@/lib/styles";
+import { useTheme } from "@/lib/ThemeContext";
 
 const UBUNTU_VERSIONS = [
     { value: "ubuntu:24.04", label: "Ubuntu 24.04 LTS (Noble Numbat)" },
@@ -35,6 +36,7 @@ export default function BaseImageSelector({
     onChange,
     onAddDefaultTemplateChange,
 }: BaseImageSelectorProps) {
+    const { isDark } = useTheme();
     const [showBaseImageHelp, setShowBaseImageHelp] = useState(false);
     const [showPkgManagerHelp, setShowPkgManagerHelp] = useState(false);
 
@@ -81,8 +83,8 @@ export default function BaseImageSelector({
 
     const baseImageHelpContent = (
         <>
-            <h4 className={HELP_SECTION.title}>Base Image</h4>
-            <div className={cn(HELP_SECTION.text, "space-y-2")}>
+            <h4 className={getHelpSection(isDark).title}>Base Image</h4>
+            <div className={cn(getHelpSection(isDark).text, "space-y-2")}>
                 <p>The Docker base image that your container will be built upon.</p>
                 <div>
                     <strong>Options:</strong>
@@ -99,8 +101,8 @@ export default function BaseImageSelector({
 
     const pkgManagerHelpContent = (
         <>
-            <h4 className={HELP_SECTION.title}>Package Manager</h4>
-            <div className={cn(HELP_SECTION.text, "space-y-2")}>
+            <h4 className={getHelpSection(isDark).title}>Package Manager</h4>
+            <div className={cn(getHelpSection(isDark).text, "space-y-2")}>
                 <p>The package management system used by your base image:</p>
                 <ul className="list-disc list-inside space-y-1">
                     <li><strong>apt:</strong> Used by Debian/Ubuntu systems for installing packages</li>
@@ -114,24 +116,26 @@ export default function BaseImageSelector({
     return (
         <div className="w-full">
             <div className="flex items-center gap-2 mb-4">
-                <label className={presets.formLabel}>Base Image</label>
+                <label className={getThemePresets(isDark).formLabel}>Base Image</label>
                 <button
                     type="button"
                     className={cn(
                         "p-1 transition-colors",
-                        iconStyles('sm', 'primary'),
-                        "hover:text-[#6aa329]",
-                        showBaseImageHelp && "text-[#6aa329]"
+                        iconStyles(isDark, 'sm', 'primary'),
+                        isDark
+                            ? "hover:text-[#7bb33a]"
+                            : "hover:text-[#6aa329]",
+                        showBaseImageHelp && (isDark ? "text-[#7bb33a]" : "text-[#6aa329]")
                     )}
                     onClick={() => setShowBaseImageHelp(!showBaseImageHelp)}
                     title={showBaseImageHelp ? "Hide documentation" : "Show documentation"}
                 >
-                    <InformationCircleIcon className={iconStyles('sm')} />
+                    <InformationCircleIcon className={iconStyles(isDark, 'sm')} />
                 </button>
             </div>
 
             {showBaseImageHelp && (
-                <div className={cn(HELP_SECTION.container, "mb-6")}>
+                <div className={cn(getHelpSection(isDark).container, "mb-6")}>
                     {baseImageHelpContent}
                 </div>
             )}
@@ -149,30 +153,41 @@ export default function BaseImageSelector({
                             className="sr-only"
                         />
                         <div
-                            className={`p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 h-full ${
+                            className={cn(
+                                "p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 h-full",
                                 baseImageSource === "ubuntu"
-                                    ? "border-[#6aa329] bg-[#f0f7e7] shadow-md ring-2 ring-[#6aa329]/20"
-                                    : "border-gray-200 hover:border-[#6aa329]/50 hover:bg-gray-50 group-hover:shadow-sm"
-                            }`}
+                                    ? (isDark
+                                        ? "border-[#7bb33a] bg-[#1f2e18] shadow-md ring-2 ring-[#7bb33a]/20"
+                                        : "border-[#6aa329] bg-[#f0f7e7] shadow-md ring-2 ring-[#6aa329]/20")
+                                    : (isDark
+                                        ? "border-[#374151] hover:border-[#7bb33a]/50 hover:bg-[#2d4222] group-hover:shadow-sm"
+                                        : "border-gray-200 hover:border-[#6aa329]/50 hover:bg-gray-50 group-hover:shadow-sm")
+                            )}
                         >
                             <div className="flex flex-col items-center text-center space-y-2">
                                 <div
-                                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                                    className={cn(
+                                        "w-5 h-5 rounded-full border-2 flex items-center justify-center",
                                         baseImageSource === "ubuntu"
-                                            ? "border-[#6aa329] bg-[#6aa329]"
-                                            : "border-gray-300"
-                                    }`}
+                                            ? (isDark ? "border-[#7bb33a] bg-[#7bb33a]" : "border-[#6aa329] bg-[#6aa329]")
+                                            : (isDark ? "border-[#6b7280]" : "border-gray-300")
+                                    )}
                                 >
                                     {baseImageSource === "ubuntu" && (
                                         <div className="w-2 h-2 rounded-full bg-white"></div>
                                     )}
                                 </div>
                                 <div>
-                                    <div className={textStyles({ size: 'sm', weight: 'semibold', color: 'primary' })}>Ubuntu LTS</div>
-                                    <div className={textStyles({ size: 'xs', color: 'muted' })}>
+                                    <div className={textStyles(isDark, { size: 'sm', weight: 'semibold', color: 'primary' })}>Ubuntu LTS</div>
+                                    <div className={textStyles(isDark, { size: 'xs', color: 'muted' })}>
                                         Long-term support
                                         <br />
-                                        <span className="text-[#6aa329] font-medium">(Recommended)</span>
+                                        <span className={cn(
+                                            "font-medium",
+                                            isDark ? "text-[#7bb33a]" : "text-[#6aa329]"
+                                        )}>
+                                            (Recommended)
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -189,27 +204,33 @@ export default function BaseImageSelector({
                             className="sr-only"
                         />
                         <div
-                            className={`p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 h-full ${
+                            className={cn(
+                                "p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 h-full",
                                 baseImageSource === "other"
-                                    ? "border-[#6aa329] bg-[#f0f7e7] shadow-md ring-2 ring-[#6aa329]/20"
-                                    : "border-gray-200 hover:border-[#6aa329]/50 hover:bg-gray-50 group-hover:shadow-sm"
-                            }`}
+                                    ? (isDark
+                                        ? "border-[#7bb33a] bg-[#1f2e18] shadow-md ring-2 ring-[#7bb33a]/20"
+                                        : "border-[#6aa329] bg-[#f0f7e7] shadow-md ring-2 ring-[#6aa329]/20")
+                                    : (isDark
+                                        ? "border-[#374151] hover:border-[#7bb33a]/50 hover:bg-[#2d4222] group-hover:shadow-sm"
+                                        : "border-gray-200 hover:border-[#6aa329]/50 hover:bg-gray-50 group-hover:shadow-sm")
+                            )}
                         >
                             <div className="flex flex-col items-center text-center space-y-2">
                                 <div
-                                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                                    className={cn(
+                                        "w-5 h-5 rounded-full border-2 flex items-center justify-center",
                                         baseImageSource === "other"
-                                            ? "border-[#6aa329] bg-[#6aa329]"
-                                            : "border-gray-300"
-                                    }`}
+                                            ? (isDark ? "border-[#7bb33a] bg-[#7bb33a]" : "border-[#6aa329] bg-[#6aa329]")
+                                            : (isDark ? "border-[#6b7280]" : "border-gray-300")
+                                    )}
                                 >
                                     {baseImageSource === "other" && (
                                         <div className="w-2 h-2 rounded-full bg-white"></div>
                                     )}
                                 </div>
                                 <div>
-                                    <div className={textStyles({ size: 'sm', weight: 'semibold', color: 'primary' })}>Other Distros</div>
-                                    <div className={textStyles({ size: 'xs', color: 'muted' })}>
+                                    <div className={textStyles(isDark, { size: 'sm', weight: 'semibold', color: 'primary' })}>Other Distros</div>
+                                    <div className={textStyles(isDark, { size: 'xs', color: 'muted' })}>
                                         Debian, CentOS
                                         <br />
                                         Fedora
@@ -229,27 +250,33 @@ export default function BaseImageSelector({
                             className="sr-only"
                         />
                         <div
-                            className={`p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 h-full ${
+                            className={cn(
+                                "p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 h-full",
                                 baseImageSource === "custom"
-                                    ? "border-[#6aa329] bg-[#f0f7e7] shadow-md ring-2 ring-[#6aa329]/20"
-                                    : "border-gray-200 hover:border-[#6aa329]/50 hover:bg-gray-50 group-hover:shadow-sm"
-                            }`}
+                                    ? (isDark
+                                        ? "border-[#7bb33a] bg-[#1f2e18] shadow-md ring-2 ring-[#7bb33a]/20"
+                                        : "border-[#6aa329] bg-[#f0f7e7] shadow-md ring-2 ring-[#6aa329]/20")
+                                    : (isDark
+                                        ? "border-[#374151] hover:border-[#7bb33a]/50 hover:bg-[#2d4222] group-hover:shadow-sm"
+                                        : "border-gray-200 hover:border-[#6aa329]/50 hover:bg-gray-50 group-hover:shadow-sm")
+                            )}
                         >
                             <div className="flex flex-col items-center text-center space-y-2">
                                 <div
-                                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                                    className={cn(
+                                        "w-5 h-5 rounded-full border-2 flex items-center justify-center",
                                         baseImageSource === "custom"
-                                            ? "border-[#6aa329] bg-[#6aa329]"
-                                            : "border-gray-300"
-                                    }`}
+                                            ? (isDark ? "border-[#7bb33a] bg-[#7bb33a]" : "border-[#6aa329] bg-[#6aa329]")
+                                            : (isDark ? "border-[#6b7280]" : "border-gray-300")
+                                    )}
                                 >
                                     {baseImageSource === "custom" && (
                                         <div className="w-2 h-2 rounded-full bg-white"></div>
                                     )}
                                 </div>
                                 <div>
-                                    <div className={textStyles({ size: 'sm', weight: 'semibold', color: 'primary' })}>Custom Image</div>
-                                    <div className={textStyles({ size: 'xs', color: 'muted' })}>
+                                    <div className={textStyles(isDark, { size: 'sm', weight: 'semibold', color: 'primary' })}>Custom Image</div>
+                                    <div className={textStyles(isDark, { size: 'xs', color: 'muted' })}>
                                         Any Docker Hub
                                         <br />
                                         image
@@ -264,9 +291,13 @@ export default function BaseImageSelector({
             {/* Conditional Base Image Selection */}
             {baseImageSource === "ubuntu" && (
                 <div className="mb-4">
-                    <label className={cn(presets.formLabel, "block")}>Ubuntu Version</label>
+                    <label className={cn(getThemePresets(isDark).formLabel, "block")}>Ubuntu Version</label>
                     <select
-                        className={cn(presets.input, "bg-white px-4 py-3 rounded-lg")}
+                        className={cn(
+                            getThemePresets(isDark).input,
+                            "px-4 py-3 rounded-lg",
+                            isDark ? "bg-[#161a0e]" : "bg-white"
+                        )}
                         value={baseImage}
                         onChange={(e) => handleBaseImageSelect(e.target.value)}
                     >
@@ -281,9 +312,13 @@ export default function BaseImageSelector({
 
             {baseImageSource === "other" && (
                 <div className="mb-4">
-                    <label className={cn(presets.formLabel, "block")}>Distribution</label>
+                    <label className={cn(getThemePresets(isDark).formLabel, "block")}>Distribution</label>
                     <select
-                        className={cn(presets.input, "bg-white px-4 py-3 rounded-lg")}
+                        className={cn(
+                            getThemePresets(isDark).input,
+                            "px-4 py-3 rounded-lg",
+                            isDark ? "bg-[#161a0e]" : "bg-white"
+                        )}
                         value={baseImage}
                         onChange={(e) => handleBaseImageSelect(e.target.value)}
                     >
@@ -300,48 +335,54 @@ export default function BaseImageSelector({
                 <div className="mb-4">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <div>
-                            <label className={cn(presets.formLabel, "block")}>
+                            <label className={cn(getThemePresets(isDark).formLabel, "block")}>
                                 Custom Image
                             </label>
                             <input
-                                className={cn(presets.input, "px-4 py-3 rounded-lg")}
+                                className={cn(getThemePresets(isDark).input, "px-4 py-3 rounded-lg")}
                                 value={baseImage}
                                 onChange={(e) => handleCustomBaseImageChange(e.target.value)}
                                 placeholder="e.g. neurodebian:sid"
                             />
-                            <p className={textStyles({ size: 'xs', color: 'muted' })}>
+                            <p className={textStyles(isDark, { size: 'xs', color: 'muted' })}>
                                 Enter any valid Docker image name and tag
                             </p>
                         </div>
 
                         <div>
                             <div className="flex items-center gap-2 mb-3">
-                                <label className={presets.formLabel}>
+                                <label className={getThemePresets(isDark).formLabel}>
                                     Package Manager
                                 </label>
                                 <button
                                     type="button"
                                     className={cn(
                                         "p-1 transition-colors",
-                                        iconStyles('sm', 'primary'),
-                                        "hover:text-[#6aa329]",
-                                        showPkgManagerHelp && "text-[#6aa329]"
+                                        iconStyles(isDark, 'sm', 'primary'),
+                                        isDark
+                                            ? "hover:text-[#7bb33a]"
+                                            : "hover:text-[#6aa329]",
+                                        showPkgManagerHelp && (isDark ? "text-[#7bb33a]" : "text-[#6aa329]")
                                     )}
                                     onClick={() => setShowPkgManagerHelp(!showPkgManagerHelp)}
                                     title={showPkgManagerHelp ? "Hide documentation" : "Show documentation"}
                                 >
-                                    <InformationCircleIcon className={iconStyles('sm')} />
+                                    <InformationCircleIcon className={iconStyles(isDark, 'sm')} />
                                 </button>
                             </div>
 
                             {showPkgManagerHelp && (
-                                <div className={cn(HELP_SECTION.container, "mb-4")}>
+                                <div className={cn(getHelpSection(isDark).container, "mb-4")}>
                                     {pkgManagerHelpContent}
                                 </div>
                             )}
 
                             <select
-                                className={cn(presets.input, "bg-white px-4 py-3 rounded-lg")}
+                                className={cn(
+                                    getThemePresets(isDark).input,
+                                    "px-4 py-3 rounded-lg",
+                                    isDark ? "bg-[#161a0e]" : "bg-white"
+                                )}
                                 value={pkgManager}
                                 onChange={(e) => onChange(baseImage, e.target.value)}
                             >
@@ -358,14 +399,19 @@ export default function BaseImageSelector({
                                 type="checkbox"
                                 checked={addDefaultTemplate}
                                 onChange={(e) => onAddDefaultTemplateChange?.(e.target.checked)}
-                                className="mr-3 h-4 w-4 text-[#6aa329] focus:ring-[#6aa329] border-gray-300 rounded"
+                                className={cn(
+                                    "mr-3 h-4 w-4 rounded",
+                                    isDark
+                                        ? "text-[#7bb33a] focus:ring-[#7bb33a] border-[#374151] bg-[#161a0e]"
+                                        : "text-[#6aa329] focus:ring-[#6aa329] border-gray-300"
+                                )}
                             />
-                            <span className={textStyles({ size: 'sm', color: 'muted' })}>
+                            <span className={textStyles(isDark, { size: 'sm', color: 'muted' })}>
                                 Add default template (disable for old containers where APT doesn&apos;t work)
                             </span>
                         </label>
-                        <p className={cn(textStyles({ size: 'xs', color: 'muted' }), "mt-1 ml-7")}>
-                            The default template includes common system updates and utilities. 
+                        <p className={cn(textStyles(isDark, { size: 'xs', color: 'muted' }), "mt-1 ml-7")}>
+                            The default template includes common system updates and utilities.
                             Disable this for legacy base images with package manager issues.
                         </p>
                     </div>

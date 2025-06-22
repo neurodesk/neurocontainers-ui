@@ -7,8 +7,8 @@ registerNeuroDockerTemplate({
         label: "Miniconda",
         description: "Install Miniconda, a minimal conda installer",
         icon: DocumentDuplicateIcon,
-        color: "bg-green-50 border-green-200 hover:bg-green-100",
-        iconColor: "text-green-600",
+        color: { light: "bg-green-50 border-green-200 hover:bg-green-100", dark: "bg-green-900 border-green-700 hover:bg-green-800" },
+        iconColor: { light: "text-green-600", dark: "text-green-400" },
         defaultValue: {
             template: {
                 name: "miniconda",

@@ -1,7 +1,7 @@
 import { TrashIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { Input } from "./FormField";
 import { iconStyles, textStyles, buttonStyles, cardStyles, cn } from "@/lib/styles";
-import { colors } from "@/lib/theme";
+import { useTheme } from "@/lib/ThemeContext";
 
 interface KeyValueEditorProps {
     data: { [key: string]: string };
@@ -26,6 +26,7 @@ export default function KeyValueEditor({
     emptyMessage,
     monospace = false,
 }: KeyValueEditorProps) {
+    const { isDark } = useTheme();
     const addItem = () => {
         onChange({ ...data, "": "" });
     };
@@ -53,19 +54,19 @@ export default function KeyValueEditor({
     if (entries.length === 0 && emptyMessage) {
         return (
             <div>
-                <div className={cn(cardStyles('default', 'md'), "mb-3")}>
-                    <p className={cn(textStyles({ size: 'sm', color: 'muted' }), "text-center")}>
+                <div className={cn(cardStyles(isDark, 'default', 'md'), "mb-3")}>
+                    <p className={cn(textStyles(isDark, { size: 'sm', color: 'muted' }), "text-center")}>
                         {emptyMessage}
                     </p>
                 </div>
                 <button
                     className={cn(
-                        buttonStyles('ghost', 'sm'),
+                        buttonStyles(isDark, 'ghost', 'sm'),
                         "flex items-center gap-1 px-0"
                     )}
                     onClick={addItem}
                 >
-                    <PlusIcon className={iconStyles('sm')} />
+                    <PlusIcon className={iconStyles(isDark, 'sm')} />
                     {addButtonText}
                 </button>
             </div>
@@ -76,7 +77,7 @@ export default function KeyValueEditor({
         <div>
             {entries.length > 0 && (
                 <div className="mb-3">
-                    <div className={cn("flex gap-2 mb-2", textStyles({ size: 'sm', weight: 'medium', color: 'primary' }))}>
+                    <div className={cn("flex gap-2 mb-2", textStyles(isDark, { size: 'sm', weight: 'medium', color: 'primary' }))}>
                         <div className="flex-1">{keyLabel}</div>
                         <div className="flex-1">{valueLabel}</div>
                         <div className="w-8"></div>
@@ -101,12 +102,14 @@ export default function KeyValueEditor({
                             <button
                                 className={cn(
                                     "w-8 h-8 flex justify-center items-center transition-colors rounded",
-                                    `text-gray-400 hover:text-[${colors.primary[600]}] hover:bg-gray-50`
+                                    isDark
+                                        ? "text-[#9ca3af] hover:text-[#7bb33a] hover:bg-[#2d4222]"
+                                        : "text-gray-400 hover:text-[#6aa329] hover:bg-gray-50"
                                 )}
                                 onClick={() => removeItem(key)}
                                 title="Remove item"
                             >
-                                <TrashIcon className={iconStyles('sm')} />
+                                <TrashIcon className={iconStyles(isDark, 'sm')} />
                             </button>
                         </div>
                     ))}
@@ -115,12 +118,12 @@ export default function KeyValueEditor({
 
             <button
                 className={cn(
-                    buttonStyles('ghost', 'sm'),
+                    buttonStyles(isDark, 'ghost', 'sm'),
                     "flex items-center gap-1 px-0"
                 )}
                 onClick={addItem}
             >
-                <PlusIcon className={iconStyles('sm')} />
+                <PlusIcon className={iconStyles(isDark, 'sm')} />
                 {addButtonText}
             </button>
         </div>

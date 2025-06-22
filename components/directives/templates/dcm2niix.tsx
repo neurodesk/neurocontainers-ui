@@ -7,8 +7,8 @@ registerNeuroDockerTemplate({
         label: "dcm2niix",
         description: "DICOM to NIfTI converter",
         icon: DocumentDuplicateIcon,
-        color: "bg-indigo-50 border-indigo-200 hover:bg-indigo-100",
-        iconColor: "text-indigo-600",
+        color: { light: "bg-indigo-50 border-indigo-200 hover:bg-indigo-100", dark: "bg-indigo-900 border-indigo-700 hover:bg-indigo-800" },
+        iconColor: { light: "text-indigo-600", dark: "text-indigo-400" },
         defaultValue: {
             template: {
                 name: "dcm2niix",

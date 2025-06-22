@@ -7,8 +7,8 @@ registerNeuroDockerTemplate({
         label: "jq",
         description: "Command-line JSON processor",
         icon: DocumentDuplicateIcon,
-        color: "bg-gray-50 border-gray-200 hover:bg-gray-100",
-        iconColor: "text-gray-600",
+        color: { light: "bg-gray-50 border-gray-200 hover:bg-gray-100", dark: "bg-gray-900 border-gray-700 hover:bg-gray-800" },
+        iconColor: { light: "text-gray-600", dark: "text-gray-400" },
         defaultValue: {
             template: {
                 name: "jq",

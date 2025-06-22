@@ -7,8 +7,8 @@ registerNeuroDockerTemplate({
         label: "AFNI",
         description: "Analysis of Functional NeuroImages",
         icon: DocumentDuplicateIcon,
-        color: "bg-blue-50 border-blue-200 hover:bg-blue-100",
-        iconColor: "text-blue-600",
+        color: { light: "bg-blue-50 border-blue-200 hover:bg-blue-100", dark: "bg-blue-900 border-blue-700 hover:bg-blue-800" },
+        iconColor: { light: "text-blue-600", dark: "text-blue-400" },
         defaultValue: {
             template: {
                 name: "afni",

@@ -5,6 +5,8 @@ import { FormField, Input, Textarea } from "./FormField";
 import ToggleButtonGroup from "./ToggleButtonGroup";
 import { StructuredReadmeEditor } from "./StructuredReadmeEditor";
 import { StructuredReadme } from "@/components/common";
+import { useTheme } from "@/lib/ThemeContext";
+import { cn } from "@/lib/styles";
 
 interface DocumentationSectionProps {
     readme?: string;
@@ -31,6 +33,7 @@ export default function DocumentationSection({
     error,
     showValidation = false,
 }: DocumentationSectionProps) {
+    const { isDark } = useTheme();
     const [readmeContent, setReadmeContent] = useState(readme || "");
     const [showPreview, setShowPreview] = useState(false);
     const [userSelectedMode, setUserSelectedMode] = useState<"structured" | "content" | "url" | null>(null);
@@ -108,16 +111,31 @@ export default function DocumentationSection({
             ) : inputType === "content" ? (
                 <FormField label="Documentation Content">
                     <div
-                        className={`border rounded-lg overflow-hidden ${showValidation && error ? "border-red-300" : "border-gray-200"
-                            }`}
+                        className={cn(
+                            "border rounded-lg overflow-hidden",
+                            showValidation && error
+                                ? "border-red-300"
+                                : (isDark ? "border-[#374151]" : "border-gray-200")
+                        )}
                     >
-                        <div className="flex justify-between items-center px-4 py-3 bg-gray-50 border-b">
-                            <div className="text-sm font-medium text-gray-700">
+                        <div className={cn(
+                            "flex justify-between items-center px-4 py-3 border-b",
+                            isDark ? "bg-[#2d4222] border-[#374151]" : "bg-gray-50 border-gray-200"
+                        )}>
+                            <div className={cn(
+                                "text-sm font-medium",
+                                isDark ? "text-[#d1d5db]" : "text-gray-700"
+                            )}>
                                 {showPreview ? "Markdown Preview" : "Markdown Editor"}
                             </div>
                             <button
                                 type="button"
-                                className="text-sm px-3 py-1.5 rounded-md bg-[#f0f7e7] text-[#4f7b38] hover:bg-[#e5f0d5] transition-colors font-medium"
+                                className={cn(
+                                    "text-sm px-3 py-1.5 rounded-md transition-colors font-medium",
+                                    isDark
+                                        ? "bg-[#1f2e18] text-[#91c84a] hover:bg-[#2a3d20]"
+                                        : "bg-[#f0f7e7] text-[#4f7b38] hover:bg-[#e5f0d5]"
+                                )}
                                 onClick={() => setShowPreview(!showPreview)}
                             >
                                 {showPreview ? "Edit" : "Preview"}
@@ -125,19 +143,33 @@ export default function DocumentationSection({
                         </div>
 
                         {showPreview ? (
-                            <div className="p-4 min-h-[250px] max-h-[500px] overflow-y-auto prose prose-sm max-w-none">
+                            <div className={cn(
+                                "p-4 min-h-[250px] max-h-[500px] overflow-y-auto prose prose-sm max-w-none",
+                                isDark ? "prose-invert" : ""
+                            )}>
                                 {readmeContent ? (
                                     <ReactMarkdown>{readmeContent}</ReactMarkdown>
                                 ) : (
-                                    <div className="text-gray-400 italic text-center py-8">
-                                        <DocumentTextIcon className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                                    <div className={cn(
+                                        "italic text-center py-8",
+                                        isDark ? "text-[#9ca3af]" : "text-gray-400"
+                                    )}>
+                                        <DocumentTextIcon className={cn(
+                                            "h-12 w-12 mx-auto mb-2",
+                                            isDark ? "text-[#6b7280]" : "text-gray-300"
+                                        )} />
                                         <p>Preview will appear here when you add content</p>
                                     </div>
                                 )}
                             </div>
                         ) : (
                             <Textarea
-                                className="w-full px-4 py-3 text-[#0c0e0a] focus:outline-none focus:ring-0 border-0 min-h-[250px] resize-y font-mono text-sm leading-relaxed"
+                                className={cn(
+                                    "w-full px-4 py-3 focus:outline-none focus:ring-0 border-0 min-h-[250px] resize-y font-mono text-sm leading-relaxed",
+                                    isDark
+                                        ? "text-[#e8f5d0] bg-[#161a0e]"
+                                        : "text-[#0c0e0a] bg-white"
+                                )}
                                 value={readmeContent}
                                 onChange={(e) => updateReadme(e.target.value)}
                                 style={{
@@ -163,7 +195,9 @@ export default function DocumentationSection({
                         placeholder="https://raw.githubusercontent.com/user/repo/main/README.md"
                         className={
                             showValidation && error
-                                ? "border-red-300 focus:ring-red-500 focus:border-red-500 bg-red-50"
+                                ? (isDark
+                                    ? "border-red-500 focus:ring-red-400 focus:border-red-400 bg-red-900/20"
+                                    : "border-red-300 focus:ring-red-500 focus:border-red-500 bg-red-50")
                                 : ""
                         }
                     />

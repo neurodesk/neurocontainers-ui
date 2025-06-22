@@ -1,28 +1,62 @@
 @import "tailwindcss";
 
-/* Markdown styling */
+/* Base theme classes */
+.light {
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+/* Markdown styling - Light mode */
 .prose {
   @apply text-gray-800;
+}
+
+/* Markdown styling - Dark mode */
+.dark .prose {
+  @apply text-[#e8f5d0];
 }
 
 .prose h1 {
   @apply text-2xl font-bold mt-6 mb-4 text-[#1e2a16];
 }
 
+.dark .prose h1 {
+  @apply text-[#e8f5d0];
+}
+
 .prose h2 {
   @apply text-xl font-bold mt-5 mb-3 text-[#1e2a16];
+}
+
+.dark .prose h2 {
+  @apply text-[#e8f5d0];
 }
 
 .prose h3 {
   @apply text-lg font-semibold mt-4 mb-2 text-[#1e2a16];
 }
 
+.dark .prose h3 {
+  @apply text-[#e8f5d0];
+}
+
 .prose h4 {
   @apply text-base font-semibold mt-3 mb-2 text-[#1e2a16];
 }
 
+.dark .prose h4 {
+  @apply text-[#e8f5d0];
+}
+
 .prose h5, .prose h6 {
   @apply text-sm font-semibold mt-3 mb-1 text-[#1e2a16];
+}
+
+.dark .prose h5, .dark .prose h6 {
+  @apply text-[#e8f5d0];
 }
 
 .prose p {
@@ -31,6 +65,10 @@
 
 .prose a {
   @apply text-[#4f7b38] hover:text-[#6aa329] underline;
+}
+
+.dark .prose a {
+  @apply text-[#91c84a] hover:text-[#7bb33a] underline;
 }
 
 .prose strong {
@@ -53,16 +91,32 @@
   @apply border-l-4 border-[#d3e7b6] pl-4 italic my-4 text-gray-600;
 }
 
+.dark .prose blockquote {
+  @apply border-l-4 border-[#3f5b2e] pl-4 italic my-4 text-[#c4e382];
+}
+
 .prose pre {
   @apply bg-gray-800 text-gray-100 p-4 rounded-md overflow-x-auto my-4;
+}
+
+.dark .prose pre {
+  @apply bg-[#1f2e18] text-[#e8f5d0] p-4 rounded-md overflow-x-auto my-4;
 }
 
 .prose code {
   @apply bg-gray-100 px-1.5 py-0.5 rounded text-sm font-mono text-gray-800;
 }
 
+.dark .prose code {
+  @apply bg-[#1f2e18] px-1.5 py-0.5 rounded text-sm font-mono text-[#e8f5d0];
+}
+
 .prose pre code {
   @apply bg-transparent p-0 text-gray-100;
+}
+
+.dark .prose pre code {
+  @apply bg-transparent p-0 text-[#e8f5d0];
 }
 
 .prose img {
@@ -73,6 +127,10 @@
   @apply border-gray-200 my-6;
 }
 
+.dark .prose hr {
+  @apply border-[#2d4222] my-6;
+}
+
 .prose table {
   @apply w-full border-collapse my-4;
 }
@@ -81,12 +139,24 @@
   @apply bg-gray-50;
 }
 
+.dark .prose thead {
+  @apply bg-[#1f2e18];
+}
+
 .prose th {
   @apply border border-gray-200 px-4 py-2 text-left font-semibold;
 }
 
+.dark .prose th {
+  @apply border border-[#2d4222] px-4 py-2 text-left font-semibold;
+}
+
 .prose td {
   @apply border border-gray-200 px-4 py-2;
+}
+
+.dark .prose td {
+  @apply border border-[#2d4222] px-4 py-2;
 }
 
 /* Custom scrollbar for the markdown preview */
@@ -98,6 +168,14 @@
   @apply bg-gray-100 rounded-md;
 }
 
+.dark .prose::-webkit-scrollbar-track {
+  @apply bg-[#1f2e18] rounded-md;
+}
+
 .prose::-webkit-scrollbar-thumb {
   @apply bg-gray-300 rounded-md hover:bg-gray-400;
+}
+
+.dark .prose::-webkit-scrollbar-thumb {
+  @apply bg-[#2d4222] rounded-md hover:bg-[#3f5b2e];
 }

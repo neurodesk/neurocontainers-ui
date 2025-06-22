@@ -1,11 +1,12 @@
-import { 
-    XMarkIcon, 
+import {
+    XMarkIcon,
     MagnifyingGlassIcon,
-    ExclamationTriangleIcon 
+    ExclamationTriangleIcon
 } from "@heroicons/react/24/outline";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { searchPackagesSync } from "@/lib/packages";
-import { presets, iconStyles, textStyles, cn } from "@/lib/styles";
+import { getThemePresets, iconStyles, textStyles, cn } from "@/lib/styles";
+import { useTheme } from "@/lib/ThemeContext";
 
 interface Package {
     name: string;
@@ -33,12 +34,13 @@ export default function PackageTagEditor({
     baseImage,
     className = "",
 }: PackageTagEditorProps) {
+    const { isDark } = useTheme();
     const [newPackage, setNewPackage] = useState("");
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [selectedIndex, setSelectedIndex] = useState(-1);
     const [searchResults, setSearchResults] = useState<Package[]>([]);
     const [searchTime, setSearchTime] = useState<number | null>(null);
-    
+
     const inputRef = useRef<HTMLInputElement>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const searchTimeoutRef = useRef<NodeJS.Timeout>(null);
@@ -178,11 +180,23 @@ export default function PackageTagEditor({
     return (
         <div className={className}>
             {baseImage !== "ubuntu:24.04" && (
-                <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-md flex items-start">
-                    <ExclamationTriangleIcon className={cn(iconStyles('md'), "text-amber-600 mr-2 mt-0.5 flex-shrink-0")} />
-                    <div className={textStyles({ size: 'sm' })}>
-                        <p className="text-amber-800 font-medium">Ubuntu 24.04 Only</p>
-                        <p className="text-amber-700">
+                <div className={cn(
+                    "mb-4 p-3 border rounded-md flex items-start",
+                    isDark ? "bg-amber-900/20 border-amber-700" : "bg-amber-50 border-amber-200"
+                )}>
+                    <ExclamationTriangleIcon className={cn(
+                        iconStyles(isDark, 'md'),
+                        "mr-2 mt-0.5 flex-shrink-0",
+                        isDark ? "text-amber-400" : "text-amber-600"
+                    )} />
+                    <div className={textStyles(isDark, { size: 'sm' })}>
+                        <p className={cn(
+                            "font-medium",
+                            isDark ? "text-amber-400" : "text-amber-800"
+                        )}>
+                            Ubuntu 24.04 Only
+                        </p>
+                        <p className={isDark ? "text-amber-300" : "text-amber-700"}>
                             Package search is currently limited to Ubuntu 24.04 LTS packages.
                             Other distributions are not supported yet.
                         </p>
@@ -192,39 +206,53 @@ export default function PackageTagEditor({
 
             {packages.length > 0 ? (
                 <div className="mb-4">
-                    <label className={presets.formLabel}>
+                    <label className={getThemePresets(isDark).formLabel}>
                         Packages to Install ({packages.length})
                     </label>
                     <div className="flex flex-wrap gap-2">
                         {packages.map((pkg, index) => (
                             <button
                                 key={index}
-                                className="flex items-center bg-[#f0f7e7] px-3 py-2 rounded-md border border-[#e6f1d6] group hover:bg-[#e8f4d9] transition-colors focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:ring-offset-1"
+                                className={cn(
+                                    "flex items-center px-3 py-2 rounded-md border group transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1",
+                                    isDark
+                                        ? "bg-[#1f2e18] border-[#2d4222] hover:bg-[#2a3d20] focus:ring-[#7bb33a]"
+                                        : "bg-[#f0f7e7] border-[#e6f1d6] hover:bg-[#e8f4d9] focus:ring-[#6aa329]"
+                                )}
                                 onClick={() => removePackage(index)}
                                 onKeyDown={(e) => handlePackageKeyDown(e, index)}
                                 title={`Remove ${pkg} (Enter or Space)`}
                             >
-                                <span className={cn(textStyles({ size: 'sm', color: 'primary' }), "font-mono mr-2 break-all")}>
+                                <span className={cn(textStyles(isDark, { size: 'sm', color: 'primary' }), "font-mono mr-2 break-all")}>
                                     {pkg}
                                 </span>
-                                <XMarkIcon className={cn(iconStyles('sm'), "text-[#4f7b38] group-hover:text-[#3a5c29] opacity-60 group-hover:opacity-100 transition-opacity flex-shrink-0")} />
+                                <XMarkIcon className={cn(
+                                    iconStyles(isDark, 'sm'),
+                                    "opacity-60 group-hover:opacity-100 transition-opacity flex-shrink-0",
+                                    isDark
+                                        ? "text-[#91c84a] group-hover:text-[#7bb33a]"
+                                        : "text-[#4f7b38] group-hover:text-[#3a5c29]"
+                                )} />
                             </button>
                         ))}
                     </div>
                 </div>
             ) : (
-                <div className="mb-4 p-4 bg-gray-50 rounded-md border border-gray-200">
-                    <p className={cn(textStyles({ size: 'sm', color: 'muted' }), "text-center")}>
+                <div className={cn(
+                    "mb-4 p-4 rounded-md border",
+                    isDark ? "bg-[#2d4222] border-[#374151]" : "bg-gray-50 border-gray-200"
+                )}>
+                    <p className={cn(textStyles(isDark, { size: 'sm', color: 'muted' }), "text-center")}>
                         No packages selected for installation.
                     </p>
-                    <p className={cn(textStyles({ size: 'xs', color: 'muted' }), "text-center mt-1")}>
+                    <p className={cn(textStyles(isDark, { size: 'xs', color: 'muted' }), "text-center mt-1")}>
                         Start typing below to search from {databaseLoaded ? packageDatabase.length.toLocaleString() : '80,000+'} Ubuntu 24.04 packages.
                     </p>
                 </div>
             )}
 
             <div>
-                <label className={presets.formLabel}>
+                <label className={getThemePresets(isDark).formLabel}>
                     Add Package
                 </label>
                 <div className="relative" ref={dropdownRef}>
@@ -232,7 +260,7 @@ export default function PackageTagEditor({
                         <input
                             ref={inputRef}
                             type="text"
-                            className={cn(presets.input, "font-mono pr-8")}
+                            className={cn(getThemePresets(isDark).input, "font-mono pr-8")}
                             placeholder={
                                 isLoadingDatabase
                                     ? "Loading database..."
@@ -245,15 +273,24 @@ export default function PackageTagEditor({
                         />
                         <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                             {isLoadingDatabase ? (
-                                <div className="animate-spin h-4 w-4 border-2 border-[#6aa329] border-t-transparent rounded-full" />
+                                <div className={cn(
+                                    "animate-spin h-4 w-4 border-2 border-t-transparent rounded-full",
+                                    isDark ? "border-[#7bb33a]" : "border-[#6aa329]"
+                                )} />
                             ) : (
-                                <MagnifyingGlassIcon className={cn(iconStyles('sm'), "text-gray-400")} />
+                                <MagnifyingGlassIcon className={cn(
+                                    iconStyles(isDark, 'sm'),
+                                    isDark ? "text-[#9ca3af]" : "text-gray-400"
+                                )} />
                             )}
                         </div>
                     </div>
 
                     {isDropdownOpen && (
-                        <div className="absolute z-10 w-full top-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg">
+                        <div className={cn(
+                            "absolute z-10 w-full top-full mt-1 border rounded-md shadow-lg",
+                            isDark ? "bg-[#161a0e] border-[#374151]" : "bg-white border-gray-200"
+                        )}>
                             <div className="max-h-64 overflow-y-auto">
                                 {searchResults.length > 0 ? (
                                     <>
@@ -261,40 +298,47 @@ export default function PackageTagEditor({
                                             <button
                                                 key={pkg.name}
                                                 type="button"
-                                                className={`w-full px-3 py-2 text-left focus:outline-none text-sm border-b border-gray-50 last:border-b-0 ${
+                                                className={cn(
+                                                    "w-full px-3 py-2 text-left focus:outline-none text-sm border-b last:border-b-0",
+                                                    isDark ? "border-[#374151]" : "border-gray-50",
                                                     index === selectedIndex
-                                                        ? "bg-[#6aa329] text-white"
-                                                        : "hover:bg-[#f0f7e7] focus:bg-[#f0f7e7]"
-                                                }`}
+                                                        ? (isDark ? "bg-[#7bb33a] text-white" : "bg-[#6aa329] text-white")
+                                                        : (isDark
+                                                            ? "hover:bg-[#1f2e18] focus:bg-[#1f2e18]"
+                                                            : "hover:bg-[#f0f7e7] focus:bg-[#f0f7e7]")
+                                                )}
                                                 onClick={() => addPackage(pkg.name)}
                                                 onMouseEnter={() => setSelectedIndex(index)}
                                             >
                                                 <div
                                                     className={cn(
                                                         "font-mono font-medium",
-                                                        textStyles({ size: 'sm' }),
+                                                        textStyles(isDark, { size: 'sm' }),
                                                         "sm:text-base",
                                                         index === selectedIndex
                                                             ? "text-white"
-                                                            : textStyles({ color: 'primary' })
+                                                            : textStyles(isDark, { color: 'primary' })
                                                     )}
                                                 >
                                                     {pkg.name}
                                                     {pkg.version && (
-                                                        <span className={`ml-2 text-xs ${
-                                                            index === selectedIndex ? "text-green-100" : "text-gray-400"
-                                                        }`}>
+                                                        <span className={cn(
+                                                            "ml-2 text-xs",
+                                                            index === selectedIndex
+                                                                ? "text-green-100"
+                                                                : (isDark ? "text-[#9ca3af]" : "text-gray-400")
+                                                        )}>
                                                             {pkg.version}
                                                         </span>
                                                     )}
                                                 </div>
                                                 <div
                                                     className={cn(
-                                                        textStyles({ size: 'xs' }),
+                                                        textStyles(isDark, { size: 'xs' }),
                                                         "truncate",
                                                         index === selectedIndex
                                                             ? "text-green-100"
-                                                            : textStyles({ color: 'muted' })
+                                                            : textStyles(isDark, { color: 'muted' })
                                                     )}
                                                 >
                                                     {pkg.description}
@@ -302,16 +346,20 @@ export default function PackageTagEditor({
                                             </button>
                                         ))}
                                         {searchTime !== null && (
-                                            <div className={cn("px-3 py-2 bg-gray-50 border-t border-gray-100", textStyles({ size: 'xs', color: 'muted' }))}>
+                                            <div className={cn(
+                                                "px-3 py-2 border-t",
+                                                textStyles(isDark, { size: 'xs', color: 'muted' }),
+                                                isDark ? "bg-[#2d4222] border-[#374151]" : "bg-gray-50 border-gray-100"
+                                            )}>
                                                 Search completed in {searchTime}ms
                                             </div>
                                         )}
                                     </>
                                 ) : newPackage.length >= 2 && databaseLoaded ? (
-                                    <div className={cn("px-3 py-2", textStyles({ size: 'sm', color: 'muted' }))}>
+                                    <div className={cn("px-3 py-2", textStyles(isDark, { size: 'sm', color: 'muted' }))}>
                                         No packages found matching &quot;{newPackage}&quot;
                                         {searchTime !== null && (
-                                            <span className={cn("block mt-1", textStyles({ size: 'xs' }))}>
+                                            <span className={cn("block mt-1", textStyles(isDark, { size: 'xs' }))}>
                                                 Search completed in {searchTime}ms
                                             </span>
                                         )}
@@ -325,14 +373,14 @@ export default function PackageTagEditor({
                 {/* Help text - always visible when not loading */}
                 {!isLoadingDatabase && (
                     <div className="mt-2 space-y-1">
-                        <p className={textStyles({ size: 'xs', color: 'muted' })}>
+                        <p className={textStyles(isDark, { size: 'xs', color: 'muted' })}>
                             {databaseLoaded
                                 ? "Use ↑/↓ to navigate, Tab to autocomplete, Enter to add"
                                 : "Database loading..."
                             }
                         </p>
                         {/* Mobile-specific help */}
-                        <p className={cn(textStyles({ size: 'xs', color: 'muted' }), "sm:hidden opacity-60")}>
+                        <p className={cn(textStyles(isDark, { size: 'xs', color: 'muted' }), "sm:hidden opacity-60")}>
                             Tap suggestions to add packages
                         </p>
                     </div>

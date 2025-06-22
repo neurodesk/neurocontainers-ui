@@ -7,8 +7,8 @@ registerNeuroDockerTemplate({
         label: "ANTs",
         description: "Advanced Normalization Tools",
         icon: DocumentDuplicateIcon,
-        color: "bg-purple-50 border-purple-200 hover:bg-purple-100",
-        iconColor: "text-purple-600",
+        color: { light: "bg-purple-50 border-purple-200 hover:bg-purple-100", dark: "bg-purple-900 border-purple-700 hover:bg-purple-800" },
+        iconColor: { light: "text-purple-600", dark: "text-purple-400" },
         defaultValue: {
             template: {
                 name: "ants",

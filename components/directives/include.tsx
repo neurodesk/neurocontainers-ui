@@ -3,7 +3,8 @@ import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
 import { IncludeMacro, IncludeMacros } from "@/components/common";
 import { DocumentArrowDownIcon } from "@heroicons/react/24/outline";
 import { registerDirective, DirectiveMetadata } from "./registry";
-import { HELP_SECTION } from "@/lib/styles";
+import { getHelpSection } from "@/lib/styles";
+import { useTheme } from "@/lib/ThemeContext";
 
 export default function IncludeDirectiveComponent({
     include,
@@ -20,18 +21,19 @@ export default function IncludeDirectiveComponent({
     onChange: (include: IncludeMacro) => void,
     condition?: string;
     onConditionChange?: (condition: string | undefined) => void;
-    headerColor?: string;
-    borderColor?: string;
-    iconColor?: string;
+    headerColor?: { light: string, dark: string };
+    borderColor?: { light: string, dark: string };
+    iconColor?: { light: string, dark: string };
     icon?: React.ComponentType<{ className?: string }>;
     controllers: DirectiveControllers;
 }) {
+    const { isDark } = useTheme();
     const helpContent = (
-        <div className={HELP_SECTION.container}>
-            <h3 className={HELP_SECTION.title}>
+        <div className={getHelpSection(isDark).container}>
+            <h3 className={getHelpSection(isDark).title}>
                 INCLUDE Directive
             </h3>
-            <div className={HELP_SECTION.text}>
+            <div className={getHelpSection(isDark).text}>
                 <p>
                     The INCLUDE directive allows you to include predefined macros or templates in your container build.
                 </p>
@@ -40,7 +42,7 @@ export default function IncludeDirectiveComponent({
                     <ul className="list-disc list-inside mt-1 space-y-1">
                         {Object.entries(IncludeMacros).map(([key, value]) => (
                             <li key={key}>
-                                <code className={HELP_SECTION.code}>{value}</code>
+                                <code className={getHelpSection(isDark).code}>{value}</code>
                             </li>
                         ))}
                     </ul>
@@ -90,10 +92,10 @@ export const includeDirectiveMetadata: DirectiveMetadata = {
     label: "Include",
     description: "Include external macros or templates",
     icon: DocumentArrowDownIcon,
-    color: "bg-slate-50 border-slate-200 hover:bg-slate-100",
-    headerColor: "bg-slate-50",
-    borderColor: "border-slate-200",
-    iconColor: "text-slate-600",
+    color: { light: "bg-slate-50 border-slate-200 hover:bg-slate-100", dark: "bg-slate-900 border-slate-700 hover:bg-slate-800" },
+    headerColor: { light: "bg-slate-50", dark: "bg-slate-900" },
+    borderColor: { light: "border-slate-200", dark: "border-slate-700" },
+    iconColor: { light: "text-slate-600", dark: "text-slate-400" },
     defaultValue: { include: "macros/openrecon/neurodocker.yaml" },
     keywords: ["include", "import", "external", "reference", "link"],
     component: IncludeDirectiveComponent,

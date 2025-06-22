@@ -8,7 +8,8 @@ import {
 } from "@heroicons/react/24/outline";
 import { getAllDirectives } from "@/components/directives";
 import type { DirectiveMetadata } from "@/components/directives/registry";
-import { BUTTONS, iconStyles, textStyles, inputStyles, cn } from "@/lib/styles";
+import { getButtons, iconStyles, textStyles, inputStyles, cn } from "@/lib/styles";
+import { useTheme } from "@/lib/ThemeContext";
 
 interface AddDirectiveButtonProps {
     onAddDirective: (directive: Directive, index?: number) => void;
@@ -43,6 +44,7 @@ interface DirectiveItemProps {
     index: number;
     isFocused: boolean;
     isMobile: boolean;
+    isDark: boolean;
     onSelect: (key: string) => void;
     onMouseEnter: (index: number) => void;
     itemRef: (el: HTMLButtonElement | null) => void;
@@ -54,6 +56,7 @@ const DirectiveItem = ({
     index,
     isFocused,
     isMobile,
+    isDark,
     onSelect,
     onMouseEnter,
     itemRef,
@@ -68,25 +71,32 @@ const DirectiveItem = ({
             onMouseEnter={() => onMouseEnter(index)}
             className={cn(
                 "w-full flex items-center text-left transition-all duration-200",
-                "focus:outline-none focus:ring-2 focus:ring-[#6aa329] active:scale-95",
-                config.color,
+                "focus:outline-none focus:ring-2 active:scale-95",
+                isDark ? config.color.dark : config.color.light,
                 isMobile ? "gap-4 p-4 rounded-xl" : "gap-3 p-3 rounded-lg",
                 "border-2",
-                isFocused ? "ring-2 ring-[#6aa329] ring-offset-1 shadow-lg scale-[1.02] bg-opacity-80" : ""
+                isDark
+                    ? "focus:ring-[#7bb33a]"
+                    : "focus:ring-[#6aa329]",
+                isFocused
+                    ? (isDark
+                        ? "ring-2 ring-[#7bb33a] ring-offset-1 shadow-lg scale-[1.02] bg-opacity-80"
+                        : "ring-2 ring-[#6aa329] ring-offset-1 shadow-lg scale-[1.02] bg-opacity-80")
+                    : ""
             )}
             role="menuitem"
         >
             <div
                 className={cn(
                     "flex-shrink-0 flex items-center justify-center transition-all duration-200",
-                    config.iconColor,
+                    isDark ? config.iconColor.dark : config.iconColor.light,
                     isMobile ? "w-12 h-12 rounded-xl" : "w-8 h-8 rounded-lg",
                     isFocused ? "bg-white shadow-md" : "bg-white/70"
                 )}
             >
                 <IconComponent
                     className={cn(
-                        iconStyles(isMobile ? 'lg' : 'md'),
+                        iconStyles(isDark, isMobile ? 'lg' : 'md'),
                         "transition-transform duration-200",
                         isFocused ? "scale-110" : ""
                     )}
@@ -95,7 +105,7 @@ const DirectiveItem = ({
             <div className="flex-1 min-w-0">
                 <div
                     className={cn(
-                        textStyles({
+                        textStyles(isDark, {
                             size: isMobile ? 'base' : 'sm',
                             weight: 'semibold',
                             color: 'primary'
@@ -107,7 +117,7 @@ const DirectiveItem = ({
                 </div>
                 <div
                     className={cn(
-                        textStyles({
+                        textStyles(isDark, {
                             size: isMobile ? 'sm' : 'xs',
                             color: 'secondary'
                         }),
@@ -119,9 +129,11 @@ const DirectiveItem = ({
             </div>
             <PlusIcon
                 className={cn(
-                    iconStyles('md'),
+                    iconStyles(isDark, 'md'),
                     "flex-shrink-0 transition-all duration-200",
-                    isFocused ? "text-[#6aa329] scale-110" : "text-gray-400"
+                    isFocused
+                        ? (isDark ? "text-[#7bb33a] scale-110" : "text-[#6aa329] scale-110")
+                        : (isDark ? "text-[#9ca3af]" : "text-gray-400")
                 )}
             />
         </button>
@@ -134,6 +146,7 @@ export default function AddDirectiveButton({
     variant = 'default',
     emptyText = { title: "No directives added yet", subtitle: "Click here to start building your container" },
 }: AddDirectiveButtonProps) {
+    const { isDark } = useTheme();
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [focusedIndex, setFocusedIndex] = useState(-1);
@@ -395,7 +408,7 @@ export default function AddDirectiveButton({
         <div className="relative">
             <MagnifyingGlassIcon
                 className={cn(
-                    iconStyles(isMobile ? 'md' : 'sm', 'muted'),
+                    iconStyles(isDark, isMobile ? 'md' : 'sm', 'muted'),
                     "absolute left-3 top-1/2 transform -translate-y-1/2"
                 )}
             />
@@ -407,11 +420,12 @@ export default function AddDirectiveButton({
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyDown={handleKeyDown}
                 className={cn(
-                    inputStyles(),
-                    "bg-white text-gray-800 placeholder-gray-400",
+                    inputStyles(isDark),
                     "w-full pl-10 pr-4",
                     isMobile ? "py-3 text-base rounded-xl" : "py-2 text-sm rounded-lg",
-                    "border-[#e6f1d6] focus:border-[#6aa329]"
+                    isDark
+                        ? "bg-[#161a0e] text-[#e8f5d0] placeholder-[#9ca3af] border-[#2d4222] focus:border-[#7bb33a]"
+                        : "bg-white text-gray-800 placeholder-gray-400 border-[#e6f1d6] focus:border-[#6aa329]"
                 )}
             />
         </div>
@@ -427,6 +441,7 @@ export default function AddDirectiveButton({
                     index={index}
                     isFocused={index === focusedIndex}
                     isMobile={isMobile}
+                    isDark={isDark}
                     onSelect={handleAddDirective}
                     onMouseEnter={setFocusedIndex}
                     itemRef={(el) => {
@@ -441,17 +456,18 @@ export default function AddDirectiveButton({
         <div
             className={cn(
                 "text-center",
-                textStyles({ color: 'muted' }),
+                textStyles(isDark, { color: 'muted' }),
                 isMobile ? "py-12" : "p-4"
             )}
         >
             <MagnifyingGlassIcon
                 className={cn(
-                    "mx-auto text-gray-300",
-                    isMobile ? "w-12 h-12 mb-4" : "w-8 h-8 mb-2"
+                    "mx-auto",
+                    isMobile ? "w-12 h-12 mb-4" : "w-8 h-8 mb-2",
+                    isDark ? "text-[#6b7280]" : "text-gray-300"
                 )}
             />
-            <p className={cn(textStyles({
+            <p className={cn(textStyles(isDark, {
                 size: isMobile ? 'base' : 'sm',
                 weight: 'medium'
             }))}>
@@ -459,7 +475,7 @@ export default function AddDirectiveButton({
             </p>
             <p
                 className={cn(
-                    textStyles({
+                    textStyles(isDark, {
                         size: isMobile ? 'sm' : 'xs',
                         color: 'disabled'
                     }),
@@ -481,17 +497,29 @@ export default function AddDirectiveButton({
                     onKeyDown={handleKeyDown}
                     className={cn(
                         "group w-full text-center py-8",
-                        "border-2 border-dashed border-gray-200 hover:border-[#6aa329]",
-                        "rounded-lg hover:bg-[#f8fdf2] transition-all duration-200",
-                        "focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:ring-offset-1",
-                        textStyles({ color: 'muted' })
+                        "border-2 border-dashed rounded-lg transition-all duration-200",
+                        "focus:outline-none focus:ring-2 focus:ring-offset-1",
+                        textStyles(isDark, { color: 'muted' }),
+                        isDark
+                            ? "border-[#374151] hover:border-[#7bb33a] hover:bg-[#1f2e18] focus:ring-[#7bb33a]"
+                            : "border-gray-200 hover:border-[#6aa329] hover:bg-[#f8fdf2] focus:ring-[#6aa329]"
                     )}
                     aria-expanded={isOpen}
                     aria-haspopup="true"
                     aria-label="Add your first directive"
                 >
-                    <p className={cn("mb-2 group-hover:text-[#6aa329]")}>{emptyText.title}</p>
-                    <p className={cn(textStyles({ size: 'sm' }), "group-hover:text-[#6aa329]")}>{emptyText.subtitle}</p>
+                    <p className={cn(
+                        "mb-2",
+                        isDark ? "group-hover:text-[#7bb33a]" : "group-hover:text-[#6aa329]"
+                    )}>
+                        {emptyText.title}
+                    </p>
+                    <p className={cn(
+                        textStyles(isDark, { size: 'sm' }),
+                        isDark ? "group-hover:text-[#7bb33a]" : "group-hover:text-[#6aa329]"
+                    )}>
+                        {emptyText.subtitle}
+                    </p>
                 </button>
             );
         }
@@ -505,18 +533,27 @@ export default function AddDirectiveButton({
                     onKeyDown={handleKeyDown}
                     className={cn(
                         "group flex items-center justify-center gap-2 w-full py-1.5",
-                        "text-gray-400 hover:text-[#6aa329] hover:bg-[#f8fdf2]",
-                        "border border-dashed border-gray-300 hover:border-[#6aa329]",
-                        "rounded-md transition-all duration-200",
-                        "focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:ring-offset-1",
-                        "opacity-50 hover:opacity-100"
+                        "border border-dashed rounded-md transition-all duration-200",
+                        "focus:outline-none focus:ring-2 focus:ring-offset-1",
+                        "opacity-50 hover:opacity-100",
+                        isDark
+                            ? "text-[#9ca3af] hover:text-[#7bb33a] hover:bg-[#1f2e18] border-[#374151] hover:border-[#7bb33a] focus:ring-[#7bb33a]"
+                            : "text-gray-400 hover:text-[#6aa329] hover:bg-[#f8fdf2] border-gray-300 hover:border-[#6aa329] focus:ring-[#6aa329]"
                     )}
                     aria-expanded={isOpen}
                     aria-haspopup="true"
                     aria-label="Add directive here"
                 >
-                    <PlusIcon className={cn(iconStyles('sm'), "group-hover:scale-110 transition-transform duration-200")} />
-                    <span className={cn(textStyles({ size: 'xs', weight: 'medium' }), "hidden sm:inline text-gray-500 group-hover:text-[#6aa329]")}>Add directive</span>
+                    <PlusIcon className={cn(iconStyles(isDark, 'sm'), "group-hover:scale-110 transition-transform duration-200")} />
+                    <span className={cn(
+                        textStyles(isDark, { size: 'xs', weight: 'medium' }),
+                        "hidden sm:inline",
+                        isDark
+                            ? "text-[#9ca3af] group-hover:text-[#7bb33a]"
+                            : "text-gray-500 group-hover:text-[#6aa329]"
+                    )}>
+                        Add directive
+                    </span>
                 </button>
             );
         }
@@ -528,7 +565,7 @@ export default function AddDirectiveButton({
                 onClick={() => setIsOpen(!isOpen)}
                 onKeyDown={handleKeyDown}
                 className={cn(
-                    BUTTONS.primary,
+                    getButtons(isDark).primary,
                     "inline-flex items-center gap-2 min-w-0 flex-shrink-0",
                     "px-3 py-2 sm:px-4 sm:py-2.5"
                 )}
@@ -536,12 +573,12 @@ export default function AddDirectiveButton({
                 aria-haspopup="true"
                 aria-label="Add new directive"
             >
-                <PlusIcon className={cn(iconStyles('sm'), "flex-shrink-0")} />
+                <PlusIcon className={cn(iconStyles(isDark, 'sm'), "flex-shrink-0")} />
                 <span className="hidden sm:inline">Add Directive</span>
                 <span className="sm:hidden">Add</span>
                 <ChevronDownIcon
                     className={cn(
-                        iconStyles('sm'),
+                        iconStyles(isDark, 'sm'),
                         "flex-shrink-0 transition-transform duration-200",
                         isOpen ? "rotate-180" : ""
                     )}
@@ -559,12 +596,23 @@ export default function AddDirectiveButton({
             {isOpen && (
                 <>
                     {/* Mobile Full Screen Modal */}
-                    <div className="fixed inset-0 bg-black/80 z-50 sm:hidden">
+                    <div className={cn(
+                        "fixed inset-0 z-50 sm:hidden",
+                        isDark ? "bg-black/90" : "bg-black/80"
+                    )}>
                         <div className="flex items-center justify-center min-h-screen p-4">
-                            <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl max-h-[90vh] overflow-hidden">
+                            <div className={cn(
+                                "w-full max-w-md rounded-2xl shadow-2xl max-h-[90vh] overflow-hidden",
+                                isDark ? "bg-[#161a0e]" : "bg-white"
+                            )}>
                                 {/* Mobile Header */}
-                                <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-[#f8fdf2]">
-                                    <h2 className={textStyles({
+                                <div className={cn(
+                                    "flex items-center justify-between p-4 border-b",
+                                    isDark
+                                        ? "border-[#2d4222] bg-[#1f2e18]"
+                                        : "border-gray-200 bg-[#f8fdf2]"
+                                )}>
+                                    <h2 className={textStyles(isDark, {
                                         size: 'lg',
                                         weight: 'semibold',
                                         color: 'primary'
@@ -574,16 +622,24 @@ export default function AddDirectiveButton({
                                     <button
                                         onClick={closeModal}
                                         className={cn(
-                                            BUTTONS.icon,
-                                            "p-2 rounded-lg hover:bg-[#e6f1d6]"
+                                            getButtons(isDark).icon,
+                                            "p-2 rounded-lg",
+                                            isDark
+                                                ? "hover:bg-[#2d4222]"
+                                                : "hover:bg-[#e6f1d6]"
                                         )}
                                     >
-                                        <XMarkIcon className={cn(iconStyles('md', 'secondary'))} />
+                                        <XMarkIcon className={cn(iconStyles(isDark, 'md', 'secondary'))} />
                                     </button>
                                 </div>
 
                                 {/* Mobile Search */}
-                                <div className="p-4 border-b border-gray-100 bg-[#f8fdf2]">
+                                <div className={cn(
+                                    "p-4 border-b",
+                                    isDark
+                                        ? "border-[#2d4222] bg-[#1f2e18]"
+                                        : "border-gray-100 bg-[#f8fdf2]"
+                                )}>
                                     {renderSearchInput(true)}
                                 </div>
 
@@ -603,20 +659,26 @@ export default function AddDirectiveButton({
 
                     {/* Desktop Dropdown */}
                     <div
-                        className="
-              hidden sm:block fixed z-50
-              w-96 max-w-[calc(100vw-2rem)] max-h-[32rem] overflow-hidden
-              bg-white rounded-xl shadow-xl border border-gray-200
-              animate-in fade-in-0 zoom-in-95 duration-200
-            "
+                        className={cn(
+                            "hidden sm:block fixed z-50",
+                            "w-96 max-w-[calc(100vw-2rem)] max-h-[32rem] overflow-hidden",
+                            "rounded-xl shadow-xl border",
+                            "animate-in fade-in-0 zoom-in-95 duration-200",
+                            isDark ? "bg-[#161a0e] border-[#2d4222]" : "bg-white border-gray-200"
+                        )}
                         style={dropdownPosition}
                         role="menu"
                         aria-orientation="vertical"
                     >
                         {/* Desktop Header with Search */}
-                        <div className="px-4 py-3 border-b border-gray-100 bg-[#f8fdf2]">
+                        <div className={cn(
+                            "px-4 py-3 border-b",
+                            isDark
+                                ? "border-[#2d4222] bg-[#1f2e18]"
+                                : "border-gray-100 bg-[#f8fdf2]"
+                        )}>
                             <h3 className={cn(
-                                textStyles({
+                                textStyles(isDark, {
                                     size: 'sm',
                                     weight: 'semibold',
                                     color: 'primary'
@@ -637,10 +699,15 @@ export default function AddDirectiveButton({
 
                         {/* Desktop Footer */}
                         {filteredDirectives.length > 0 && (
-                            <div className="px-4 py-2 border-t border-gray-100 bg-[#f8fdf2]">
+                            <div className={cn(
+                                "px-4 py-2 border-t",
+                                isDark
+                                    ? "border-[#2d4222] bg-[#1f2e18]"
+                                    : "border-gray-100 bg-[#f8fdf2]"
+                            )}>
                                 <div className={cn(
                                     "flex items-center justify-between",
-                                    textStyles({ size: 'xs', color: 'secondary' })
+                                    textStyles(isDark, { size: 'xs', color: 'secondary' })
                                 )}>
                                     <span>Use ↑↓ to navigate</span>
                                     <span>Enter to select • Esc to close</span>

@@ -7,8 +7,8 @@ registerNeuroDockerTemplate({
         label: "SPM12",
         description: "Statistical Parametric Mapping",
         icon: DocumentDuplicateIcon,
-        color: "bg-sky-50 border-sky-200 hover:bg-sky-100",
-        iconColor: "text-sky-600",
+        color: { light: "bg-sky-50 border-sky-200 hover:bg-sky-100", dark: "bg-sky-900 border-sky-700 hover:bg-sky-800" },
+        iconColor: { light: "text-sky-600", dark: "text-sky-400" },
         defaultValue: {
             template: {
                 name: "spm12",

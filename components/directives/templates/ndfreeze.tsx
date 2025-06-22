@@ -7,8 +7,8 @@ registerNeuroDockerTemplate({
         label: "NeuroDebian Freeze",
         description: "Freeze NeuroDebian packages to a specific date",
         icon: DocumentDuplicateIcon,
-        color: "bg-slate-50 border-slate-200 hover:bg-slate-100",
-        iconColor: "text-slate-600",
+        color: { light: "bg-slate-50 border-slate-200 hover:bg-slate-100", dark: "bg-slate-900 border-slate-700 hover:bg-slate-800" },
+        iconColor: { light: "text-slate-600", dark: "text-slate-400" },
         defaultValue: {
             template: {
                 name: "ndfreeze",

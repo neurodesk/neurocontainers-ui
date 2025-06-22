@@ -2,7 +2,8 @@ import { DirectiveContainer, ListEditor, Input } from "@/components/ui";
 import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
 import { DocumentIcon } from "@heroicons/react/24/outline";
 import { registerDirective, DirectiveMetadata } from "./registry";
-import { HELP_SECTION } from "@/lib/styles";
+import { getHelpSection } from "@/lib/styles";
+import { useTheme } from "@/lib/ThemeContext";
 
 export default function CopyDirectiveComponent({
     copy,
@@ -19,29 +20,30 @@ export default function CopyDirectiveComponent({
     onChange: (copy: string[]) => void,
     condition?: string;
     onConditionChange?: (condition: string | undefined) => void;
-    headerColor?: string;
-    borderColor?: string;
-    iconColor?: string;
+    headerColor?: { light: string, dark: string };
+    borderColor?: { light: string, dark: string };
+    iconColor?: { light: string, dark: string };
     icon?: React.ComponentType<{ className?: string }>;
     controllers: DirectiveControllers;
 }) {
+    const { isDark } = useTheme();
     const copyAsArray = Array.isArray(copy) ? copy : copy.split(" ");
 
     const helpContent = (
-        <div className={HELP_SECTION.container}>
-            <h3 className={HELP_SECTION.title}>
+        <div className={getHelpSection(isDark).container}>
+            <h3 className={getHelpSection(isDark).title}>
                 COPY Directive
             </h3>
-            <div className={HELP_SECTION.text}>
+            <div className={getHelpSection(isDark).text}>
                 <p>
                     The COPY instruction copies new files or directories from the source and adds them to the filesystem of the container.
                 </p>
                 <div>
                     <strong>Format:</strong>
                     <ul className="list-disc list-inside mt-1 space-y-1">
-                        <li><code className={HELP_SECTION.code}>source:destination</code> - Copy from source to destination</li>
-                        <li><code className={HELP_SECTION.code}>file.txt:/app/</code> - Copy file to directory</li>
-                        <li><code className={HELP_SECTION.code}>./src:/app/src</code> - Copy directory contents</li>
+                        <li><code className={getHelpSection(isDark).code}>source:destination</code> - Copy from source to destination</li>
+                        <li><code className={getHelpSection(isDark).code}>file.txt:/app/</code> - Copy file to directory</li>
+                        <li><code className={getHelpSection(isDark).code}>./src:/app/src</code> - Copy directory contents</li>
                     </ul>
                 </div>
             </div>
@@ -86,10 +88,10 @@ export const copyDirectiveMetadata: DirectiveMetadata = {
     label: "Copy",
     description: "Copy files and directories into the container",
     icon: DocumentIcon,
-    color: "bg-cyan-50 border-cyan-200 hover:bg-cyan-100",
-    headerColor: "bg-cyan-50",
-    borderColor: "border-cyan-200",
-    iconColor: "text-cyan-600",
+    color: { light: "bg-cyan-50 border-cyan-200 hover:bg-cyan-100", dark: "bg-cyan-900 border-cyan-700 hover:bg-cyan-800" },
+    headerColor: { light: "bg-cyan-50", dark: "bg-cyan-900" },
+    borderColor: { light: "border-cyan-200", dark: "border-cyan-700" },
+    iconColor: { light: "text-cyan-600", dark: "text-cyan-400" },
     defaultValue: { copy: [] as string[] },
     keywords: ["copy", "file", "transfer", "duplicate", "move"],
     component: CopyDirectiveComponent,

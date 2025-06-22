@@ -7,8 +7,8 @@ registerNeuroDockerTemplate({
         label: "NiftyReg",
         description: "Medical image registration toolkit",
         icon: DocumentDuplicateIcon,
-        color: "bg-lime-50 border-lime-200 hover:bg-lime-100",
-        iconColor: "text-lime-600",
+        color: { light: "bg-lime-50 border-lime-200 hover:bg-lime-100", dark: "bg-lime-900 border-lime-700 hover:bg-lime-800" },
+        iconColor: { light: "text-lime-600", dark: "text-lime-400" },
         defaultValue: {
             template: {
                 name: "niftyreg",

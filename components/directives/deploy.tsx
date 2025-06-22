@@ -3,7 +3,8 @@ import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
 import { DeployInfo } from "@/components/common";
 import { RocketLaunchIcon } from "@heroicons/react/24/outline";
 import { registerDirective, DirectiveMetadata } from "./registry";
-import { HELP_SECTION } from "@/lib/styles";
+import { getHelpSection } from "@/lib/styles";
+import { useTheme } from "@/lib/ThemeContext";
 
 export default function DeployDirectiveComponent({
     deploy,
@@ -20,12 +21,13 @@ export default function DeployDirectiveComponent({
     onChange: (deploy: DeployInfo) => void;
     condition?: string;
     onConditionChange?: (condition: string | undefined) => void;
-    headerColor?: string;
-    borderColor?: string;
-    iconColor?: string;
+    headerColor?: { light: string, dark: string };
+    borderColor?: { light: string, dark: string };
+    iconColor?: { light: string, dark: string };
     icon?: React.ComponentType<{ className?: string }>;
     controllers: DirectiveControllers;
 }) {
+    const { isDark } = useTheme();
     const updatePaths = (paths: string[]) => {
         onChange({
             ...deploy,
@@ -41,11 +43,11 @@ export default function DeployDirectiveComponent({
     };
 
     const helpContent = (
-        <div className={HELP_SECTION.container}>
-            <h3 className={HELP_SECTION.title}>
+        <div className={getHelpSection(isDark).container}>
+            <h3 className={getHelpSection(isDark).title}>
                 DEPLOY Directive
             </h3>
-            <div className={HELP_SECTION.text}>
+            <div className={getHelpSection(isDark).text}>
                 <p>
                     The DEPLOY directive configures deployment settings for the container, including paths and binaries.
                 </p>
@@ -54,7 +56,7 @@ export default function DeployDirectiveComponent({
                     <ul className="list-disc list-inside mt-1 space-y-1">
                         <li>Specify directories to include in deployment</li>
                         <li>Use absolute paths for clarity</li>
-                        <li>Example: <code className={HELP_SECTION.code}>/app/bin</code>, <code className={HELP_SECTION.code}>/usr/local/bin</code></li>
+                        <li>Example: <code className={getHelpSection(isDark).code}>/app/bin</code>, <code className={getHelpSection(isDark).code}>/usr/local/bin</code></li>
                     </ul>
                 </div>
                 <div>
@@ -62,7 +64,7 @@ export default function DeployDirectiveComponent({
                     <ul className="list-disc list-inside mt-1 space-y-1">
                         <li>List specific executable files to deploy</li>
                         <li>Binary names or full paths</li>
-                        <li>Example: <code className={HELP_SECTION.code}>myapp</code>, <code className={HELP_SECTION.code}>processingTool</code></li>
+                        <li>Example: <code className={getHelpSection(isDark).code}>myapp</code>, <code className={getHelpSection(isDark).code}>processingTool</code></li>
                     </ul>
                 </div>
             </div>
@@ -114,10 +116,10 @@ export const deployDirectiveMetadata: DirectiveMetadata = {
     label: "Deploy",
     description: "Configure deployment settings for the container",
     icon: RocketLaunchIcon,
-    color: "bg-orange-50 border-orange-200 hover:bg-orange-100",
-    headerColor: "bg-orange-50",
-    borderColor: "border-orange-200",
-    iconColor: "text-orange-600",
+    color: { light: "bg-orange-50 border-orange-200 hover:bg-orange-100", dark: "bg-orange-900 border-orange-700 hover:bg-orange-800" },
+    headerColor: { light: "bg-orange-50", dark: "bg-orange-900" },
+    borderColor: { light: "border-orange-200", dark: "border-orange-700" },
+    iconColor: { light: "text-orange-600", dark: "text-orange-400" },
     defaultValue: { deploy: { path: [] as string[], bins: [] as string[] } },
     keywords: ["deploy", "deployment", "publish", "release", "launch"],
     component: DeployDirectiveComponent,

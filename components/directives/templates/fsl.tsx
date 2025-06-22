@@ -7,8 +7,8 @@ registerNeuroDockerTemplate({
         label: "FSL",
         description: "FMRIB Software Library",
         icon: DocumentDuplicateIcon,
-        color: "bg-yellow-50 border-yellow-200 hover:bg-yellow-100",
-        iconColor: "text-yellow-600",
+        color: { light: "bg-yellow-50 border-yellow-200 hover:bg-yellow-100", dark: "bg-yellow-900 border-yellow-700 hover:bg-yellow-800" },
+        iconColor: { light: "text-yellow-600", dark: "text-yellow-400" },
         defaultValue: {
             template: {
                 name: "fsl",

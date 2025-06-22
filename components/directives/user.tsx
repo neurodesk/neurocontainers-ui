@@ -2,7 +2,8 @@ import { DirectiveContainer, Input } from "@/components/ui";
 import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
 import { UserIcon } from "@heroicons/react/24/outline";
 import { registerDirective, DirectiveMetadata } from "./registry";
-import { HELP_SECTION } from "@/lib/styles";
+import { getHelpSection } from "@/lib/styles";
+import { useTheme } from "@/lib/ThemeContext";
 
 export default function UserDirectiveComponent({
     user,
@@ -19,18 +20,19 @@ export default function UserDirectiveComponent({
     onChange: (user: string) => void,
     condition?: string;
     onConditionChange?: (condition: string | undefined) => void;
-    headerColor?: string;
-    borderColor?: string;
-    iconColor?: string;
+    headerColor?: { light: string, dark: string };
+    borderColor?: { light: string, dark: string };
+    iconColor?: { light: string, dark: string };
     icon?: React.ComponentType<{ className?: string }>;
     controllers: DirectiveControllers;
 }) {
+    const { isDark } = useTheme();
     const helpContent = (
-        <div className={HELP_SECTION.container}>
-            <h3 className={HELP_SECTION.title}>
+        <div className={getHelpSection(isDark).container}>
+            <h3 className={getHelpSection(isDark).title}>
                 USER Directive
             </h3>
-            <div className={HELP_SECTION.text}>
+            <div className={getHelpSection(isDark).text}>
                 <p>
                     The USER directive sets the user name or UID to use when running the container and for any subsequent commands.
                 </p>
@@ -52,7 +54,7 @@ export default function UserDirectiveComponent({
                 </div>
                 <div>
                     <strong>Examples:</strong>
-                    <div className={HELP_SECTION.code}>
+                    <div className={getHelpSection(isDark).code}>
                         <div><strong>Username:</strong> nginx</div>
                         <div><strong>UID:</strong> 1000</div>
                         <div><strong>User:Group:</strong> www-data:www-data</div>
@@ -91,10 +93,10 @@ export const userDirectiveMetadata: DirectiveMetadata = {
     label: "User",
     description: "Set the user context for subsequent commands",
     icon: UserIcon,
-    color: "bg-teal-50 border-teal-200 hover:bg-teal-100",
-    headerColor: "bg-teal-50",
-    borderColor: "border-teal-200",
-    iconColor: "text-teal-600",
+    color: { light: "bg-teal-50 border-teal-200 hover:bg-teal-100", dark: "bg-teal-900 border-teal-700 hover:bg-teal-800" },
+    headerColor: { light: "bg-teal-50", dark: "bg-teal-900" },
+    borderColor: { light: "border-teal-200", dark: "border-teal-700" },
+    iconColor: { light: "text-teal-600", dark: "text-teal-400" },
     defaultValue: { user: "" },
     keywords: ["user", "account", "permission", "context", "identity"],
     component: UserDirectiveComponent,

@@ -2,7 +2,7 @@ import { CodeBracketIcon } from "@heroicons/react/24/outline";
 import { registerGroupEditor } from "../group";
 import type { ComponentType } from "react";
 import type { Directive } from "@/components/common";
-import { HELP_SECTION, textStyles, cn } from "@/lib/styles";
+import { getHelpSection, textStyles, cn } from "@/lib/styles";
 
 
 registerGroupEditor("java", {
@@ -11,8 +11,8 @@ registerGroupEditor("java", {
         label: "Java",
         description: "Install Java Development Kit (JDK)",
         icon: CodeBracketIcon,
-        color: "bg-orange-50 border-orange-200 hover:bg-orange-100",
-        iconColor: "text-orange-600",
+        color: { light: "bg-orange-50 border-orange-200 hover:bg-orange-100", dark: "bg-orange-900 border-orange-700 hover:bg-orange-800" },
+        iconColor: { light: "text-orange-600", dark: "text-orange-400" },
         defaultValue: {
             group: [],
             custom: "java",
@@ -21,16 +21,16 @@ registerGroupEditor("java", {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         component: undefined as unknown as ComponentType<any>, // Will be set by registerGroupEditor
     },
-    helpContent() {
+    helpContent(isDark: boolean) {
         return (
-            <div className={HELP_SECTION.container}>
-                <h3 className={HELP_SECTION.title}>
+            <div className={getHelpSection(isDark).container}>
+                <h3 className={getHelpSection(isDark).title}>
                     Java Installation
                 </h3>
-                <div className={HELP_SECTION.text}>
+                <div className={getHelpSection(isDark).text}>
                     <p>
-                        Installs Java Development Kit (JDK) or Java Runtime Environment (JRE) 
-                        in your container. This group handles package installation and environment 
+                        Installs Java Development Kit (JDK) or Java Runtime Environment (JRE)
+                        in your container. This group handles package installation and environment
                         configuration for Java applications.
                     </p>
                     <div>
@@ -49,8 +49,8 @@ registerGroupEditor("java", {
                             <li>Automatic JAVA_HOME and PATH configuration</li>
                         </ul>
                     </div>
-                    <div className="bg-blue-50 border border-blue-200 rounded-md p-2">
-                        <p className={cn(textStyles({ size: 'xs', weight: 'medium' }), "text-blue-800")}>
+                    <div className={cn("border rounded-md p-2", isDark ? "bg-blue-900 border-blue-700" : "bg-blue-50 border-blue-200")}>
+                        <p className={cn(textStyles(isDark, { size: 'xs', weight: 'medium' }), "text-blue-800")}>
                             💡 Tip: Use OpenJDK for open-source projects. Version 17 or 21 recommended for modern applications.
                         </p>
                     </div>
@@ -86,11 +86,11 @@ registerGroupEditor("java", {
     updateDirective({ version, type, setJavaHome }) {
         const packages: string[] = [];
         let javaHome = "";
-        
+
         // Use standard package names that work across most distributions
         const javaVersion = version as string;
         const javaType = type as string;
-        
+
         // Determine Java package and JAVA_HOME based on version
         if (javaVersion === "default") {
             packages.push(javaType === "jdk" ? "default-jdk" : "default-jre");
@@ -99,13 +99,13 @@ registerGroupEditor("java", {
             packages.push(`openjdk-${javaVersion}-${javaType}`);
             javaHome = `/usr/lib/jvm/java-${javaVersion}-openjdk-amd64`;
         }
-        
+
         const directives: Directive[] = [
             {
                 install: packages,
             }
         ];
-        
+
         // Set JAVA_HOME if requested
         if (setJavaHome && javaHome) {
             directives.push({
@@ -115,7 +115,7 @@ registerGroupEditor("java", {
                 }
             });
         }
-        
+
         return {
             group: directives,
             custom: "java",

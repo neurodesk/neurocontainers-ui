@@ -4,17 +4,27 @@
  * This file provides helper functions for working with the centralized theme system.
  */
 
-import { presets, components, cn, themeClass } from './theme';
+import {
+  cn,
+  themeClass,
+  getThemeComponents,
+  getThemePresets
+} from './theme';
 
 // ============================================================================
 // COMPONENT STYLE BUILDERS
 // ============================================================================
 
 /**
- * Input field style builder with variants
+ * Input field style builder with variants (theme-aware)
  */
-export function inputStyles(variant?: 'default' | 'error', size?: 'sm' | 'md' | 'lg') {
-  const baseStyle = components.input.full;
+export function inputStyles(
+  isDark: boolean,
+  variant?: 'default' | 'error',
+  size?: 'sm' | 'md' | 'lg'
+) {
+  const themeComponents = getThemeComponents(isDark);
+  const baseStyle = themeComponents.input.full;
   const sizeStyles = {
     sm: 'px-2 py-1 text-xs',
     md: 'px-3 py-1.5 text-sm', // default
@@ -23,7 +33,7 @@ export function inputStyles(variant?: 'default' | 'error', size?: 'sm' | 'md' | 
 
   const variantStyles = {
     default: '',
-    error: components.input.error,
+    error: themeComponents.input.error,
   };
 
   return cn(
@@ -34,65 +44,74 @@ export function inputStyles(variant?: 'default' | 'error', size?: 'sm' | 'md' | 
 }
 
 /**
- * Button style builder with variants and sizes
+ * Button style builder with variants and sizes (theme-aware)
  */
 export function buttonStyles(
+  isDark: boolean,
   variant: 'primary' | 'secondary' | 'ghost' | 'danger' = 'primary',
   size: 'sm' | 'md' | 'lg' = 'md'
 ) {
-  const baseStyle = components.button.base;
+  const themeComponents = getThemeComponents(isDark);
+  const baseStyle = themeComponents.button.base;
   const variantStyles = {
-    primary: components.button.primary,
-    secondary: components.button.secondary,
-    ghost: components.button.ghost,
-    danger: components.button.danger,
+    primary: themeComponents.button.primary,
+    secondary: themeComponents.button.secondary,
+    ghost: themeComponents.button.ghost,
+    danger: themeComponents.button.danger,
   };
 
   const sizeStyles = {
-    sm: components.button.sm,
-    md: components.button.md,
-    lg: components.button.lg,
+    sm: themeComponents.button.sm,
+    md: themeComponents.button.md,
+    lg: themeComponents.button.lg,
   };
 
   return cn(
     baseStyle,
     variantStyles[variant],
     sizeStyles[size],
-    components.button.disabled
+    themeComponents.button.disabled
   );
 }
 
 /**
- * Textarea style builder
+ * Textarea style builder (theme-aware)
  */
-export function textareaStyles(options?: {
+export function textareaStyles(isDark: boolean, options?: {
   monospace?: boolean;
   height?: string;
   error?: boolean;
 }) {
-  const baseStyle = components.textarea.full;
-  const monoStyle = options?.monospace ? components.textarea.monospace : '';
+  const themeComponents = getThemeComponents(isDark);
+  const baseStyle = themeComponents.textarea.full;
+  const monoStyle = options?.monospace ? themeComponents.textarea.monospace : '';
   const heightStyle = options?.height ? options.height : '';
-  const errorStyle = options?.error ? components.input.error : '';
+  const errorStyle = options?.error ? themeComponents.input.error : '';
 
   return cn(baseStyle, monoStyle, heightStyle, errorStyle);
 }
 
 /**
- * Card style builder
+ * Card style builder (theme-aware)
  */
-export function cardStyles(variant?: 'default' | 'elevated' | 'theme', padding?: 'zero' | 'sm' | 'md' | 'lg') {
+export function cardStyles(
+  isDark: boolean,
+  variant?: 'default' | 'elevated' | 'theme',
+  padding?: 'zero' | 'sm' | 'md' | 'lg',
+) {
+  const themeComponents = getThemeComponents(isDark);
+
   const variantStyles = {
-    default: components.card.base,
-    elevated: components.card.elevated,
-    theme: components.card.theme,
+    default: themeComponents.card.base,
+    elevated: themeComponents.card.elevated,
+    theme: themeComponents.card.theme,
   };
 
   const paddingStyles = {
     zero: "",
-    sm: components.card.padding.sm,
-    md: components.card.padding.md,
-    lg: components.card.padding.lg,
+    sm: themeComponents.card.padding.sm,
+    md: themeComponents.card.padding.md,
+    lg: themeComponents.card.padding.lg,
   };
 
   return cn(
@@ -102,19 +121,24 @@ export function cardStyles(variant?: 'default' | 'elevated' | 'theme', padding?:
 }
 
 /**
- * Icon style builder  
+ * Icon style builder (theme-aware)
  */
-export function iconStyles(size?: 'sm' | 'md' | 'lg', color?: 'primary' | 'secondary' | 'muted') {
+export function iconStyles(
+  isDark: boolean,
+  size?: 'sm' | 'md' | 'lg',
+  color?: 'primary' | 'secondary' | 'muted'
+) {
+  const themeComponents = getThemeComponents(isDark);
   const sizeStyles = {
-    sm: components.icon.sm,
-    md: components.icon.md,
-    lg: components.icon.lg,
+    sm: themeComponents.icon.sm,
+    md: themeComponents.icon.md,
+    lg: themeComponents.icon.lg,
   };
 
   const colorStyles = {
-    primary: components.icon.color.primary,
-    secondary: components.icon.color.secondary,
-    muted: components.icon.color.muted,
+    primary: themeComponents.icon.color.primary,
+    secondary: themeComponents.icon.color.secondary,
+    muted: themeComponents.icon.color.muted,
   };
 
   return cn(
@@ -130,7 +154,9 @@ export function iconStyles(size?: 'sm' | 'md' | 'lg', color?: 'primary' | 'secon
 /**
  * Grid layout builder
  */
-export function gridStyles(cols: 1 | 2 | 3 = 1, gap?: 'sm' | 'md' | 'lg') {
+export function gridStyles(isDark: boolean, cols: 1 | 2 | 3 = 1, gap?: 'sm' | 'md' | 'lg') {
+  const components = getThemeComponents(isDark);
+
   const colStyles = {
     1: components.layout.grid.cols1,
     2: components.layout.grid.cols2,
@@ -152,7 +178,9 @@ export function gridStyles(cols: 1 | 2 | 3 = 1, gap?: 'sm' | 'md' | 'lg') {
 /**
  * Flex layout builder
  */
-export function flexStyles(variant: 'center' | 'between' | 'start' | 'col') {
+export function flexStyles(isDark: boolean, variant: 'center' | 'between' | 'start' | 'col') {
+  const components = getThemeComponents(isDark);
+
   const variants = {
     center: components.layout.flex.center,
     between: components.layout.flex.between,
@@ -170,7 +198,9 @@ export function flexStyles(variant: 'center' | 'between' | 'start' | 'col') {
 /**
  * Form field wrapper styles
  */
-export function formFieldStyles(hasError?: boolean) {
+export function formFieldStyles(isDark: boolean, hasError?: boolean) {
+  const components = getThemeComponents(isDark);
+
   return cn(
     components.formField.container,
     hasError && 'mb-2' // Reduce margin when there's an error message
@@ -180,7 +210,9 @@ export function formFieldStyles(hasError?: boolean) {
 /**
  * Form label styles
  */
-export function formLabelStyles(required?: boolean) {
+export function formLabelStyles(isDark: boolean, required?: boolean) {
+  const components = getThemeComponents(isDark);
+
   return cn(
     components.formField.label,
     required && "after:content-['*'] after:text-red-500 after:ml-1"
@@ -194,11 +226,13 @@ export function formLabelStyles(required?: boolean) {
 /**
  * Interactive state styles
  */
-export function interactiveStyles(options?: {
+export function interactiveStyles(isDark: boolean, options?: {
   hover?: boolean;
   focus?: boolean;
   disabled?: boolean;
 }) {
+  const components = getThemeComponents(isDark);
+
   return cn(
     options?.hover && components.state.hover.card,
     options?.focus && components.state.focus.ring,
@@ -209,7 +243,9 @@ export function interactiveStyles(options?: {
 /**
  * Focus ring styles
  */
-export function focusRingStyles(thick?: boolean) {
+export function focusRingStyles(isDark: boolean, thick?: boolean) {
+  const components = getThemeComponents(isDark);
+
   return thick ? components.state.focus.ringThick : components.state.focus.ring;
 }
 
@@ -220,7 +256,7 @@ export function focusRingStyles(thick?: boolean) {
 /**
  * Text style builder
  */
-export function textStyles(options?: {
+export function textStyles(isDark: boolean, options?: {
   size?: 'xs' | 'sm' | 'base' | 'md' | 'lg' | 'xl' | '2xl';
   weight?: 'normal' | 'medium' | 'semibold' | 'bold';
   color?: 'primary' | 'secondary' | 'muted' | 'disabled' | 'white';
@@ -232,62 +268,142 @@ export function textStyles(options?: {
     size && `text-${size}`,
     weight && `font-${weight}`,
     color && {
-      primary: 'text-[#0c0e0a]',
-      secondary: 'text-[#4f7b38]',
-      muted: 'text-gray-500',
-      disabled: 'text-gray-400',
-      white: 'text-white',
+      primary: isDark ? "text-[#e8f5d0]" : 'text-[#0c0e0a]',
+      secondary: isDark ? "text-[#91c84a]" : 'text-[#4f7b38]',
+      muted: isDark ? "text-gray-500" : 'text-gray-500',
+      disabled: isDark ? "text-gray-600" : 'text-gray-400',
+      white: isDark ? "text-black" : 'text-white',
     }[color],
     leading && `leading-${leading}`
   );
 }
 
 // ============================================================================
-// COMMONLY USED PRESET COMBINATIONS
+// THEME-AWARE PRESET COMBINATIONS
 // ============================================================================
 
 /**
- * Standard input field with label
+ * Theme-aware input field components
  */
-export const INPUT_FIELD = {
-  container: presets.formField,
-  label: presets.formLabel,
-  input: presets.input,
-};
+export function getInputField(isDark: boolean) {
+  const themePresets = getThemePresets(isDark);
+  return {
+    container: themePresets.formField,
+    label: themePresets.formLabel,
+    input: themePresets.input,
+  };
+}
 
 /**
- * Help section components
+ * Theme-aware help section components
  */
-export const HELP_SECTION = {
-  container: presets.helpSection,
-  title: components.help.title,
-  text: components.help.text,
-  code: components.help.code,
-};
+export function getHelpSection(isDark: boolean) {
+  const themeComponents = getThemeComponents(isDark);
+  const themePresets = getThemePresets(isDark);
+  return {
+    container: themePresets.helpSection,
+    title: themeComponents.help.title,
+    text: themeComponents.help.text,
+    code: themeComponents.help.code,
+  };
+}
 
 /**
- * Button variants
+ * Theme-aware button variants
  */
-export const BUTTONS = {
-  primary: presets.buttonPrimary,
-  secondary: presets.buttonSecondary,
-  icon: presets.buttonIcon,
-  danger: presets.buttonDanger,
-};
+export function getButtons(isDark: boolean) {
+  const themePresets = getThemePresets(isDark);
+  return {
+    primary: themePresets.buttonPrimary,
+    secondary: themePresets.buttonSecondary,
+    icon: themePresets.buttonIcon,
+    danger: themePresets.buttonDanger,
+  };
+}
 
 /**
- * Card variants
+ * Theme-aware card variants
  */
-export const CARDS = {
-  default: presets.card,
-  theme: presets.cardTheme,
-  elevated: cardStyles('elevated'),
-  minimal: cardStyles('elevated', 'sm'),
-};
+export function getCards(isDark: boolean) {
+  const themePresets = getThemePresets(isDark);
+  return {
+    default: themePresets.card,
+    theme: themePresets.cardTheme,
+    elevated: cardStyles(isDark, 'elevated', 'md'),
+    minimal: cardStyles(isDark, 'elevated', 'sm'),
+  };
+}
+
+// ============================================================================
+// THEME-AWARE UTILITY FUNCTIONS
+// ============================================================================
+
+/**
+ * Gets theme-appropriate class names for common UI patterns
+ */
+export function getThemeClasses(isDark: boolean) {
+  const themePresets = getThemePresets(isDark);
+  const themeComponents = getThemeComponents(isDark);
+
+  return {
+    // Form elements
+    input: themePresets.input,
+    textarea: themeComponents.textarea.full,
+    textareaMono: themePresets.textareaMono,
+    formField: themePresets.formField,
+    formLabel: themePresets.formLabel,
+
+    // Buttons
+    buttonPrimary: themePresets.buttonPrimary,
+    buttonSecondary: themePresets.buttonSecondary,
+    buttonGhost: themePresets.buttonIcon,
+    buttonDanger: themePresets.buttonDanger,
+
+    // Cards and containers
+    card: themePresets.card,
+    cardTheme: themePresets.cardTheme,
+
+    // Interactive states
+    focusRing: themePresets.focusRing,
+    hoverCard: themePresets.hoverCard,
+    hoverIcon: themePresets.hoverIcon,
+
+    // Help sections
+    helpTitle: themeComponents.help.title,
+    helpText: themeComponents.help.text,
+    helpCode: themeComponents.help.code,
+  };
+}
+
+/**
+ * Convenience hook-like function for getting all theme-aware styles
+ */
+export function useThemeStyles(isDark: boolean) {
+  return {
+    classes: getThemeClasses(isDark),
+    inputField: getInputField(isDark),
+    helpSection: getHelpSection(isDark),
+    buttons: getButtons(isDark),
+    cards: getCards(isDark),
+
+    // Style builders
+    input: (variant?: 'default' | 'error', size?: 'sm' | 'md' | 'lg') =>
+      inputStyles(isDark, variant, size),
+    button: (variant?: 'primary' | 'secondary' | 'ghost' | 'danger', size?: 'sm' | 'md' | 'lg') =>
+      buttonStyles(isDark, variant, size),
+    card: (variant?: 'default' | 'elevated' | 'theme', padding?: 'zero' | 'sm' | 'md' | 'lg') =>
+      cardStyles(isDark, variant, padding),
+    icon: (size?: 'sm' | 'md' | 'lg', color?: 'primary' | 'secondary' | 'muted') =>
+      iconStyles(isDark, size, color),
+    textarea: (options?: { monospace?: boolean; height?: string; error?: boolean; }) =>
+      textareaStyles(isDark, { ...options }),
+  };
+}
 
 // Export commonly used individual styles
 export {
-  presets,
   cn,
   themeClass,
+  getThemeComponents,
+  getThemePresets,
 };

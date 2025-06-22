@@ -1,7 +1,7 @@
 import { FolderIcon } from "@heroicons/react/24/outline";
 import { registerGroupEditor } from "../group";
 import type { ComponentType } from "react";
-import { HELP_SECTION, textStyles, cn } from "@/lib/styles";
+import { getHelpSection, textStyles, cn } from "@/lib/styles";
 
 registerGroupEditor("shellScript", {
     metadata: {
@@ -9,8 +9,8 @@ registerGroupEditor("shellScript", {
         label: "Shell Script",
         description: "Create a shell script",
         icon: FolderIcon,
-        color: "bg-gray-50 border-gray-200 hover:bg-gray-100",
-        iconColor: "text-gray-600",
+        color: { light: "bg-gray-50 border-gray-200 hover:bg-gray-100", dark: "bg-gray-900 border-gray-700 hover:bg-gray-800" },
+        iconColor: { light: "text-gray-600", dark: "text-gray-400" },
         defaultValue: {
             group: [],
             custom: "shellScript",
@@ -19,16 +19,16 @@ registerGroupEditor("shellScript", {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         component: undefined as unknown as ComponentType<any>, // Will be set by registerGroupEditor
     },
-    helpContent() {
+    helpContent(isDark: boolean) {
         return (
-            <div className={HELP_SECTION.container}>
-                <h3 className={HELP_SECTION.title}>
+            <div className={getHelpSection(isDark).container}>
+                <h3 className={getHelpSection(isDark).title}>
                     Shell Script Group
                 </h3>
-                <div className={HELP_SECTION.text}>
+                <div className={getHelpSection(isDark).text}>
                     <p>
-                        Creates an executable shell script and configures it for deployment. 
-                        This group automatically handles script creation, permission setting, 
+                        Creates an executable shell script and configures it for deployment.
+                        This group automatically handles script creation, permission setting,
                         PATH configuration, and deployment binary registration.
                     </p>
                     <div>
@@ -49,8 +49,8 @@ registerGroupEditor("shellScript", {
                             <li>Container initialization scripts</li>
                         </ul>
                     </div>
-                    <div className="bg-blue-50 border border-blue-200 rounded-md p-2">
-                        <p className={cn(textStyles({ size: 'xs', weight: 'medium' }), "text-blue-800")}>
+                    <div className={cn("border rounded-md p-2", isDark ? "bg-blue-900 border-blue-700" : "bg-blue-50 border-blue-200")}>
+                        <p className={cn(textStyles(isDark, { size: 'xs', weight: 'medium' }), "text-blue-800")}>
                             💡 Tip: Use the advanced mode to manually edit individual directives if needed
                         </p>
                     </div>

@@ -12,6 +12,7 @@ import "./copy";
 import "./file";
 import "./test";
 import "./include";
+import "./boutique";
 
 // Import all template components to trigger their registration  
 import "./templates";

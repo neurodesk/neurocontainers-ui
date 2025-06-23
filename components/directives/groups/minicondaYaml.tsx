@@ -2,6 +2,7 @@ import { DocumentDuplicateIcon } from "@heroicons/react/24/outline";
 import { registerGroupEditor } from "../group";
 import type { ComponentType } from "react";
 import { getHelpSection, textStyles, cn } from "@/lib/styles";
+import type { Directive } from "@/components/common";
 
 registerGroupEditor("minicondaYaml", {
     metadata: {
@@ -127,7 +128,7 @@ dependencies:
             createCommands.push("rm /tmp/environment.yml");
         }
         
-        const directives = [
+        const directives: Directive[] = [
             {
                 file: {
                     name: "environment.yml",

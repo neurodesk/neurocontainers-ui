@@ -14,6 +14,7 @@ import VariableDirectiveComponent from "./variable";
 import WorkingDirectoryDirectiveComponent from "./workdir";
 import TestDirectiveComponent from "./test";
 import IncludeDirectiveComponent from "./include";
+import BoutiqueDirectiveComponent from "./boutique";
 import { getDirective } from "./registry";
 
 // Helper function to get directive metadata based on directive type
@@ -31,6 +32,7 @@ function getDirectiveMetadata(directive: Directive) {
     if ('file' in directive) return getDirective('file');
     if ('test' in directive) return getDirective('test');
     if ('include' in directive) return getDirective('include');
+    if ('boutique' in directive) return getDirective('boutique');
     return undefined;
 }
 
@@ -253,6 +255,17 @@ export default function DirectiveComponent({
             {...styleProps}
             {...controllerProps}
         />;
+    } else if ('boutique' in directive) {
+        return (
+            <BoutiqueDirectiveComponent
+                boutique={directive.boutique}
+                onChange={(boutique) => onChange({ ...directive, boutique })}
+                condition={directive.condition}
+                onConditionChange={conditionProps.onConditionChange}
+                {...styleProps}
+                {...controllerProps}
+            />
+        );
     } else {
         return (
             <div className="bg-white rounded-md shadow-sm border border-red-200 mb-4 p-4 text-red-500 dark:bg-red-900 dark:border-red-700 dark:text-red-300">

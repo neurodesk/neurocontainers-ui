@@ -119,6 +119,10 @@ export interface IncludeDirective extends BaseDirective {
     include: IncludeMacro;
 }
 
+export interface BoutiqueDirective extends BaseDirective {
+    boutique: import("@/types/boutique").BoutiquesDescriptor;
+}
+
 export type Directive =
     | GroupDirective
     | EnvironmentDirective
@@ -132,7 +136,8 @@ export type Directive =
     | CopyDirective
     | FileDirective
     | TestDirective
-    | IncludeDirective;
+    | IncludeDirective
+    | BoutiqueDirective;
 
 export interface NeuroDockerBuildRecipe {
     kind: "neurodocker";

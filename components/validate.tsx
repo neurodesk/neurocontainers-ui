@@ -26,8 +26,14 @@ interface ValidationResult {
 
 export default function ContainerValidator({
     recipe,
+    onValidationChange,
+    disabled,
+    disabledReason,
 }: {
     recipe: ContainerRecipe;
+    onValidationChange?: (isValid: boolean, hasResult: boolean) => void;
+    disabled?: boolean;
+    disabledReason?: string;
 }) {
     const { isDark } = useTheme();
     const { pyodide, loading: pyodideLoading, error: pyodideError, loadPyodide } = usePyodide();
@@ -53,8 +59,8 @@ export default function ContainerValidator({
     }, [pyodide, builder, builderLoading, pyodideLoading]);
 
     const canValidate = useMemo(() => {
-        return isReady && !validating;
-    }, [isReady, validating]);
+        return isReady && !validating && !disabled;
+    }, [isReady, validating, disabled]);
 
     // Stable function to load builder - prevents infinite loops
     const loadBuilderInstance = useCallback(async () => {
@@ -92,6 +98,13 @@ export default function ContainerValidator({
         }
     }, [pyodide, loadBuilderInstance, builder, builderLoading]);
 
+    // Notify when validation result is cleared (e.g., when recipe changes)
+    useEffect(() => {
+        if (!validationResult) {
+            onValidationChange?.(false, false);
+        }
+    }, [validationResult, onValidationChange]);
+
     const validateRecipe = useCallback(async () => {
         if (!builder || validating) {
             console.log("Cannot validate: builder not ready or already validating");
@@ -115,31 +128,37 @@ export default function ContainerValidator({
             console.log("Validation result:", result);
 
             if (result) {
-                setValidationResult({
+                const validationResult = {
                     success: true,
                     dockerfile: result.dockerfile,
                     readme: result.readme,
                     buildDirectory: result.buildDirectory,
                     deployBins: result.deployBins,
                     deployPath: result.deployPath,
-                });
+                };
+                setValidationResult(validationResult);
                 setShowDockerfile(true);
+                onValidationChange?.(true, true);
             } else {
-                setValidationResult({
+                const validationResult = {
                     success: false,
                     error: "Failed to generate container. Please check your recipe configuration.",
-                });
+                };
+                setValidationResult(validationResult);
+                onValidationChange?.(false, true);
             }
         } catch (error) {
             console.error("Validation error:", error);
-            setValidationResult({
+            const validationResult = {
                 success: false,
                 error: error instanceof Error ? error.message : "Unknown validation error",
-            });
+            };
+            setValidationResult(validationResult);
+            onValidationChange?.(false, true);
         } finally {
             setValidating(false);
         }
-    }, [builder, recipe, buildOptions, validating]);
+    }, [builder, recipe, buildOptions, validating, onValidationChange]);
 
     const copyDockerfile = useCallback(async () => {
         if (validationResult?.dockerfile) {
@@ -387,7 +406,21 @@ export default function ContainerValidator({
                         </button>
                     </div>
 
-                    {!isReady && (
+                    {disabled && disabledReason && (
+                        <div className={cn(
+                            "p-4 border rounded-md",
+                            isDark ? "bg-red-900/20 border-red-700" : "bg-red-50 border-red-200"
+                        )}>
+                            <p className={cn(
+                                textStyles(isDark, { size: 'sm' }),
+                                isDark ? "text-red-400" : "text-red-800"
+                            )}>
+                                {disabledReason}
+                            </p>
+                        </div>
+                    )}
+
+                    {!disabled && !isReady && (
                         <div className={cn(
                             "p-4 border rounded-md",
                             isDark ? "bg-yellow-900/20 border-yellow-700" : "bg-yellow-50 border-yellow-200"

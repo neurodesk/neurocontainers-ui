@@ -853,6 +853,7 @@ function SideNavigation({
     filesystemMode,
     isLocalFilesystemConnected,
     onSaveToLocalFilesystem,
+    hasMetadataErrors,
 }: {
     activeSection: Section;
     onSectionChange: (section: Section) => void;
@@ -869,6 +870,7 @@ function SideNavigation({
     filesystemMode?: 'local' | 'remote';
     isLocalFilesystemConnected?: boolean;
     onSaveToLocalFilesystem?: () => void;
+    hasMetadataErrors?: boolean;
 }) {
     const { isDark } = useTheme();
     const actionStyle = cn(
@@ -988,7 +990,8 @@ function SideNavigation({
                         <button
                             className={actionStyle}
                             onClick={onOpenGitHub}
-                            disabled={!yamlData}
+                            disabled={!yamlData || hasMetadataErrors}
+                            title={!yamlData ? "No recipe data available" : hasMetadataErrors ? "Please fix the metadata validation errors in the Basic Information section before publishing" : "Publish recipe to GitHub"}
                         >
                             <CloudArrowUpIcon className="h-4 w-4" />
                             <span>Publish to GitHub</span>
@@ -1038,6 +1041,7 @@ function SideNavigation({
                         </div>
                     </div>
                 )}
+
 
                 {/* Build Steps Header */}
                 <div className={cn("p-3 border-b", isDark ? "border-[#2d4222]" : "border-[#e6f1d6]")}>
@@ -1135,6 +1139,7 @@ function TopNavigation({
     onOpenGitHub,
     saveStatus,
     filesystemMode,
+    hasMetadataErrors,
 }: {
     activeSection: Section;
     onSectionChange: (section: Section) => void;
@@ -1144,6 +1149,7 @@ function TopNavigation({
     onOpenGitHub: () => void;
     saveStatus: SaveStatus;
     filesystemMode?: 'local' | 'remote';
+    hasMetadataErrors?: boolean;
 }) {
     const { isDark } = useTheme();
     return (
@@ -1198,7 +1204,8 @@ function TopNavigation({
                                 : "bg-[#4f7b38] hover:bg-[#6aa329]"
                         )}
                         onClick={onOpenGitHub}
-                        disabled={!yamlData}
+                        disabled={!yamlData || hasMetadataErrors}
+                        title={!yamlData ? "No recipe data available" : hasMetadataErrors ? "Please fix the metadata validation errors in the Basic Information section before publishing" : "Publish recipe to GitHub"}
                     >
                         Publish
                     </button>
@@ -1265,6 +1272,7 @@ export default function Home() {
     const [isUpdatingUrl, setIsUpdatingUrl] = useState<boolean>(false);
     const [filesystemMode, setFilesystemMode] = useState<'local' | 'remote'>('remote');
     const [isLocalFilesystemConnected, setIsLocalFilesystemConnected] = useState<boolean>(false);
+    const [hasMetadataErrors, setHasMetadataErrors] = useState<boolean>(false);
 
     const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const { files } = useGitHubFiles("neurodesk", "neurocontainers", "main");
@@ -1671,6 +1679,17 @@ export default function Home() {
         }
     }, []);
 
+    // Handle validation state changes
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const handleValidationChange = useCallback((isValid: boolean, hasResult: boolean) => {
+        // Builder validation results are tracked but don't affect publishing
+        // Publishing is only blocked by metadata validation errors
+    }, []);
+
+    const handleMetadataValidationChange = useCallback((hasErrors: boolean) => {
+        setHasMetadataErrors(hasErrors);
+    }, []);
+
     // Removed auto-save for local filesystem - now requires explicit save
 
     // Handle yamlData changes with debounced save
@@ -1878,6 +1897,7 @@ export default function Home() {
                         filesystemMode={filesystemMode}
                         isLocalFilesystemConnected={isLocalFilesystemConnected}
                         onSaveToLocalFilesystem={handleSaveToLocalFilesystem}
+                        hasMetadataErrors={hasMetadataErrors}
                     />
 
                     {/* Main Content */}
@@ -1892,6 +1912,7 @@ export default function Home() {
                             onOpenGitHub={() => setIsGitHubModalOpen(true)}
                             saveStatus={saveStatus}
                             filesystemMode={filesystemMode}
+                            hasMetadataErrors={hasMetadataErrors}
                         />
 
                         <div className="max-w-5xl mx-auto px-4 py-6 pt-24 lg:pt-6">
@@ -1909,6 +1930,7 @@ export default function Home() {
                                         onChange={(updated) => setYamlData(updated)}
                                         onNameEditStart={() => setIsEditingName(true)}
                                         onNameEditFinish={() => handleNameEditingFinished(yamlData)}
+                                        onValidationChange={handleMetadataValidationChange}
                                     />
                                 </section>
 
@@ -1934,7 +1956,12 @@ export default function Home() {
                                         title="Validate & Generate"
                                         description="Test your configuration and generate the final container"
                                     />
-                                    <ValidateRecipeComponent recipe={yamlData} />
+                                    <ValidateRecipeComponent 
+                                        recipe={yamlData} 
+                                        onValidationChange={handleValidationChange}
+                                        disabled={hasMetadataErrors}
+                                        disabledReason={hasMetadataErrors ? "Please fix the metadata validation errors in the Basic Information section before validating the recipe." : undefined}
+                                    />
                                 </section>
 
                                 {/* YAML Preview */}
@@ -2013,7 +2040,7 @@ export default function Home() {
                             <div className="mb-4">
                                 <Logo className="h-12 w-auto mx-auto" />
                                 <h1 className={cn(
-                                    textStyles(isDark, { size: '2xl', weight: 'bold', color: 'primary' }), 
+                                    textStyles(isDark, { size: '2xl', weight: 'bold', color: 'primary' }),
                                     "mt-3"
                                 )}>
                                     Container Builder

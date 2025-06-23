@@ -57,11 +57,13 @@ export default function ContainerMetadata({
     onChange,
     onNameEditStart,
     onNameEditFinish,
+    onValidationChange,
 }: {
     recipe: ContainerRecipe;
     onChange: (recipe: ContainerRecipe) => void;
     onNameEditStart?: () => void;
     onNameEditFinish?: () => void;
+    onValidationChange?: (hasErrors: boolean) => void;
 }) {
     const { isDark } = useTheme();
     const [showInputTypeWarning, setShowInputTypeWarning] = useState(false);
@@ -105,6 +107,11 @@ export default function ContainerMetadata({
             setShowValidation(true);
         }
     }, [recipe.name, recipe.version, recipe.readme, recipe.readme_url, recipe.structured_readme, recipe.architectures, recipe.categories]);
+
+    // Notify parent about validation state changes
+    useEffect(() => {
+        onValidationChange?.(hasErrors);
+    }, [hasErrors, onValidationChange]);
 
     const updateName = (name: string) => {
         onChange({ ...recipe, name });

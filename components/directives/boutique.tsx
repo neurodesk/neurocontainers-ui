@@ -311,7 +311,7 @@ function InputEditor({
     return (
         <div className={`p-4 border rounded-lg ${
             isDark 
-                ? "border-gray-600 bg-gray-800/50" 
+                ? "border-gray-600 bg-gray-800/30" 
                 : "border-gray-200 bg-gray-50"
         }`}>
             <div className="flex items-center justify-between mb-3">
@@ -407,7 +407,7 @@ function OutputEditor({
     return (
         <div className={`p-4 border rounded-lg ${
             isDark 
-                ? "border-gray-600 bg-gray-800/50" 
+                ? "border-gray-600 bg-gray-800/30" 
                 : "border-gray-200 bg-gray-50"
         }`}>
             <div className="flex items-center justify-between mb-3">

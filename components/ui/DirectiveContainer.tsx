@@ -222,7 +222,10 @@ export default function DirectiveContainer({
                     </div>
                 )}
                 {helpContent && showHelp && (
-                    <div className="px-4 py-3 bg-[#fafcf7] border-b border-[#e6f1d6]">
+                    <div className={cn(
+                        "px-4 py-3 border-b",
+                        isDark ? "bg-[#1a2113] border-[#2d4222]" : "bg-[#fafcf7] border-[#e6f1d6]"
+                    )}>
                         {helpContent}
                     </div>
                 )}

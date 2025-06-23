@@ -47,8 +47,8 @@ registerGroupEditor("pipRequirements", {
                             <li>Installing packages with specific build flags</li>
                         </ul>
                     </div>
-                    <div className={cn("border rounded-md p-2", isDark ? "bg-blue-900 border-blue-700" : "bg-blue-50 border-blue-200")}>
-                        <p className={cn(textStyles(isDark, { size: 'xs', weight: 'medium' }), "text-blue-800")}>
+                    <div className={cn("border rounded-md p-2", isDark ? "bg-blue-900/40 border-blue-700/50" : "bg-blue-50 border-blue-200")}>
+                        <p className={cn(textStyles(isDark, { size: 'xs', weight: 'medium' }), isDark ? "text-blue-200" : "text-blue-800")}>
                             💡 Tip: Each line in requirements should be a valid pip install specification (e.g., numpy==1.21.0, scipy{'>'}=1.7.0)
                         </p>
                     </div>

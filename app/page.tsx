@@ -941,8 +941,8 @@ function SideNavigation({
 
                 {/* Action Buttons */}
                 <div className={cn(
-                    "p-3 border-b border-[#e6f1d6]",
-                    isDark ? "bg-[#1e2a16]" : "bg-[#f8fdf2]",
+                    "p-3 border-b",
+                    isDark ? "bg-[#1e2a16] border-[#2d4222]" : "bg-[#f8fdf2] border-[#e6f1d6]",
                 )}>
                     <div className="space-y-1">
                         <button
@@ -982,7 +982,7 @@ function SideNavigation({
                                     <ComputerDesktopIcon className="h-4 w-4" />
                                     <span>Save to Local Filesystem</span>
                                 </div>
-                                <span className="text-xs text-gray-500">Ctrl+S</span>
+                                <span className={cn("text-xs", isDark ? "text-gray-400" : "text-gray-500")}>Ctrl+S</span>
                             </button>
                         )}
                         <button
@@ -1007,12 +1007,14 @@ function SideNavigation({
 
                 {/* Unpublished Warning */}
                 {yamlData && !isPublished && (
-                    <div className={cn("p-3 border-b", isDark ? "bg-orange-900 border-orange-800" : "border-[#e6f1d6] bg-orange-50")}>
+                    <div className={cn("p-3 border-b", isDark ? "bg-orange-900/80 border-orange-700" : "border-[#e6f1d6] bg-orange-50")}>
                         <div className="flex items-start space-x-2">
-                            <ExclamationTriangleIcon className="h-4 w-4 text-orange-600 flex-shrink-0 mt-0.5" />
+                            <ExclamationTriangleIcon className={cn("h-4 w-4 flex-shrink-0 mt-0.5", isDark ? "text-orange-300" : "text-orange-600")} />
                             <div>
-                                <p className="text-xs font-medium text-orange-800">Unpublished Container</p>
-                                <p className="text-xs text-orange-700 mt-1">
+                                <p className={cn("text-xs font-medium", isDark ? "text-orange-200" : "text-orange-800")}>
+                                    Unpublished Container
+                                </p>
+                                <p className={cn("text-xs mt-1", isDark ? "text-orange-300" : "text-orange-700")}>
                                     This container is not available in the public repository. Consider publishing it to make it accessible to others.
                                 </p>
                             </div>
@@ -1022,14 +1024,14 @@ function SideNavigation({
 
                 {/* Modified Warning */}
                 {yamlData && isPublished && isModified && (
-                    <div className={cn("p-3 border-b", isDark ? "bg-yellow-900 border-yellow-800" : "border-[#e6f1d6] bg-yellow-50")}>
+                    <div className={cn("p-3 border-b", isDark ? "bg-yellow-900/80 border-yellow-700" : "border-[#e6f1d6] bg-yellow-50")}>
                         <div className="flex items-start space-x-2">
-                            <ExclamationTriangleIcon className="h-4 w-4 text-yellow-600 flex-shrink-0 mt-0.5" />
+                            <ExclamationTriangleIcon className={cn("h-4 w-4 flex-shrink-0 mt-0.5", isDark ? "text-yellow-300" : "text-yellow-600")} />
                             <div>
-                                <p className={cn("text-xs font-medium", isDark ? "text-yellow-300" : "text-yellow-800")}>
+                                <p className={cn("text-xs font-medium", isDark ? "text-yellow-200" : "text-yellow-800")}>
                                     Modified Container
                                 </p>
-                                <p className={cn("text-xs mt-1", isDark ? "text-yellow-200" : "text-yellow-700")}>
+                                <p className={cn("text-xs mt-1", isDark ? "text-yellow-300" : "text-yellow-700")}>
                                     This container has been modified from the published version. Your changes are only saved locally.
                                 </p>
                             </div>
@@ -1038,11 +1040,11 @@ function SideNavigation({
                 )}
 
                 {/* Build Steps Header */}
-                <div className={cn("p-3 border-b border-[#e6f1d6]")}>
+                <div className={cn("p-3 border-b", isDark ? "border-[#2d4222]" : "border-[#e6f1d6]")}>
                     <h2 className={cn("text-sm font-semibold", isDark ? "text-[#d1d5db]" : "text-[#0c0e0a]")}>
                         Build Steps
                     </h2>
-                    <p className="text-xs text-[#4f7b38] mt-1">
+                    <p className={cn("text-xs mt-1", isDark ? "text-[#91c84a]" : "text-[#4f7b38]")}>
                         Follow these steps to build your container
                     </p>
                 </div>

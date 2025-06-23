@@ -37,6 +37,7 @@ import { filesystemService } from "@/lib/filesystem";
 import { iconStyles, textStyles, inputStyles, cn, useThemeStyles, cardStyles, buttonStyles } from "@/lib/styles";
 import { ThemeToggleIcon } from "@/components/ui/ThemeToggle";
 import { useTheme } from "@/lib/ThemeContext";
+import { Logo } from "@/components/ui/Logo";
 
 enum Section {
     BasicInfo = "basic-info",
@@ -900,22 +901,31 @@ function SideNavigation({
                         : "bg-white border-[#e6f1d6]"
                 )}
             >
-                {/* Header with Title */}
+                {/* Header with Logo */}
                 <div className={cn(
-                    "p-4 border-b text-white",
+                    "p-4 border-b",
                     isDark
                         ? "border-[#2d4222] bg-[#0a0c08]"
-                        : "border-[#e6f1d6] bg-[#0c0e0a]"
+                        : "border-[#e6f1d6] bg-white"
                 )}>
                     <div className="flex items-center justify-between">
-                        <h1 className="text-base font-bold">
-                            Neurocontainers Builder
-                        </h1>
+                        <div>
+                            <Logo className="h-6 w-auto" />
+                            <p className={cn(
+                                "text-xs mt-1 font-medium",
+                                isDark ? "text-[#91c84a]" : "text-gray-600"
+                            )}>
+                                Container Builder
+                            </p>
+                        </div>
                         <div className="flex items-center space-x-2">
                             <ThemeToggleIcon />
                             <button
                                 onClick={onToggle}
-                                className="lg:hidden p-1 rounded-md hover:bg-[#1e2a16]"
+                                className={cn(
+                                    "lg:hidden p-1 rounded-md",
+                                    isDark ? "hover:bg-[#1e2a16] text-white" : "hover:bg-[#e6f1d6]"
+                                )}
                             >
                                 <XMarkIcon className="h-4 w-4" />
                             </button>
@@ -1142,7 +1152,7 @@ function TopNavigation({
                 : "bg-[#0c0e0a] border-[#1e2a16]"
         )}>
             {/* Header */}
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                     <button
                         onClick={onSidebarToggle}
@@ -1154,12 +1164,13 @@ function TopNavigation({
                         <Bars3Icon className="h-5 w-5" />
                     </button>
                     <div>
-                        <h1 className="text-lg font-bold text-white">
-                            Neurocontainers Builder
-                        </h1>
-                        {yamlData && (
-                            <SaveIndicator status={saveStatus} mode={filesystemMode} />
-                        )}
+                        <Logo className="h-5 w-auto" />
+                        <p className={cn(
+                            "text-[10px] mt-0.5 font-medium",
+                            isDark ? "text-[#91c84a]" : "text-gray-300"
+                        )}>
+                            Container Builder
+                        </p>
                     </div>
                 </div>
 
@@ -1191,6 +1202,12 @@ function TopNavigation({
                     </button>
                 </div>
             </div>
+            {/* Save Status */}
+            {yamlData && (
+                <div className="mt-2">
+                    <SaveIndicator status={saveStatus} mode={filesystemMode} />
+                </div>
+            )}
         </div>
     );
 }
@@ -1991,9 +2008,15 @@ export default function Home() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                                 </svg>
                             </div>
-                            <h1 className={cn(textStyles(isDark, { size: '2xl', weight: 'bold', color: 'primary' }), "mb-4 text-4xl")}>
-                                Neurocontainers Builder
-                            </h1>
+                            <div className="mb-4">
+                                <Logo className="h-12 w-auto mx-auto" />
+                                <h1 className={cn(
+                                    textStyles(isDark, { size: '2xl', weight: 'bold', color: 'primary' }), 
+                                    "mt-3"
+                                )}>
+                                    Container Builder
+                                </h1>
+                            </div>
                             <p className={cn(textStyles(isDark, { size: 'xl', color: 'secondary' }), "mb-8 max-w-2xl mx-auto")}>
                                 Create reproducible neuroimaging containers with ease. Build, validate, and publish
                                 containerized neuroimaging tools using our intuitive visual interface.

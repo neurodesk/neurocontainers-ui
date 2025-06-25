@@ -73,7 +73,9 @@ export function LocalContainersList({
     return (
         <div className={cn(cardStyles(isDark, 'elevated'), "h-fit")}>
             {/* Header */}
-            <div className="border-b border-[#e6f1d6] p-4">
+            <div
+                className={cn("border-b p-4", isDark ? "border-[#2d4222]" : "border-[#e6f1d6]")}
+            >
                 <div className="flex items-center space-x-2 mb-2">
                     <ComputerDesktopIcon className={iconStyles(isDark, 'md', 'secondary')} />
                     <h2 className={textStyles(isDark, { size: 'lg', weight: 'semibold', color: 'primary' })}>
@@ -101,7 +103,7 @@ export function LocalContainersList({
                     )}
                 >
                     <div className="relative">
-                        <MagnifyingGlassIcon className={cn("absolute left-3 top-1/2 transform -translate-y-1/2", iconStyles(isDark, 'sm', 'muted'))} />
+                        <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                         <input
                             type="text"
                             placeholder="Search containers..."
@@ -122,17 +124,17 @@ export function LocalContainersList({
             <div className="max-h-96 overflow-y-auto">
                 {savedContainers.length === 0 ? (
                     <div className="text-center py-12">
-                        <ComputerDesktopIcon className={cn(iconStyles(isDark, 'lg'), "mx-auto mb-3 opacity-50 h-12 w-12 text-[#4f7b38]")} />
+                        <ComputerDesktopIcon className={cn(iconStyles(isDark, 'lg', 'secondary'), "mx-auto mb-3 opacity-50 h-12 w-12")} />
                         <p className={textStyles(isDark, { size: 'sm', color: 'secondary' })}>No containers saved yet</p>
                         <p className={cn(textStyles(isDark, { size: 'xs', color: 'muted' }), "mt-1")}>Your work will appear here automatically</p>
                     </div>
                 ) : filteredContainers.length === 0 ? (
                     <div className="text-center py-12">
-                        <ComputerDesktopIcon className={cn(iconStyles(isDark, 'lg'), "mx-auto mb-3 opacity-50 h-12 w-12 text-[#4f7b38]")} />
+                        <ComputerDesktopIcon className={cn(iconStyles(isDark, 'lg', 'secondary'), "mx-auto mb-3 opacity-50 h-12 w-12")} />
                         <p className={textStyles(isDark, { size: 'sm', color: 'secondary' })}>No matching containers found</p>
                         <button
                             onClick={() => setSearchTerm('')}
-                            className={cn(textStyles(isDark, { size: 'xs' }), "mt-1 text-[#6aa329] hover:underline")}
+                            className={cn(textStyles(isDark, { size: 'xs' }), "mt-1 hover:underline", isDark ? "text-[#7bb33a]" : "text-green-600")}
                         >
                             Clear search
                         </button>
@@ -173,8 +175,7 @@ export function LocalContainersList({
                                             </span>
                                             {!isPublishedContainer(container.data.name) && (
                                                 <span className={cn(
-                                                    textStyles(isDark, { size: 'xs' }), 
-                                                    "px-1.5 py-0.5 rounded-full",
+                                                    "px-1.5 py-0.5 rounded-full text-xs",
                                                     isDark 
                                                         ? "bg-orange-900/60 text-orange-200 border border-orange-700/50" 
                                                         : "bg-orange-100 text-orange-700"

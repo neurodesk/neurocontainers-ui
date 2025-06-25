@@ -4,7 +4,7 @@ import { Variable } from "@/components/common";
 import { TrashIcon, CubeTransparentIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import { registerDirective, DirectiveMetadata } from "./registry";
-import { cn, getHelpSection, useThemeStyles } from "@/lib/styles";
+import { cn, getHelpSection, useThemeStyles, buttonStyles } from "@/lib/styles";
 import { useTheme } from "@/lib/ThemeContext";
 
 export function VariableComponent({ variable, onChange }: { variable: Variable, onChange?: (variable: Variable) => void }) {
@@ -193,7 +193,11 @@ export default function VariableDirectiveComponent({
                         onKeyDown={(e) => e.key === 'Enter' && addVariable()}
                     />
                     <button
-                        className={cn(styles.buttons.primary, "rounded-l-none rounded-r-md")}
+                        className={cn(
+                            buttonStyles(isDark, 'primary', 'md'),
+                            "rounded-l-none rounded-r-md min-h-[44px] md:min-h-[auto]",
+                            "disabled:opacity-50 disabled:cursor-not-allowed"
+                        )}
                         onClick={addVariable}
                         disabled={!newVarKey.trim()}
                     >

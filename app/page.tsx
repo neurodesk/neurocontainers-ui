@@ -359,7 +359,7 @@ export default function Home() {
 
 
     return (
-        <div className={cn("min-h-screen flex", isDark ? "bg-[#161a0e]" : "bg-[#f8fdf2]")}>
+        <div className={cn("min-h-screen flex overflow-x-hidden", isDark ? "bg-[#161a0e]" : "bg-[#f8fdf2]")}>
             {loading ? (
                 <div className="flex-1 flex items-center justify-center">
                     <div className={cn("rounded-lg shadow-md p-8 text-center", styles.cards.default)}>
@@ -425,10 +425,10 @@ export default function Home() {
                     />
 
                     {/* Main Content */}
-                    <div className="flex-1 lg:ml-0 min-h-screen">
+                    <div className="flex-1 min-h-screen overflow-x-hidden lg:ml-64">
                         {!yamlData ? (
                             /* Container Selection View */
-                            <div className="max-w-6xl mx-auto p-6 pt-20 lg:pt-6">
+                            <div className="max-w-6xl mx-auto p-4 sm:p-6 pt-20 lg:pt-6">
                                 {/* Hero Section with Action Buttons */}
                                 <div className="text-center mb-8">
                                     <h1 className={cn("text-3xl font-bold mb-4", isDark ? "text-[#e8f5d0]" : "text-[#0c0e0a]")}>
@@ -537,7 +537,7 @@ export default function Home() {
                             </div>
                         ) : (
                             /* Container Builder View - All Steps */
-                            <div className="max-w-6xl mx-auto p-6 pt-20 lg:pt-6 space-y-8">
+                            <div className="max-w-6xl mx-auto p-4 sm:p-6 pt-20 lg:pt-6 space-y-8">
                                 {/* Step 1: Basic Info */}
                                 <div className="space-y-6">
                                     <SectionHeader

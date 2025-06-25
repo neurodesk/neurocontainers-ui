@@ -34,7 +34,7 @@ export function TopNavigation({
             "fixed top-0 left-0 right-0 border-b p-3 lg:hidden z-30",
             isDark
                 ? "bg-[#0a0c08] border-[#1f2e18]"
-                : "bg-[#0c0e0a] border-[#1e2a16]"
+                : "bg-white border-[#e6f1d6]"
         )}>
             {/* Header */}
             <div className="flex items-center justify-between">
@@ -42,8 +42,10 @@ export function TopNavigation({
                     <button
                         onClick={onSidebarToggle}
                         className={cn(
-                            "p-2 rounded-md text-white",
-                            isDark ? "hover:bg-[#1f2e18]" : "hover:bg-[#1e2a16]"
+                            "p-2 rounded-md transition-colors",
+                            isDark 
+                                ? "text-white hover:bg-[#1f2e18]" 
+                                : "text-gray-700 hover:bg-gray-100"
                         )}
                     >
                         <Bars3Icon className="h-5 w-5" />
@@ -52,7 +54,7 @@ export function TopNavigation({
                         <Logo className="h-5 w-auto" />
                         <p className={cn(
                             "text-[10px] mt-0.5 font-medium",
-                            isDark ? "text-[#91c84a]" : "text-gray-300"
+                            isDark ? "text-[#91c84a]" : "text-green-600"
                         )}>
                             Container Builder
                         </p>
@@ -64,10 +66,10 @@ export function TopNavigation({
                     <ThemeToggleIcon />
                     <button
                         className={cn(
-                            "px-3 py-1 rounded-md text-xs font-medium transition-colors text-white",
+                            "px-3 py-1 rounded-md text-xs font-medium transition-colors",
                             isDark
-                                ? "bg-[#1f2e18] hover:bg-[#171e13]"
-                                : "bg-[#1e2a16] hover:bg-[#161c10]"
+                                ? "bg-[#1f2e18] hover:bg-[#171e13] text-white"
+                                : "bg-gray-100 hover:bg-gray-200 text-gray-700"
                         )}
                         onClick={onNewContainer}
                     >
@@ -75,10 +77,10 @@ export function TopNavigation({
                     </button>
                     <button
                         className={cn(
-                            "px-3 py-1 rounded-md text-xs font-medium transition-colors text-white disabled:opacity-50 disabled:cursor-not-allowed",
+                            "px-3 py-1 rounded-md text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
                             isDark
-                                ? "bg-[#5a8f23] hover:bg-[#7bb33a]"
-                                : "bg-[#4f7b38] hover:bg-[#6aa329]"
+                                ? "bg-green-700 hover:bg-green-600 text-white"
+                                : "bg-green-600 hover:bg-green-700 text-white"
                         )}
                         onClick={onOpenGitHub}
                         disabled={!yamlData || hasMetadataErrors}

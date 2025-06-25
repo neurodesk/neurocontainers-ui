@@ -52,10 +52,12 @@ export function SideNavigation({
 }: SideNavigationProps) {
     const { isDark } = useTheme();
     const actionStyle = cn(
-        "w-full flex items-center space-x-2 px-3 py-2",
-        "text-sm font-medium",
-        isDark ? "text-[#d1d5db] hover:text-[#f9fafb]" : "text-[#1e2a16] hover:bg-[#e6f1d6]",
-        "rounded-md transition-colors",
+        "w-full flex items-center space-x-3 px-4 py-3 md:px-3 md:py-2",
+        "text-base md:text-sm font-medium min-h-[48px] md:min-h-[auto]",
+        isDark 
+            ? "text-[#c4e382] hover:text-[#e8f5d0] hover:bg-[#161a0e]" 
+            : "text-gray-700 hover:text-gray-900 hover:bg-gray-100",
+        "rounded-lg md:rounded-md transition-colors touch-manipulation",
         "disabled:opacity-50 disabled:cursor-not-allowed",
     );
     return (
@@ -71,22 +73,22 @@ export function SideNavigation({
             {/* Sidebar */}
             <nav
                 className={cn(
-                    "fixed lg:sticky top-0 left-0 h-full lg:h-screen",
-                    "w-full lg:w-64 border-r",
-                    "transform transition-transform duration-300 ease-in-out z-50",
-                    "flex flex-col",
+                    "fixed top-0 left-0 h-full lg:h-screen",
+                    "w-full lg:w-64 border-r lg:border-r",
+                    "transform transition-transform duration-300 ease-in-out z-50 lg:z-auto",
+                    "flex flex-col lg:flex-shrink-0",
                     isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
                     isDark
-                        ? "bg-[#161a0e] border-[#2d4222]"
-                        : "bg-white border-[#e6f1d6]"
+                        ? "bg-[#0a0c08] border-[#2d4222]"
+                        : "bg-white border-gray-200"
                 )}
             >
                 {/* Header with Logo */}
                 <div className={cn(
                     "p-4 border-b",
                     isDark
-                        ? "border-[#2d4222] bg-[#0a0c08]"
-                        : "border-[#e6f1d6] bg-white"
+                        ? "border-[#2d4222] bg-[#161a0e]"
+                        : "border-gray-200 bg-gray-50"
                 )}>
                     <div className="flex items-center justify-between">
                         <div>
@@ -103,11 +105,11 @@ export function SideNavigation({
                             <button
                                 onClick={onToggle}
                                 className={cn(
-                                    "lg:hidden p-1 rounded-md",
+                                    "lg:hidden p-2 rounded-lg touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center",
                                     isDark ? "hover:bg-[#1e2a16] text-white" : "hover:bg-[#e6f1d6]"
                                 )}
                             >
-                                <XMarkIcon className="h-4 w-4" />
+                                <XMarkIcon className="h-5 w-5" />
                             </button>
                         </div>
                     </div>
@@ -121,15 +123,15 @@ export function SideNavigation({
 
                 {/* Action Buttons */}
                 <div className={cn(
-                    "p-3 border-b",
-                    isDark ? "bg-[#1e2a16] border-[#2d4222]" : "bg-[#f8fdf2] border-[#e6f1d6]",
+                    "flex-1 p-3",
+                    isDark ? "bg-[#0a0c08]" : "bg-white"
                 )}>
                     <div className="space-y-1">
                         <button
                             className={actionStyle}
                             onClick={onNewContainer}
                         >
-                            <RectangleStackIcon className="h-4 w-4" />
+                            <RectangleStackIcon className="h-5 w-5 md:h-4 md:w-4 flex-shrink-0" />
                             <span>Container Library</span>
                         </button>
                         <button
@@ -137,7 +139,7 @@ export function SideNavigation({
                             onClick={onExportYAML}
                             disabled={!yamlData}
                         >
-                            <ArrowDownTrayIcon className="h-4 w-4" />
+                            <ArrowDownTrayIcon className="h-5 w-5 md:h-4 md:w-4 flex-shrink-0" />
                             <span>Download YAML</span>
                         </button>
                         {isPublished && githubUrl ? (
@@ -189,10 +191,10 @@ export function SideNavigation({
                 {/* Unpublished Warning */}
                 {yamlData && !isPublished && (
                     <div className={cn(
-                        "p-3 border-b", 
+                        "p-3 border-t mt-auto", 
                         isDark 
-                            ? "bg-orange-900/40 border-orange-700/50 backdrop-blur-sm" 
-                            : "border-[#e6f1d6] bg-orange-50"
+                            ? "bg-orange-900/20 border-[#2d4222]" 
+                            : "border-gray-200 bg-orange-50"
                     )}>
                         <div className="flex items-start space-x-2">
                             <ExclamationTriangleIcon className={cn(
@@ -220,10 +222,10 @@ export function SideNavigation({
                 {/* Modified Warning */}
                 {yamlData && isPublished && isModified && (
                     <div className={cn(
-                        "p-3 border-b", 
+                        "p-3 border-t mt-auto", 
                         isDark 
-                            ? "bg-yellow-900/40 border-yellow-700/50 backdrop-blur-sm" 
-                            : "border-[#e6f1d6] bg-yellow-50"
+                            ? "bg-yellow-900/20 border-[#2d4222]" 
+                            : "border-gray-200 bg-yellow-50"
                     )}>
                         <div className="flex items-start space-x-2">
                             <ExclamationTriangleIcon className={cn(

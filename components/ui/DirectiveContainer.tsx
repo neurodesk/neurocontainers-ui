@@ -1,7 +1,7 @@
 import {
     ChevronDownIcon,
     InformationCircleIcon,
-    QuestionMarkCircleIcon,
+    AdjustmentsHorizontalIcon,
     Bars3Icon,
     ChevronUpIcon,
     TrashIcon,
@@ -86,13 +86,14 @@ export default function DirectiveContainer({
                         {/* Drag Handle */}
                         <button
                             className={cn(
-                                "cursor-grab active:cursor-grabbing transition-colors p-1 flex items-center justify-center",
+                                "cursor-grab active:cursor-grabbing transition-colors flex items-center justify-center touch-manipulation",
+                                "p-1 md:p-1 min-h-[44px] min-w-[44px] md:min-h-[auto] md:min-w-[auto]",
                                 isDark ? "text-[#9ca3af] hover:text-[#91c84a]" : `text-gray-400 hover:text-[${colors.primary[600]}]`
                             )}
                             onMouseDown={(e) => e.stopPropagation()}
                             title="Drag to reorder"
                         >
-                            <Bars3Icon className={iconStyles(isDark, 'sm')} />
+                            <Bars3Icon className={cn(iconStyles(isDark, 'sm'), "md:h-4 md:w-4 h-5 w-5")} />
                         </button>
 
                         {/* Step Number */}
@@ -106,11 +107,11 @@ export default function DirectiveContainer({
                         )}
 
                         {/* Reorder Controls - Vertically Centered */}
-                        <div className="flex flex-col -space-y-px">
+                        <div className="flex flex-col gap-1 md:gap-0 md:-space-y-px">
                             <button
                                 className={cn(
-                                    "transition-colors p-0.5 flex items-center justify-center",
-                                    iconStyles(isDark, 'sm'),
+                                    "transition-colors flex items-center justify-center touch-manipulation",
+                                    "p-2 md:p-0.5 min-h-[36px] min-w-[36px] md:min-h-[auto] md:min-w-[auto]",
                                     controllers.canMoveUp
                                         ? (isDark ? "text-[#d1d5db] hover:text-[#91c84a]" : `text-gray-600 hover:text-[${colors.primary[600]}]`)
                                         : (isDark ? "text-[#6b7280] cursor-not-allowed" : "text-gray-300 cursor-not-allowed")
@@ -119,12 +120,12 @@ export default function DirectiveContainer({
                                 disabled={!controllers.canMoveUp}
                                 title="Move up"
                             >
-                                <ChevronUpIcon className="w-3 h-3" />
+                                <ChevronUpIcon className="w-4 h-4 md:w-3 md:h-3" />
                             </button>
                             <button
                                 className={cn(
-                                    "transition-colors p-0.5 flex items-center justify-center",
-                                    iconStyles(isDark, 'sm'),
+                                    "transition-colors flex items-center justify-center touch-manipulation",
+                                    "p-2 md:p-0.5 min-h-[36px] min-w-[36px] md:min-h-[auto] md:min-w-[auto]",
                                     controllers.canMoveDown
                                         ? (isDark ? "text-[#d1d5db] hover:text-[#91c84a]" : `text-gray-600 hover:text-[${colors.primary[600]}]`)
                                         : (isDark ? "text-[#6b7280] cursor-not-allowed" : "text-gray-300 cursor-not-allowed")
@@ -133,18 +134,19 @@ export default function DirectiveContainer({
                                 disabled={!controllers.canMoveDown}
                                 title="Move down"
                             >
-                                <ChevronDownIcon className="w-3 h-3" />
+                                <ChevronDownIcon className="w-4 h-4 md:w-3 md:h-3" />
                             </button>
                         </div>
                         <button
                             className={cn(
-                                "transition-colors p-1 flex items-center justify-center",
+                                "transition-colors flex items-center justify-center touch-manipulation",
+                                "p-2 md:p-1 min-h-[44px] min-w-[44px] md:min-h-[auto] md:min-w-[auto]",
                                 `text-[${colors.error}] hover:text-red-600`
                             )}
                             onClick={controllers.onDelete}
                             title="Delete directive"
                         >
-                            <TrashIcon className={iconStyles(isDark, 'sm')} />
+                            <TrashIcon className={cn(iconStyles(isDark, 'sm'), "md:h-4 md:w-4 h-5 w-5")} />
                         </button>
                     </div>
                 )}
@@ -163,10 +165,16 @@ export default function DirectiveContainer({
                     {showConditionOption && onConditionChange && (
                         <button
                             className={cn(
-                                "transition-colors",
-                                iconStyles(isDark, 'md', 'primary'),
-                                "hover:text-black text-gray-600",
-                                showCondition && "text-black"
+                                "transition-all duration-200 flex items-center justify-center touch-manipulation rounded-md",
+                                "p-2 min-h-[44px] min-w-[44px] md:min-h-[36px] md:min-w-[36px]",
+                                "border", // Always have a border to prevent layout shift
+                                showCondition
+                                    ? (isDark
+                                        ? "bg-[#1f2e18] text-[#7bb33a] border-[#2d4222]"
+                                        : "bg-green-50 text-green-600 border-green-200")
+                                    : (isDark
+                                        ? "text-[#9ca3af] hover:text-[#7bb33a] hover:bg-[#1f2e18] border-transparent hover:border-[#2d4222]"
+                                        : "text-gray-500 hover:text-green-600 hover:bg-green-50 border-transparent hover:border-green-200")
                             )}
                             onClick={(e) => {
                                 e.stopPropagation();
@@ -174,16 +182,22 @@ export default function DirectiveContainer({
                             }}
                             title={showCondition ? "Hide condition" : "Add condition"}
                         >
-                            <QuestionMarkCircleIcon className={iconStyles(isDark, 'md')} />
+                            <AdjustmentsHorizontalIcon className="h-5 w-5" />
                         </button>
                     )}
                     {helpContent && (
                         <button
                             className={cn(
-                                "transition-colors",
-                                iconStyles(isDark, 'md', 'primary'),
-                                "hover:text-[#6aa329]",
-                                showHelp && "text-[#6aa329]"
+                                "transition-all duration-200 flex items-center justify-center touch-manipulation rounded-md",
+                                "p-2 min-h-[44px] min-w-[44px] md:min-h-[36px] md:min-w-[36px]",
+                                "border", // Always have a border to prevent layout shift
+                                showHelp
+                                    ? (isDark
+                                        ? "bg-[#1f2e18] text-[#7bb33a] border-[#2d4222]"
+                                        : "bg-blue-50 text-blue-600 border-blue-200")
+                                    : (isDark
+                                        ? "text-[#9ca3af] hover:text-[#7bb33a] hover:bg-[#1f2e18] border-transparent hover:border-[#2d4222]"
+                                        : "text-gray-500 hover:text-blue-600 hover:bg-blue-50 border-transparent hover:border-blue-200")
                             )}
                             onClick={(e) => {
                                 e.stopPropagation();
@@ -191,7 +205,7 @@ export default function DirectiveContainer({
                             }}
                             title={showHelp ? "Hide documentation" : "Show documentation"}
                         >
-                            <InformationCircleIcon className={iconStyles(isDark, 'md')} />
+                            <InformationCircleIcon className="h-5 w-5" />
                         </button>
                     )}
                 </div>

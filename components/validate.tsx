@@ -10,7 +10,7 @@ import {
 import { usePyodide } from "@/lib/python";
 import { loadBuilder, Builder, type BuildOptions } from "@/lib/builder";
 import { ContainerRecipe } from "@/components/common";
-import { getCards, getButtons, iconStyles, textStyles, inputStyles, cn } from "@/lib/styles";
+import { getCards, getButtons, iconStyles, textStyles, inputStyles, buttonStyles, cn } from "@/lib/styles";
 import { useTheme } from "@/lib/ThemeContext";
 
 interface ValidationResult {
@@ -238,7 +238,7 @@ export default function ContainerValidator({
                             {!pyodide && !pyodideLoading && (
                                 <button
                                     onClick={loadPyodide}
-                                    className={cn(getButtons(isDark).secondary, "px-3 py-1 text-xs")}
+                                    className={cn(buttonStyles(isDark, 'secondary', 'sm'))}
                                 >
                                     Load Pyodide
                                 </button>
@@ -281,7 +281,7 @@ export default function ContainerValidator({
                             {pyodide && !builder && !builderLoading && (
                                 <button
                                     onClick={retryLoadBuilder}
-                                    className={cn(getButtons(isDark).secondary, "px-3 py-1 text-xs")}
+                                    className={cn(buttonStyles(isDark, 'secondary', 'sm'))}
                                 >
                                     {builderError ? "Retry" : "Load Builder"}
                                 </button>
@@ -306,13 +306,7 @@ export default function ContainerValidator({
                                     Architecture
                                 </label>
                                 <select
-                                    className={cn(
-                                        inputStyles(isDark),
-                                        "w-full",
-                                        isDark
-                                            ? "text-[#e8f5d0] bg-[#161a0e] focus:ring-1 focus:ring-[#7bb33a] focus:border-[#7bb33a]"
-                                            : "text-[#0c0e0a] bg-white focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
-                                    )}
+                                    className={cn(inputStyles(isDark), "w-full")}
                                     value={buildOptions.architecture}
                                     onChange={(e) =>
                                         setBuildOptions({
@@ -337,13 +331,7 @@ export default function ContainerValidator({
                                     type="number"
                                     min="1"
                                     max="16"
-                                    className={cn(
-                                        inputStyles(isDark),
-                                        "w-full",
-                                        isDark
-                                            ? "text-[#e8f5d0] bg-[#161a0e] focus:ring-1 focus:ring-[#7bb33a] focus:border-[#7bb33a]"
-                                            : "text-[#0c0e0a] focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]"
-                                    )}
+                                    className={cn(inputStyles(isDark), "w-full")}
                                     value={buildOptions.maxParallelJobs}
                                     onChange={(e) =>
                                         setBuildOptions({
@@ -359,10 +347,10 @@ export default function ContainerValidator({
                                 <input
                                     type="checkbox"
                                     className={cn(
-                                        "mr-2",
+                                        "mr-2 rounded border-gray-300 focus:ring-2 focus:ring-offset-0",
                                         isDark
-                                            ? "text-[#7bb33a] focus:ring-[#7bb33a]"
-                                            : "text-[#6aa329] focus:ring-[#6aa329]"
+                                            ? "bg-[#161a0e] border-[#2d4222] text-[#7bb33a] focus:ring-[#7bb33a]/20"
+                                            : "text-green-600 focus:ring-green-500/20"
                                     )}
                                     checked={buildOptions.ignoreArchitecture}
                                     onChange={(e) =>
@@ -391,14 +379,13 @@ export default function ContainerValidator({
                             onClick={validateRecipe}
                             disabled={!canValidate}
                             className={cn(
-                                "flex items-center gap-2 px-4 py-2 rounded-md font-medium transition-colors",
-                                canValidate
-                                    ? (isDark ? "bg-[#7bb33a] text-white hover:bg-[#6ea232]" : "bg-[#6aa329] text-white hover:bg-[#5a8f23]")
-                                    : (isDark ? "bg-[#374151] text-[#9ca3af] cursor-not-allowed" : "bg-gray-300 text-gray-500 cursor-not-allowed")
+                                buttonStyles(isDark, 'primary', 'md'),
+                                "flex items-center gap-2",
+                                !canValidate && "disabled:opacity-50 disabled:cursor-not-allowed"
                             )}
                         >
                             {validating ? (
-                                <ArrowPathIcon className={iconStyles(isDark, 'sm')} />
+                                <ArrowPathIcon className={cn(iconStyles(isDark, 'sm'), "animate-spin")} />
                             ) : (
                                 <PlayIcon className={iconStyles(isDark, 'sm')} />
                             )}
@@ -516,26 +503,21 @@ export default function ContainerValidator({
                             <div className="flex gap-2">
                                 <button
                                     onClick={copyDockerfile}
-                                    className={cn(getButtons(isDark).secondary, "px-3 py-1 text-sm")}
+                                    className={cn(buttonStyles(isDark, 'secondary', 'sm'), "flex items-center gap-1")}
                                 >
                                     <ClipboardDocumentIcon className={iconStyles(isDark, 'sm')} />
                                     Copy
                                 </button>
                                 <button
                                     onClick={downloadDockerfile}
-                                    className={cn(getButtons(isDark).secondary, "px-3 py-1 text-sm")}
+                                    className={cn(buttonStyles(isDark, 'secondary', 'sm'), "flex items-center gap-1")}
                                 >
                                     <DocumentTextIcon className={iconStyles(isDark, 'sm')} />
                                     Download
                                 </button>
                                 <button
                                     onClick={() => setShowDockerfile(!showDockerfile)}
-                                    className={cn(
-                                        "px-3 py-1 text-sm font-medium rounded transition-colors border",
-                                        isDark
-                                            ? "text-[#d1d5db] border-[#2d4222] hover:bg-[#2d4222]"
-                                            : "text-gray-600 border-gray-300 hover:bg-gray-50"
-                                    )}
+                                    className={cn(buttonStyles(isDark, 'ghost', 'sm'))}
                                 >
                                     {showDockerfile ? "Hide" : "Show"}
                                 </button>
@@ -567,7 +549,7 @@ export default function ContainerValidator({
                                 <pre
                                     ref={dockerfileRef}
                                     className={cn(
-                                        "p-4 overflow-x-auto max-h-96 overflow-y-auto",
+                                        "p-4 overflow-x-auto max-h-96 overflow-y-auto break-words whitespace-pre-wrap",
                                         textStyles(isDark, { size: 'sm' }),
                                         isDark ? "text-[#e2e8f0]" : "text-gray-100"
                                     )}
@@ -592,7 +574,7 @@ export default function ContainerValidator({
                         )}>
                             <pre className={cn(
                                 textStyles(isDark, { size: 'sm' }),
-                                "whitespace-pre-wrap",
+                                "whitespace-pre-wrap break-words overflow-x-auto",
                                 isDark ? "text-[#d1d5db]" : "text-gray-700"
                             )}>
                                 {validationResult.readme}

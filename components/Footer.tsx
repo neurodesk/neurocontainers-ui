@@ -9,7 +9,7 @@ export function Footer() {
             "border-t mt-12",
             isDark
                 ? "bg-[#161a0e] border-[#2d4222]"
-                : "bg-white border-[#e6f1d6]"
+                : "bg-gray-50/50 border-[#e6f1d6]"
         )}>
             <div className="max-w-6xl mx-auto px-6 py-8">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">

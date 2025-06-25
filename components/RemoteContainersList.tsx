@@ -139,7 +139,7 @@ export function RemoteContainersList({
                     </div>
                 </div>
                 <div className="flex items-center justify-between">
-                    <p className="text-sm text-[#4f7b38]">
+                    <p className={textStyles(isDark, { size: 'sm', color: 'secondary' })}>
                         {filesystemMode === 'remote'
                             ? (loading ? 'Loading...' : error ? 'Error loading recipes' : `${files.length} recipes available`)
                             : 'Browse local neurocontainers repository'
@@ -216,30 +216,30 @@ export function RemoteContainersList({
                     <div className="max-h-96 overflow-y-auto">
                         {loading ? (
                             <div className="text-center py-12">
-                                <div className="animate-spin h-8 w-8 border-2 border-[#6aa329] border-t-transparent rounded-full mx-auto mb-3"></div>
-                                <p className="text-sm text-[#4f7b38]">Loading recipes...</p>
+                                <div className={cn("animate-spin h-8 w-8 border-2 border-t-transparent rounded-full mx-auto mb-3", isDark ? "border-[#7bb33a]" : "border-green-600")}></div>
+                                <p className={textStyles(isDark, { size: 'sm', color: 'secondary' })}>Loading recipes...</p>
                             </div>
                         ) : error ? (
-                            <div className="text-center py-12 text-red-600">
-                                <ExclamationTriangleIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                                <p className="text-sm">Failed to load recipes</p>
+                            <div className="text-center py-12">
+                                <ExclamationTriangleIcon className={cn("h-12 w-12 mx-auto mb-3 opacity-50", isDark ? "text-red-400" : "text-red-600")} />
+                                <p className={cn(textStyles(isDark, { size: 'sm' }), isDark ? "text-red-400" : "text-red-600")}>Failed to load recipes</p>
                                 <button
                                     onClick={refetch}
-                                    className="mt-2 text-xs text-[#6aa329] hover:underline"
+                                    className={cn("mt-2 text-xs hover:underline", isDark ? "text-[#7bb33a]" : "text-green-600")}
                                 >
                                     Try again
                                 </button>
                             </div>
                         ) : filteredFiles.length === 0 ? (
-                            <div className="text-center py-12 text-[#4f7b38]">
-                                <CloudIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                                <p className="text-sm">
+                            <div className="text-center py-12">
+                                <CloudIcon className={cn(iconStyles(isDark, 'lg', 'secondary'), "mx-auto mb-3 opacity-50 h-12 w-12")} />
+                                <p className={textStyles(isDark, { size: 'sm', color: 'secondary' })}>
                                     {searchTerm ? 'No matching recipes found' : 'No recipes available'}
                                 </p>
                                 {searchTerm && (
                                     <button
                                         onClick={() => setSearchTerm('')}
-                                        className="mt-1 text-xs text-[#6aa329] hover:underline"
+                                        className={cn("mt-1 text-xs hover:underline", isDark ? "text-[#7bb33a]" : "text-green-600")}
                                     >
                                         Clear search
                                     </button>
@@ -266,7 +266,7 @@ export function RemoteContainersList({
                                                 >
                                                     {getRecipeName(file.path)}
                                                 </h3>
-                                                <div className="text-xs text-gray-500 mt-1 font-mono truncate">
+                                                <div className={cn(textStyles(isDark, { size: 'xs', color: 'muted' }), "mt-1 font-mono truncate")}>
                                                     {file.path}
                                                 </div>
                                             </div>
@@ -274,12 +274,7 @@ export function RemoteContainersList({
                                                 <button
                                                     onClick={() => handleLoadRecipe(file)}
                                                     disabled={loadingRecipe === file.path}
-                                                    className={cn(
-                                                        "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50",
-                                                        isDark
-                                                            ? "bg-[#7bb33a] text-white hover:bg-[#4f7b38]"
-                                                            : "bg-[#6aa329] text-white hover:bg-[#4f7b38]"
-                                                    )}
+                                                    className={cn(buttonStyles(isDark, 'primary', 'md'), "rounded-lg disabled:opacity-50")}
                                                 >
                                                     {loadingRecipe === file.path ? (
                                                         <div className="animate-spin h-3 w-3 border border-white border-t-transparent rounded-full"></div>
@@ -291,7 +286,7 @@ export function RemoteContainersList({
                                                     href={file.htmlUrl}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="p-1.5 text-gray-400 hover:text-[#6aa329] transition-colors"
+                                                    className={cn("p-1.5 transition-colors", isDark ? "text-gray-400 hover:text-[#7bb33a]" : "text-gray-400 hover:text-green-600")}
                                                     title="View on GitHub"
                                                 >
                                                     <EyeIcon className="h-4 w-4" />

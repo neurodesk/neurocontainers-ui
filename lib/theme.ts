@@ -10,18 +10,18 @@
 // ============================================================================
 
 export const colors = {
-  // Primary Brand Colors - Green theme (Light Mode)
+  // Primary Brand Colors - Green theme (Light Mode) - Enhanced for vibrancy
   primary: {
-    50: '#fafdfb',    // Lightest background
-    100: '#f8fdf2',   // Very light background  
-    200: '#f0f7e7',   // Light background
-    300: '#e6f1d6',   // Border light
-    400: '#d3e7b6',   // Border medium
-    500: '#6aa329',   // Primary brand
-    600: '#4f7b38',   // Primary dark
-    700: '#3a5829',   // Darker
-    800: '#1e2a16',   // Very dark
-    900: '#0c0e0a',   // Text dark
+    50: '#f0fdf4',    // Brightest green tint
+    100: '#dcfce7',   // Very light green background  
+    200: '#bbf7d0',   // Light green background
+    300: '#86efac',   // Bright border light
+    400: '#4ade80',   // Vibrant border medium
+    500: '#16a34a',   // Strong primary brand
+    600: '#15803d',   // Rich primary dark
+    700: '#166534',   // Deep green
+    800: '#14532d',   // Very dark green
+    900: '#052e16',   // Deep forest text
   },
 
   // Primary Brand Colors - Dark Mode variants
@@ -38,17 +38,25 @@ export const colors = {
     900: '#e8f5d0',   // Lightest text (inverted from 50)
   },
 
-  // Semantic colors (Light Mode)
-  success: '#10b981',
-  warning: '#f59e0b',
-  error: '#ef4444',
-  info: '#3b82f6',
+  // Semantic colors (Light Mode) - Enhanced vibrancy
+  success: '#059669',   // Richer emerald green
+  warning: '#d97706',   // Deeper amber orange
+  error: '#dc2626',     // Bold red
+  info: '#2563eb',      // Strong blue
+  purple: '#7c3aed',    // Rich purple
+  pink: '#db2777',      // Vibrant pink
+  indigo: '#4338ca',    // Deep indigo
+  cyan: '#0891b2',      // Bright cyan
 
   // Semantic colors (Dark Mode)
-  successDark: '#34d399',   // Lighter green for dark backgrounds
-  warningDark: '#fbbf24',   // Lighter amber for dark backgrounds
+  successDark: '#10b981',   // Bright emerald for dark backgrounds
+  warningDark: '#f59e0b',   // Bright amber for dark backgrounds
   errorDark: '#f87171',     // Lighter red for dark backgrounds
   infoDark: '#60a5fa',      // Lighter blue for dark backgrounds
+  purpleDark: '#a855f7',    // Bright purple for dark backgrounds
+  pinkDark: '#ec4899',      // Bright pink for dark backgrounds
+  indigoDark: '#6366f1',    // Bright indigo for dark backgrounds
+  cyanDark: '#06b6d4',      // Bright cyan for dark backgrounds
 
   // Gray scale colors (Light Mode)
   gray: {
@@ -83,8 +91,8 @@ export const colors = {
     background: '#0a0c08',      // Main dark background
     surface: '#161a0e',         // Card/surface background
     surfaceElevated: '#1f2e18', // Elevated surface background
-    border: '#2d4222',          // Border color
-    borderLight: '#3f5b2e',     // Lighter border
+    border: '#1f2e18',          // Subtle border color
+    borderLight: '#2d4222',     // Slightly more visible border
     text: '#e8f5d0',           // Primary text
     textSecondary: '#c4e382',   // Secondary text
     textMuted: '#a8d65c',       // Muted text
@@ -96,15 +104,15 @@ export const colors = {
 // ============================================================================
 
 export const typography = {
-  // Text sizes - optimized for more content on screen
+  // Text sizes - mobile-first responsive typography
   size: {
-    xs: 'text-xs',     // 12px - Fine print, captions
-    sm: 'text-sm',     // 14px - Secondary text, most UI text
-    base: 'text-sm',   // 14px - Main body text (reduced from text-base)
-    md: 'text-base',   // 16px - Important content
-    lg: 'text-lg',     // 18px - Section headers
-    xl: 'text-xl',     // 20px - Page titles
-    '2xl': 'text-2xl', // 24px - Main headings
+    xs: 'text-sm md:text-xs',      // 14px mobile / 12px desktop - Better readability on mobile
+    sm: 'text-base md:text-sm',    // 16px mobile / 14px desktop - Improved mobile UX
+    base: 'text-base md:text-sm',  // 16px mobile / 14px desktop - Standard mobile-friendly base
+    md: 'text-lg md:text-base',    // 18px mobile / 16px desktop - Important content
+    lg: 'text-xl md:text-lg',      // 20px mobile / 18px desktop - Section headers
+    xl: 'text-2xl md:text-xl',     // 24px mobile / 20px desktop - Page titles
+    '2xl': 'text-3xl md:text-2xl', // 30px mobile / 24px desktop - Main headings
   },
 
   // Font weights
@@ -125,26 +133,26 @@ export const typography = {
 
   // Text colors (Light Mode)
   color: {
-    primary: `text-[${colors.primary[900]}]`,
-    secondary: `text-[${colors.primary[600]}]`,
+    primary: 'text-[#052e16]',
+    secondary: 'text-[#15803d]',
     muted: 'text-gray-500',
     disabled: 'text-gray-400',
     white: 'text-white',
-    success: `text-[${colors.success}]`,
-    warning: `text-[${colors.warning}]`,
-    error: `text-[${colors.error}]`,
+    success: 'text-[#059669]',
+    warning: 'text-[#d97706]',
+    error: 'text-[#dc2626]',
   },
 
   // Text colors (Dark Mode)
   colorDark: {
-    primary: `text-[${colors.dark.text}]`,
-    secondary: `text-[${colors.dark.textSecondary}]`,
-    muted: `text-[${colors.dark.textMuted}]`,
-    disabled: `text-[${colors.grayDark[400]}]`,
-    white: `text-[${colors.grayDark[900]}]`,
-    success: `text-[${colors.successDark}]`,
-    warning: `text-[${colors.warningDark}]`,
-    error: `text-[${colors.errorDark}]`,
+    primary: 'text-[#e8f5d0]',
+    secondary: 'text-[#c4e382]',
+    muted: 'text-[#a8d65c]',
+    disabled: 'text-[#6b7280]',
+    white: 'text-[#ffffff]',
+    success: 'text-[#10b981]',
+    warning: 'text-[#f59e0b]',
+    error: 'text-[#f87171]',
   },
 } as const;
 
@@ -170,35 +178,35 @@ export const spacing = {
 const components = {
   // Form inputs - standardized
   input: {
-    base: `w-full px-3 py-1.5 border border-gray-200 rounded-md text-[${colors.primary[900]}] text-sm`,
-    focus: `focus:outline-none focus:ring-1 focus:ring-[${colors.primary[500]}] focus:border-[${colors.primary[500]}]`,
+    base: `w-full px-3 py-1.5 border border-gray-200 rounded-md text-gray-900 text-sm`,
+    focus: `focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500`,
     disabled: `disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed`,
-    error: `border-[${colors.error}] focus:ring-[${colors.error}] focus:border-[${colors.error}]`,
+    error: `border-red-500 focus:ring-red-500 focus:border-red-500`,
     get full() { return `${this.base} ${this.focus} ${this.disabled}` }
   },
 
   // Textarea - standardized
   textarea: {
-    base: `w-full px-3 py-1.5 border border-gray-200 rounded-md text-[${colors.primary[900]}] text-sm resize-none`,
-    focus: `focus:outline-none focus:ring-1 focus:ring-[${colors.primary[500]}] focus:border-[${colors.primary[500]}]`,
+    base: `w-full px-3 py-1.5 border border-gray-200 rounded-md text-gray-900 text-sm resize-none`,
+    focus: `focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500`,
     monospace: 'font-mono',
     get full() { return `${this.base} ${this.focus}` },
     get fullMono() { return `${this.base} ${this.focus} ${this.monospace}` }
   },
 
-  // Buttons
+  // Buttons - mobile-first with touch-friendly targets
   button: {
-    base: 'px-3 py-1.5 text-sm font-medium rounded-md transition-colors focus:outline-none focus:ring-1',
+    base: 'font-medium rounded-md transition-colors focus:outline-none focus:ring-1 touch-manipulation',
 
-    primary: `bg-[${colors.primary[500]}] text-white hover:bg-[${colors.primary[600]}] focus:ring-[${colors.primary[500]}]`,
-    secondary: `bg-white border border-[${colors.primary[300]}] text-[${colors.primary[600]}] hover:bg-[${colors.primary[100]}] focus:ring-[${colors.primary[500]}]`,
-    ghost: `text-[${colors.primary[600]}] hover:text-[${colors.primary[500]}] hover:bg-[${colors.primary[50]}]`,
-    danger: `bg-[${colors.error}] text-white hover:bg-red-600 focus:ring-[${colors.error}]`,
+    primary: `bg-green-600 text-white hover:bg-green-700 focus:ring-green-500`,
+    secondary: `bg-white border border-green-300 text-green-700 hover:bg-green-50 focus:ring-green-500`,
+    ghost: `text-green-700 hover:text-green-600 hover:bg-green-50`,
+    danger: `bg-red-600 text-white hover:bg-red-700 focus:ring-red-500`,
 
-    // Size variants
-    sm: 'px-2 py-1 text-xs',
-    md: 'px-3 py-1.5 text-sm', // default
-    lg: 'px-4 py-2 text-base',
+    // Size variants - mobile-first approach
+    sm: 'px-3 py-2 text-sm md:px-2 md:py-1 md:text-xs min-h-[40px] md:min-h-[auto]',
+    md: 'px-4 py-3 text-base md:px-3 md:py-1.5 md:text-sm min-h-[44px] md:min-h-[auto]', // default
+    lg: 'px-6 py-4 text-lg md:px-4 md:py-2 md:text-base min-h-[48px] md:min-h-[auto]',
 
     // State variants
     disabled: `disabled:opacity-50 disabled:cursor-not-allowed`,
@@ -208,32 +216,32 @@ const components = {
     get ghostFull() { return `${this.base} ${this.ghost} ${this.disabled}` },
   },
 
-  // Cards and containers
+  // Cards and containers - subtle styling
   card: {
-    base: `bg-white rounded-md shadow-sm border border-gray-200`,
-    elevated: `bg-white rounded-lg shadow-md border border-[${colors.primary[400]}]`,
-    theme: `bg-[${colors.primary[50]}] border border-[${colors.primary[300]}] rounded-md`,
+    base: `bg-white rounded-lg shadow-md border border-gray-200`,
+    elevated: `bg-white rounded-xl shadow-xl border border-gray-300`,
+    theme: `bg-gradient-to-br from-white to-green-50/30 border border-green-300/50 rounded-lg shadow-md`,
 
-    // Padding variants
+    // Padding variants - mobile-first spacing
     padding: {
-      sm: 'p-1',
-      md: 'p-2', // default
-      lg: 'p-4',
+      sm: 'p-3 md:p-1',
+      md: 'p-4 md:p-2', // default
+      lg: 'p-6 md:p-4',
     }
   },
 
-  // Form fields
+  // Form fields - mobile-first responsive spacing
   formField: {
-    container: 'mb-3', // Reduced from mb-4 for density
-    label: `block text-sm font-medium text-[${colors.primary[900]}] mb-1.5`, // Reduced margin
-    description: `mt-1 text-xs text-gray-500`, // Smaller text
-    error: `mt-1 text-xs text-[${colors.error}]`,
+    container: 'mb-4 md:mb-3', // More space on mobile, compact on desktop
+    label: `block font-medium text-gray-900 mb-2 md:mb-1.5 text-base md:text-sm`, // Larger text on mobile
+    description: `mt-2 md:mt-1 text-sm md:text-xs text-gray-500`, // Better readability on mobile
+    error: `mt-2 md:mt-1 text-sm md:text-xs text-red-600`,
   },
 
   // Help sections
   help: {
     container: ``,
-    title: `font-semibold text-[${colors.primary[900]}] mb-2 text-sm`,
+    title: `font-semibold text-gray-900 mb-2 text-sm`,
     text: `text-xs text-gray-600`,
     code: `bg-gray-100 px-2 py-1 rounded text-xs font-mono`,
   },
@@ -244,7 +252,7 @@ const components = {
     md: 'h-5 w-5', // default
     lg: 'h-6 w-6',
     color: {
-      primary: `text-[${colors.primary[600]}]`,
+      primary: `text-green-600`,
       secondary: `text-gray-500`,
       muted: `text-gray-400`,
     }
@@ -253,14 +261,14 @@ const components = {
   // States and interactions
   state: {
     hover: {
-      card: `hover:bg-[${colors.primary[50]}] hover:shadow-md`,
-      icon: `hover:text-[${colors.primary[500]}]`,
-      text: `hover:text-[${colors.primary[500]}]`,
+      card: `hover:bg-green-50 hover:shadow-md`,
+      icon: `hover:text-green-600`,
+      text: `hover:text-green-600`,
     },
 
     focus: {
-      ring: `focus:ring-1 focus:ring-[${colors.primary[500]}] focus:outline-none`,
-      ringThick: `focus:ring-2 focus:ring-[${colors.primary[500]}]/20 focus:outline-none`,
+      ring: `focus:ring-1 focus:ring-green-500 focus:outline-none`,
+      ringThick: `focus:ring-2 focus:ring-green-500/20 focus:outline-none`,
     },
 
     disabled: {
@@ -299,35 +307,35 @@ const components = {
 const componentsDark = {
   // Form inputs - dark mode
   input: {
-    base: `w-full px-3 py-1.5 border border-[${colors.dark.border}] bg-[${colors.dark.surface}] rounded-md text-[${colors.dark.text}] text-sm`,
-    focus: `focus:outline-none focus:ring-1 focus:ring-[${colors.primaryDark[500]}] focus:border-[${colors.primaryDark[500]}]`,
-    disabled: `disabled:bg-[${colors.grayDark[100]}] disabled:text-[${colors.grayDark[400]}] disabled:cursor-not-allowed`,
-    error: `border-[${colors.errorDark}] focus:ring-[${colors.errorDark}] focus:border-[${colors.errorDark}]`,
+    base: 'w-full px-3 py-1.5 border border-[#1f2e18] bg-[#161a0e] rounded-md text-[#e8f5d0] text-sm',
+    focus: 'focus:outline-none focus:ring-1 focus:ring-[#7bb33a] focus:border-[#7bb33a]',
+    disabled: 'disabled:bg-[#2d4222] disabled:text-[#6b7280] disabled:cursor-not-allowed',
+    error: 'border-[#f87171] focus:ring-[#f87171] focus:border-[#f87171]',
     get full() { return `${this.base} ${this.focus} ${this.disabled}` }
   },
 
   // Textarea - dark mode
   textarea: {
-    base: `w-full px-3 py-1.5 border border-[${colors.dark.border}] bg-[${colors.dark.surface}] rounded-md text-[${colors.dark.text}] text-sm resize-none`,
-    focus: `focus:outline-none focus:ring-1 focus:ring-[${colors.primaryDark[500]}] focus:border-[${colors.primaryDark[500]}]`,
+    base: 'w-full px-3 py-1.5 border border-[#1f2e18] bg-[#161a0e] rounded-md text-[#e8f5d0] text-sm resize-none',
+    focus: 'focus:outline-none focus:ring-1 focus:ring-[#7bb33a] focus:border-[#7bb33a]',
     monospace: 'font-mono',
     get full() { return `${this.base} ${this.focus}` },
     get fullMono() { return `${this.base} ${this.focus} ${this.monospace}` }
   },
 
-  // Buttons - dark mode
+  // Buttons - dark mode with mobile-first touch targets
   button: {
-    base: 'px-3 py-1.5 text-sm font-medium rounded-md transition-colors focus:outline-none focus:ring-1',
+    base: 'font-medium rounded-md transition-colors focus:outline-none focus:ring-1 touch-manipulation',
 
-    primary: `bg-[${colors.primaryDark[500]}] text-[${colors.dark.background}] hover:bg-[${colors.primaryDark[600]}] focus:ring-[${colors.primaryDark[500]}]`,
-    secondary: `bg-[${colors.dark.surface}] border border-[${colors.dark.borderLight}] text-[${colors.dark.textSecondary}] hover:bg-[${colors.dark.surfaceElevated}] focus:ring-[${colors.primaryDark[500]}]`,
-    ghost: `text-[${colors.dark.textSecondary}] hover:text-[${colors.primaryDark[500]}] hover:bg-[${colors.primaryDark[200]}]`,
-    danger: `bg-[${colors.errorDark}] text-[${colors.dark.background}] hover:bg-red-400 focus:ring-[${colors.errorDark}]`,
+    primary: `bg-green-700 text-white hover:bg-green-600 focus:ring-green-500`,
+    secondary: `bg-gray-800 border border-gray-600 text-gray-300 hover:bg-gray-700 focus:ring-green-500`,
+    ghost: `text-gray-300 hover:text-green-400 hover:bg-gray-800`,
+    danger: `bg-red-600 text-white hover:bg-red-500 focus:ring-red-500`,
 
-    // Size variants (same as light mode)
-    sm: 'px-2 py-1 text-xs',
-    md: 'px-3 py-1.5 text-sm', // default
-    lg: 'px-4 py-2 text-base',
+    // Size variants - mobile-first approach (same as light mode)
+    sm: 'px-3 py-2 text-sm md:px-2 md:py-1 md:text-xs min-h-[40px] md:min-h-[auto]',
+    md: 'px-4 py-3 text-base md:px-3 md:py-1.5 md:text-sm min-h-[44px] md:min-h-[auto]', // default
+    lg: 'px-6 py-4 text-lg md:px-4 md:py-2 md:text-base min-h-[48px] md:min-h-[auto]',
 
     // State variants
     disabled: `disabled:opacity-50 disabled:cursor-not-allowed`,
@@ -339,9 +347,9 @@ const componentsDark = {
 
   // Cards and containers - dark mode
   card: {
-    base: `bg-[${colors.dark.surface}] rounded-md shadow-sm border border-[${colors.dark.border}]`,
-    elevated: `bg-[${colors.dark.surfaceElevated}] rounded-lg shadow-md border border-[${colors.dark.borderLight}]`,
-    theme: `bg-[${colors.primaryDark[200]}] border border-[${colors.primaryDark[300]}] rounded-md`,
+    base: `bg-[#161a0e] rounded-md shadow-sm border border-[#1f2e18]`,
+    elevated: `bg-[#1f2e18] rounded-lg shadow-md border border-[#2d4222]`,
+    theme: `bg-[#1f2e18] border border-[#2d4222] rounded-md`,
 
     // Padding variants (same as light mode)
     padding: {
@@ -351,12 +359,12 @@ const componentsDark = {
     }
   },
 
-  // Form fields - dark mode
+  // Form fields - dark mode with mobile-first responsive spacing
   formField: {
-    container: 'mb-3', // same as light mode
-    label: `block text-sm font-medium text-[${colors.dark.text}] mb-1.5`,
-    description: `mt-1 text-xs text-[${colors.dark.textMuted}]`,
-    error: `mt-1 text-xs text-[${colors.errorDark}]`,
+    container: 'mb-4 md:mb-3', // same as light mode
+    label: `block font-medium text-[${colors.dark.text}] mb-2 md:mb-1.5 text-base md:text-sm`,
+    description: `mt-2 md:mt-1 text-sm md:text-xs text-[${colors.dark.textMuted}]`,
+    error: `mt-2 md:mt-1 text-sm md:text-xs text-[${colors.errorDark}]`,
   },
 
   // Help sections - dark mode

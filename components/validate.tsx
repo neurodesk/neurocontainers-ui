@@ -438,7 +438,7 @@ export default function ContainerValidator({
                                         <ExclamationTriangleIcon className={cn(iconStyles(isDark, 'md'), "text-red-500")} />
                                     )}
                                 </div>
-                                <div className="flex-1">
+                                <div className="flex-1 min-w-0">
                                     <p
                                         className={cn(
                                             textStyles(isDark, { size: 'sm', weight: 'medium' }),
@@ -454,7 +454,7 @@ export default function ContainerValidator({
                                     {validationResult.error && (
                                         /* Display the error message as a code block with newlines */
                                         <pre className={cn(
-                                            "mt-2 text-sm whitespace-pre-wrap",
+                                            "mt-2 text-sm whitespace-pre-wrap break-words overflow-x-auto",
                                             isDark ? "text-red-400" : "text-red-700"
                                         )}>
                                             {validationResult.error}
@@ -469,16 +469,20 @@ export default function ContainerValidator({
                                             <p>✓ Dockerfile generated successfully</p>
                                             {validationResult.deployBins &&
                                                 validationResult.deployBins.length > 0 && (
-                                                    <p>
+                                                    <p className="break-words">
                                                         ✓ Deploy binaries:{" "}
-                                                        {validationResult.deployBins.join(", ")}
+                                                        <span className="font-mono text-xs">
+                                                            {validationResult.deployBins.join(", ")}
+                                                        </span>
                                                     </p>
                                                 )}
                                             {validationResult.deployPath &&
                                                 validationResult.deployPath.length > 0 && (
-                                                    <p>
+                                                    <p className="break-words">
                                                         ✓ Deploy paths:{" "}
-                                                        {validationResult.deployPath.join(", ")}
+                                                        <span className="font-mono text-xs">
+                                                            {validationResult.deployPath.join(", ")}
+                                                        </span>
                                                     </p>
                                                 )}
                                         </div>
@@ -500,24 +504,33 @@ export default function ContainerValidator({
                                 <DocumentTextIcon className={iconStyles(isDark, 'md')} />
                                 Generated Dockerfile
                             </h3>
-                            <div className="flex gap-2">
+                            <div className="flex flex-wrap gap-2 sm:gap-2">
                                 <button
                                     onClick={copyDockerfile}
-                                    className={cn(buttonStyles(isDark, 'secondary', 'sm'), "flex items-center gap-1")}
+                                    className={cn(
+                                        buttonStyles(isDark, 'secondary', 'sm'), 
+                                        "flex items-center gap-1 min-w-0 flex-shrink-0"
+                                    )}
                                 >
                                     <ClipboardDocumentIcon className={iconStyles(isDark, 'sm')} />
-                                    Copy
+                                    <span className="hidden xs:inline">Copy</span>
                                 </button>
                                 <button
                                     onClick={downloadDockerfile}
-                                    className={cn(buttonStyles(isDark, 'secondary', 'sm'), "flex items-center gap-1")}
+                                    className={cn(
+                                        buttonStyles(isDark, 'secondary', 'sm'), 
+                                        "flex items-center gap-1 min-w-0 flex-shrink-0"
+                                    )}
                                 >
                                     <DocumentTextIcon className={iconStyles(isDark, 'sm')} />
-                                    Download
+                                    <span className="hidden xs:inline">Download</span>
                                 </button>
                                 <button
                                     onClick={() => setShowDockerfile(!showDockerfile)}
-                                    className={cn(buttonStyles(isDark, 'ghost', 'sm'))}
+                                    className={cn(
+                                        buttonStyles(isDark, 'ghost', 'sm'),
+                                        "min-w-0 flex-shrink-0"
+                                    )}
                                 >
                                     {showDockerfile ? "Hide" : "Show"}
                                 </button>
@@ -549,7 +562,8 @@ export default function ContainerValidator({
                                 <pre
                                     ref={dockerfileRef}
                                     className={cn(
-                                        "p-4 overflow-x-auto max-h-96 overflow-y-auto break-words whitespace-pre-wrap",
+                                        "p-3 sm:p-4 overflow-x-auto max-h-80 sm:max-h-96 overflow-y-auto",
+                                        "break-words whitespace-pre-wrap text-xs sm:text-sm leading-relaxed",
                                         textStyles(isDark, { size: 'sm' }),
                                         isDark ? "text-[#e2e8f0]" : "text-gray-100"
                                     )}

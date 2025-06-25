@@ -172,15 +172,15 @@ export default function TagEditor({
                                         <span className={cn(textStyles(isDark, { size: 'sm', color: 'primary' }), "font-mono mr-2 break-all")}>
                                             {tag}
                                         </span>
-                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <div className="flex items-center gap-1">
                                             <button
                                                 type="button"
                                                 onClick={() => startEdit(index)}
                                                 className={cn(
                                                     "p-1 rounded transition-colors",
                                                     isDark
-                                                        ? "hover:bg-[#374151] text-[#91c84a]"
-                                                        : "hover:bg-[#d1e7c1] text-[#4f7b38]"
+                                                        ? "bg-[#374151] text-[#91c84a]"
+                                                        : "bg-[#d1e7c1] text-[#4f7b38]"
                                                 )}
                                                 title="Edit item"
                                             >
@@ -193,8 +193,8 @@ export default function TagEditor({
                                                 className={cn(
                                                     "p-1 rounded transition-colors",
                                                     isDark
-                                                        ? "hover:bg-[#374151] text-[#91c84a]"
-                                                        : "hover:bg-[#d1e7c1] text-[#4f7b38]"
+                                                        ? "bg-[#374151] text-[#91c84a]"
+                                                        : "bg-[#d1e7c1] text-[#4f7b38]"
                                                 )}
                                                 title="Remove item"
                                             >

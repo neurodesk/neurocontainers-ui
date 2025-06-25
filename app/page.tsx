@@ -45,6 +45,7 @@ export default function Home() {
     const [filesystemMode, setFilesystemMode] = useState<'local' | 'remote'>('remote');
     const [isLocalFilesystemConnected, setIsLocalFilesystemConnected] = useState<boolean>(false);
     const [hasMetadataErrors, setHasMetadataErrors] = useState<boolean>(false);
+    const [isDragging, setIsDragging] = useState<boolean>(false);
 
     // Custom hooks
     const {
@@ -233,6 +234,56 @@ export default function Home() {
         }
     }, [yamlData]);
 
+    // Handle file processing for both upload and drag-drop
+    const processYamlFile = useCallback((file: File) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const content = event.target?.result as string;
+                const recipe = loadYAML(content) as ContainerRecipe;
+                const migratedRecipe = migrateLegacyRecipe(recipe);
+                // Generate a new ID and save immediately
+                const newId = `uploaded-${Date.now()}`;
+                loadContainer(migratedRecipe, newId);
+                saveToStorage(migratedRecipe, newId);
+            } catch (error) {
+                console.error('Failed to load YAML file:', error);
+                alert('Failed to load YAML file. Please check the file format.');
+            }
+        };
+        reader.readAsText(file);
+    }, [loadContainer, saveToStorage]);
+
+    // Drag and drop handlers
+    const handleDragOver = useCallback((e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(true);
+    }, []);
+
+    const handleDragLeave = useCallback((e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(false);
+    }, []);
+
+    const handleDrop = useCallback((e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(false);
+
+        const files = Array.from(e.dataTransfer.files);
+        const yamlFile = files.find(file => 
+            file.name.endsWith('.yaml') || file.name.endsWith('.yml')
+        );
+
+        if (yamlFile) {
+            processYamlFile(yamlFile);
+        } else {
+            alert('Please drop a YAML file (.yaml or .yml)');
+        }
+    }, [processYamlFile]);
+
     // Initialize app
     useEffect(() => {
         const initializeApp = async () => {
@@ -410,25 +461,19 @@ export default function Home() {
                                             </div>
                                         </button>
 
-                                        <div className="relative">
+                                        <div 
+                                            className="relative"
+                                            onDragOver={handleDragOver}
+                                            onDragLeave={handleDragLeave}
+                                            onDrop={handleDrop}
+                                        >
                                             <input
                                                 type="file"
                                                 accept=".yaml,.yml"
                                                 onChange={(e) => {
                                                     const file = e.target.files?.[0];
                                                     if (file) {
-                                                        const reader = new FileReader();
-                                                        reader.onload = (event) => {
-                                                            try {
-                                                                const content = event.target?.result as string;
-                                                                const recipe = loadYAML(content) as ContainerRecipe;
-                                                                loadContainer(migrateLegacyRecipe(recipe));
-                                                            } catch (error) {
-                                                                console.error('Failed to load YAML file:', error);
-                                                                alert('Failed to load YAML file. Please check the file format.');
-                                                            }
-                                                        };
-                                                        reader.readAsText(file);
+                                                        processYamlFile(file);
                                                     }
                                                     // Reset the input
                                                     e.target.value = '';
@@ -440,9 +485,15 @@ export default function Home() {
                                                 htmlFor="yaml-upload"
                                                 className={cn(
                                                     "group flex items-center space-x-3 px-8 py-4 rounded-xl font-semibold transition-all duration-200 cursor-pointer text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5",
-                                                    isDark
-                                                        ? "bg-gradient-to-r from-[#2d4222] to-[#3a5c29] text-[#91c84a] hover:from-[#3a5c29] hover:to-[#4f7b38] border border-[#4f7b38]/30"
-                                                        : "bg-gradient-to-r from-[#e6f1d6] to-[#d3e7b6] text-[#4f7b38] hover:from-[#d3e7b6] hover:to-[#c0d89f] border border-[#4f7b38]/20"
+                                                    isDragging ? (
+                                                        isDark
+                                                            ? "bg-gradient-to-r from-[#5a8f23] to-[#7bb33a] text-white border-2 border-[#91c84a] scale-105"
+                                                            : "bg-gradient-to-r from-[#4f7b38] to-[#6aa329] text-white border-2 border-[#7bb33a] scale-105"
+                                                    ) : (
+                                                        isDark
+                                                            ? "bg-gradient-to-r from-[#2d4222] to-[#3a5c29] text-[#91c84a] hover:from-[#3a5c29] hover:to-[#4f7b38] border border-[#4f7b38]/30"
+                                                            : "bg-gradient-to-r from-[#e6f1d6] to-[#d3e7b6] text-[#4f7b38] hover:from-[#d3e7b6] hover:to-[#c0d89f] border border-[#4f7b38]/20"
+                                                    )
                                                 )}
                                             >
                                                 <div className={cn(
@@ -454,8 +505,8 @@ export default function Home() {
                                                     <ArrowUpTrayIcon className="h-6 w-6" />
                                                 </div>
                                                 <div className="flex flex-col items-start">
-                                                    <span className="text-xl">Upload Existing YAML</span>
-                                                    <span className="text-sm opacity-80 font-normal">Import your recipe</span>
+                                                    <span className="text-xl">{isDragging ? 'Drop YAML File' : 'Upload Existing YAML'}</span>
+                                                    <span className="text-sm opacity-80 font-normal">{isDragging ? 'Release to upload' : 'Click or drag & drop'}</span>
                                                 </div>
                                             </label>
                                         </div>

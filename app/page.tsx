@@ -9,7 +9,7 @@ import ContainerMetadata from "@/components/metadata";
 import ValidateRecipeComponent from "@/components/validate";
 import GitHubModal from "@/components/githubExport";
 import { useGitHubFiles } from '@/lib/useGithub';
-import { cn, useThemeStyles } from "@/lib/styles";
+import { cn } from "@/lib/styles";
 import { useTheme } from "@/lib/ThemeContext";
 
 // Extracted components
@@ -30,7 +30,6 @@ import { useContainerPublishing } from "@/hooks/useContainerPublishing";
 
 export default function Home() {
     const { isDark } = useTheme();
-    const styles = useThemeStyles(isDark);
 
     // Core state
     const [yamlData, setYamlData] = useState<ContainerRecipe | null>(null);
@@ -359,36 +358,80 @@ export default function Home() {
 
 
     return (
-        <div className={cn("min-h-screen flex overflow-x-hidden", isDark ? "bg-[#161a0e]" : "bg-[#f8fdf2]")}>
+        <div 
+            className="min-h-screen flex overflow-x-hidden"
+            style={{ backgroundColor: 'var(--bg-primary)' }}
+        >
             {loading ? (
                 <div className="flex-1 flex items-center justify-center">
-                    <div className={cn("rounded-lg shadow-md p-8 text-center", styles.cards.default)}>
-                        <div className={cn("animate-pulse text-lg", isDark ? "text-[#91c84a]" : "text-[#4f7b38]")}>
+                    <div 
+                        className="rounded-lg shadow-md p-8 text-center"
+                        style={{
+                            backgroundColor: 'var(--card-bg)',
+                            borderColor: 'var(--card-border)',
+                            border: '1px solid var(--card-border)'
+                        }}
+                    >
+                        <div 
+                            className="animate-pulse text-lg"
+                            style={{ color: 'var(--text-accent)' }}
+                        >
                             Loading...
                         </div>
                     </div>
                 </div>
             ) : loadingContainer ? (
                 <div className="flex-1 flex items-center justify-center">
-                    <div className={cn("rounded-lg shadow-md p-8 text-center max-w-md", styles.cards.default)}>
-                        <div className={cn("animate-spin h-12 w-12 border-4 border-t-transparent rounded-full mx-auto mb-4", isDark ? "border-[#7bb33a]" : "border-[#6aa329]")}></div>
-                        <h2 className={cn("text-lg font-semibold mb-2", isDark ? "text-[#e8f5d0]" : "text-[#0c0e0a]")}>Loading Container</h2>
-                        <p className={cn(isDark ? "text-[#91c84a]" : "text-[#4f7b38]")}>
+                    <div 
+                        className="rounded-lg shadow-md p-8 text-center max-w-md"
+                        style={{
+                            backgroundColor: 'var(--card-bg)',
+                            borderColor: 'var(--card-border)',
+                            border: '1px solid var(--card-border)'
+                        }}
+                    >
+                        <div 
+                            className="animate-spin h-12 w-12 border-4 border-t-transparent rounded-full mx-auto mb-4"
+                            style={{ borderColor: 'var(--text-accent) transparent transparent transparent' }}
+                        ></div>
+                        <h2 
+                            className="text-lg font-semibold mb-2"
+                            style={{ color: 'var(--text-primary)' }}
+                        >
+                            Loading Container
+                        </h2>
+                        <p style={{ color: 'var(--text-secondary)' }}>
                             Loading &ldquo;{loadingContainer}&rdquo; from repository...
                         </p>
                     </div>
                 </div>
             ) : containerError && !isEditingName && !isUpdatingUrl ? (
                 <div className="flex-1 flex items-center justify-center">
-                    <div className={cn("rounded-lg shadow-md p-8 text-center max-w-md", styles.cards.default)}>
+                    <div 
+                        className="rounded-lg shadow-md p-8 text-center max-w-md"
+                        style={{
+                            backgroundColor: 'var(--card-bg)',
+                            borderColor: 'var(--card-border)',
+                            border: '1px solid var(--card-border)'
+                        }}
+                    >
                         <ExclamationTriangleIcon className="h-16 w-16 text-red-500 mx-auto mb-4" />
-                        <h2 className={cn("text-lg font-semibold mb-2", isDark ? "text-[#e8f5d0]" : "text-[#0c0e0a]")}>Container Not Found</h2>
-                        <p className={cn("mb-6", isDark ? "text-red-400" : "text-red-600")}>
+                        <h2 
+                            className="text-lg font-semibold mb-2"
+                            style={{ color: 'var(--text-primary)' }}
+                        >
+                            Container Not Found
+                        </h2>
+                        <p 
+                            className="mb-6"
+                            style={{ color: '#ef4444' }}
+                        >
                             {containerError}
                         </p>
                         <button
                             onClick={handleNewContainer}
-                            className={cn("w-full px-4 py-2 rounded-md transition-colors font-medium", isDark ? "bg-[#7bb33a] text-white hover:bg-[#6aa329]" : "bg-[#6aa329] text-white hover:bg-[#4f7b38]")}
+                            className="w-full px-4 py-2 rounded-md transition-colors font-medium text-white hover:opacity-90"
+                            style={{ backgroundColor: 'var(--text-accent)' }}
                         >
                             Create New Container
                         </button>

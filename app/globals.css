@@ -1,5 +1,30 @@
 @import "tailwindcss";
 
+/* CSS Custom Properties for theme colors */
+:root {
+  /* Light theme colors */
+  --bg-primary: #f8fdf2;
+  --bg-surface: #ffffff;
+  --text-primary: #0c0e0a;
+  --text-secondary: #4f7b38;
+  --text-accent: #91c84a;
+  --border-color: #e5e7eb;
+  --card-bg: #ffffff;
+  --card-border: #e5e7eb;
+}
+
+.dark {
+  /* Dark theme colors */
+  --bg-primary: #161a0e;
+  --bg-surface: #1f2e18;
+  --text-primary: #e8f5d0;
+  --text-secondary: #c4e382;
+  --text-accent: #91c84a;
+  --border-color: #2d4222;
+  --card-bg: #1f2e18;
+  --card-border: #2d4222;
+}
+
 /* Base theme classes */
 .light {
   color-scheme: light;

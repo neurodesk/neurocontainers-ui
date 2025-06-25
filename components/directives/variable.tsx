@@ -8,6 +8,8 @@ import { cn, getHelpSection, useThemeStyles, buttonStyles } from "@/lib/styles";
 import { useTheme } from "@/lib/ThemeContext";
 
 export function VariableComponent({ variable, onChange }: { variable: Variable, onChange?: (variable: Variable) => void }) {
+    const { isDark } = useTheme();
+
     if (typeof variable === 'string') {
         return (
             <Input
@@ -66,9 +68,11 @@ export function VariableComponent({ variable, onChange }: { variable: Variable, 
                 placeholder="Enter JSON object"
                 className={cn(
                     "w-full min-h-[80px] px-3 py-2",
-                    "border border-gray-200 rounded-md dark:border-gray-700",
-                    "text-[#0c0e0a] dark:text-gray-200",
-                    "focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329] dark:focus:ring-[#6aa329] dark:focus:border-[#6aa329]",
+                    "border rounded-md",
+                    isDark
+                        ? "border-gray-700 bg-gray-800 text-gray-200"
+                        : "border-gray-200 bg-white text-gray-900",
+                    "focus:outline-none focus:ring-1 focus:ring-[#6aa329] focus:border-[#6aa329]",
                     "resize-none font-mono text-sm",
                 )}
             />

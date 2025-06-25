@@ -11,6 +11,9 @@ const UBUNTU_VERSIONS = [
 ];
 
 const OTHER_BASE_IMAGES = [
+    { value: "neurodebian:jammy-non-free", label: "NeuroDebian Jammy Non-Free", pkgManager: "apt" },
+    { value: "neurodebian:bullseye-non-free", label: "NeuroDebian Bullseye Non-Free", pkgManager: "apt" },
+    { value: "neurodebian:bookworm-non-free", label: "NeuroDebian Bookworm Non-Free", pkgManager: "apt" },
     { value: "debian:12", label: "Debian 12 (Bookworm)", pkgManager: "apt" },
     { value: "debian:11", label: "Debian 11 (Bullseye)", pkgManager: "apt" },
     { value: "centos:8", label: "CentOS 8", pkgManager: "yum" },

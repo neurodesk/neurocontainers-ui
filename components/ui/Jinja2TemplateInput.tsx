@@ -299,7 +299,7 @@ export const Jinja2TemplateInput = forwardRef<HTMLTextAreaElement, Jinja2Templat
                 setSelectedSuggestion(0);
                 return;
             }
-            
+
             // If we didn't handle the key and there's an external handler, call it
             if (externalOnKeyDown) {
                 externalOnKeyDown(e);
@@ -349,14 +349,14 @@ export const Jinja2TemplateInput = forwardRef<HTMLTextAreaElement, Jinja2Templat
             "w-full px-3 py-2 text-sm border rounded-md transition-colors font-mono",
             "focus:outline-none focus:ring-2 focus:ring-offset-2",
             "placeholder:text-gray-400 resize-none",
-            isDark ?
-                "bg-gray-800 border-gray-600 text-gray-100 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500" :
-                "bg-white border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
+            isDark
+                ? "border-gray-600 text-gray-100 focus:ring-blue-500 focus:border-blue-500"
+                : "border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
         );
 
         // Add mobile detection
         const [isMobile, setIsMobile] = useState(false);
-        
+
         useEffect(() => {
             const checkMobile = () => {
                 setIsMobile(window.innerWidth < 768 || 'ontouchstart' in window);
@@ -365,7 +365,7 @@ export const Jinja2TemplateInput = forwardRef<HTMLTextAreaElement, Jinja2Templat
             window.addEventListener('resize', checkMobile);
             return () => window.removeEventListener('resize', checkMobile);
         }, []);
-        
+
         // Calculate dropdown position relative to viewport
         const updateDropdownPosition = useCallback(() => {
             if (textareaRef.current && showSuggestions) {
@@ -373,10 +373,10 @@ export const Jinja2TemplateInput = forwardRef<HTMLTextAreaElement, Jinja2Templat
                 const viewportHeight = window.innerHeight;
                 const spaceBelow = viewportHeight - rect.bottom;
                 const spaceAbove = rect.top;
-                
+
                 // Position above if there's more space above and not enough below
                 const shouldPositionAbove = spaceBelow < 200 && spaceAbove > spaceBelow;
-                
+
                 setDropdownPosition({
                     top: shouldPositionAbove ? rect.top - Math.min(240, spaceAbove - 10) : rect.bottom + 2,
                     left: Math.max(8, Math.min(rect.left, window.innerWidth - 300)), // Keep within viewport
@@ -385,23 +385,23 @@ export const Jinja2TemplateInput = forwardRef<HTMLTextAreaElement, Jinja2Templat
                 });
             }
         }, [showSuggestions]);
-        
+
         // Update position when suggestions show or window scrolls/resizes
         useEffect(() => {
             if (showSuggestions) {
                 updateDropdownPosition();
-                
+
                 const handleUpdate = () => updateDropdownPosition();
                 window.addEventListener('scroll', handleUpdate, true);
                 window.addEventListener('resize', handleUpdate);
-                
+
                 return () => {
                     window.removeEventListener('scroll', handleUpdate, true);
                     window.removeEventListener('resize', handleUpdate);
                 };
             }
         }, [showSuggestions, updateDropdownPosition]);
-        
+
         // Handle clicks outside to close suggestions (especially useful on mobile)
         useEffect(() => {
             const handleClickOutside = (event: MouseEvent | TouchEvent) => {
@@ -410,11 +410,11 @@ export const Jinja2TemplateInput = forwardRef<HTMLTextAreaElement, Jinja2Templat
                     setShowSuggestions(false);
                 }
             };
-            
+
             if (showSuggestions) {
                 document.addEventListener('mousedown', handleClickOutside);
                 document.addEventListener('touchstart', handleClickOutside);
-                
+
                 return () => {
                     document.removeEventListener('mousedown', handleClickOutside);
                     document.removeEventListener('touchstart', handleClickOutside);
@@ -427,91 +427,93 @@ export const Jinja2TemplateInput = forwardRef<HTMLTextAreaElement, Jinja2Templat
                 <div className="relative" style={{ overflow: 'visible', zIndex: 1 }}>
                     {/* Syntax highlighting overlay */}
                     <div
-                    ref={highlightRef}
-                    className={cn(
-                        "absolute inset-0 px-3 py-2 text-sm font-mono pointer-events-none overflow-hidden whitespace-pre-wrap break-words",
-                        "border border-transparent rounded-md",
-                        isDark ? "text-gray-100" : "text-gray-900"
-                    )}
-                    style={{
-                        lineHeight: '1.5',
-                        wordWrap: 'break-word',
-                        overflowWrap: 'break-word'
-                    }}
-                    onScroll={syncScroll}
-                >
-                    {highlightSegments.map((segment, index) => (
-                        <span
-                            key={index}
-                            className={getSegmentStyle(segment.type)}
-                        >
-                            {segment.text}
-                        </span>
-                    ))}
-                </div>
-
-                {/* Input textarea */}
-                <textarea
-                    ref={combinedRef}
-                    value={value}
-                    onChange={handleInputChange}
-                    onKeyDown={handleKeyDown}
-                    onScroll={syncScroll}
-                    className={cn(baseClasses, "relative bg-transparent caret-gray-900 dark:caret-gray-100", className)}
-                    style={{ color: 'transparent' }}
-                    placeholder={placeholder}
-                    spellCheck={false}
-                    autoComplete="off"
-                    {...props}
-                />
-
-                {/* Mobile autocomplete trigger button */}
-                {isMobile && (
-                    <button
-                        type="button"
+                        ref={highlightRef}
                         className={cn(
-                            "absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded",
-                            "text-xs font-medium",
-                            isDark 
-                                ? "bg-gray-700 text-gray-300 hover:bg-gray-600" 
-                                : "bg-gray-100 text-gray-700 hover:bg-gray-200",
-                            "focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500"
+                            "absolute inset-0 px-3 py-2 text-sm font-mono pointer-events-none overflow-hidden whitespace-pre-wrap break-words",
+                            "border border-transparent rounded-md",
+                            isDark ? "text-gray-100" : "text-gray-900"
                         )}
-                        onClick={() => {
-                            const position = textareaRef.current?.selectionStart || 0;
-                            const newSuggestions = getSuggestions(value, position);
-                            setSuggestions(newSuggestions);
-                            setShowSuggestions(newSuggestions.length > 0);
-                            setSelectedSuggestion(0);
-                            textareaRef.current?.focus();
+                        style={{
+                            lineHeight: '1.5',
+                            wordWrap: 'break-word',
+                            overflowWrap: 'break-word'
                         }}
-                        aria-label="Show autocomplete suggestions"
+                        onScroll={syncScroll}
                     >
-                        <svg 
-                            className="w-4 h-4" 
-                            fill="none" 
-                            stroke="currentColor" 
-                            viewBox="0 0 24 24"
+                        {highlightSegments.map((segment, index) => (
+                            <span
+                                key={index}
+                                className={getSegmentStyle(segment.type)}
+                            >
+                                {segment.text}
+                            </span>
+                        ))}
+                    </div>
+
+                    {/* Input textarea */}
+                    <textarea
+                        ref={combinedRef}
+                        value={value}
+                        onChange={handleInputChange}
+                        onKeyDown={handleKeyDown}
+                        onScroll={syncScroll}
+                        className={cn(baseClasses, "relative bg-transparent caret-gray-900 dark:caret-gray-100", className)}
+                        style={{ color: 'transparent' }}
+                        placeholder={placeholder}
+                        spellCheck={false}
+                        autoComplete="off"
+                        {...props}
+                    />
+
+                    {/* Mobile autocomplete trigger button */}
+                    {isMobile && (
+                        <button
+                            type="button"
+                            className={cn(
+                                "absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded",
+                                "text-xs font-medium",
+                                isDark
+                                    ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                                    : "bg-gray-200 text-gray-700 hover:bg-gray-300",
+                                "focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500"
+                            )}
+                            onClick={() => {
+                                const position = textareaRef.current?.selectionStart || 0;
+                                const newSuggestions = getSuggestions(value, position);
+                                setSuggestions(newSuggestions);
+                                setShowSuggestions(newSuggestions.length > 0);
+                                setSelectedSuggestion(0);
+                                textareaRef.current?.focus();
+                            }}
+                            aria-label="Show autocomplete suggestions"
                         >
-                            <path 
-                                strokeLinecap="round" 
-                                strokeLinejoin="round" 
-                                strokeWidth={2} 
-                                d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" 
-                            />
-                        </svg>
-                    </button>
-                )}
+                            <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                />
+                            </svg>
+                        </button>
+                    )}
                 </div>
 
                 {/* Autocomplete suggestions - Use React Portal */}
-                {showSuggestions && suggestions.length > 0 && typeof window !== 'undefined' && 
+                {showSuggestions && suggestions.length > 0 && typeof window !== 'undefined' &&
                     createPortal(
                         <div
                             ref={suggestionsRef}
                             className={cn(
                                 "fixed overflow-auto rounded-md shadow-2xl border",
-                                isDark ? "bg-gray-800 border-gray-600" : "bg-white border-gray-200"
+                                isDark
+                                    ? "bg-gray-800 border-gray-600"
+                                    : "bg-white border-gray-300"
                             )}
                             style={{
                                 position: 'fixed',

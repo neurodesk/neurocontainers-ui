@@ -10,7 +10,7 @@ import {
 import { usePyodide } from "@/lib/python";
 import { loadBuilder, Builder, type BuildOptions } from "@/lib/builder";
 import { ContainerRecipe } from "@/components/common";
-import { getCards, getButtons, iconStyles, textStyles, inputStyles, buttonStyles, cn } from "@/lib/styles";
+import { getCards, iconStyles, textStyles, inputStyles, buttonStyles, cn } from "@/lib/styles";
 import { useTheme } from "@/lib/ThemeContext";
 
 interface ValidationResult {

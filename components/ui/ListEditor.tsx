@@ -203,7 +203,7 @@ export default function ListEditor<T>({
                                             <Bars3Icon className={cn(iconStyles(isDark, 'sm', 'muted'))} />
                                         </div>
                                     )}
-                                    <div className={`flex-grow ${allowReorder ? "" : "rounded-l-md"}`}>
+                                    <div className={`flex-grow ${allowReorder ? "" : "rounded-l-md"}`} style={{ overflow: 'visible' }}>
                                         {renderItem(item, index, (updatedItem) => updateItem(index, updatedItem))}
                                     </div>
                                     <button

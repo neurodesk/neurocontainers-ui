@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from "react";
-import { DirectiveContainer, ListEditor, Textarea } from "@/components/ui";
+import { DirectiveContainer, ListEditor, Jinja2TemplateInput } from "@/components/ui";
 import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
 import { PlayIcon } from "@heroicons/react/24/outline";
 import { registerDirective, DirectiveMetadata } from "./registry";
@@ -73,14 +73,6 @@ export default function RunCommandDirectiveComponent({
         }
     };
 
-    const handleTextareaChange = (
-        e: React.ChangeEvent<HTMLTextAreaElement>,
-        index: number,
-        onChangeCommand: (command: string) => void
-    ) => {
-        onChangeCommand(e.target.value);
-        adjustTextareaHeight(e.target);
-    };
 
     // Adjust height on mount and when content changes
     useEffect(() => {
@@ -99,7 +91,7 @@ export default function RunCommandDirectiveComponent({
             <div className={getHelpSection(isDark).text}>
                 <p>
                     The RUN instruction executes commands in a new layer on top
-                    of the current image and commits the results.
+                    of the current image and commits the results. Supports Jinja2 templates for dynamic values.
                 </p>
                 <div>
                     <strong>Usage:</strong>
@@ -107,13 +99,28 @@ export default function RunCommandDirectiveComponent({
                         <li>All lines are concatenated together as a single Docker layer</li>
                         <li>Press Enter to add a new command</li>
                         <li>Press Shift+Enter for a new line within a command</li>
+                        <li>Use Jinja2 syntax like {`{{ context.version }}`} for templating</li>
+                        <li>Autocomplete available inside {`{{ }}`} and {`{% %}`} tags</li>
                         <li>Drag the handle to reorder commands</li>
+                    </ul>
+                </div>
+                <div>
+                    <strong>Autocomplete Navigation:</strong>
+                    <ul className="list-disc list-inside mt-1 space-y-1 text-xs">
+                        <li>↑/↓ arrows: Navigate suggestions</li>
+                        <li>Tab/Enter: Accept selected suggestion</li>
+                        <li>Escape: Close suggestions</li>
+                        <li>Ctrl+Space: Trigger autocomplete</li>
+                        <li>PageUp/PageDown: Jump 5 suggestions</li>
+                        <li>Home/End: First/last suggestion</li>
                     </ul>
                 </div>
                 <div>
                     <strong>Examples:</strong>
                     <pre className={getHelpSection(isDark).code}>
-                        {`mkdir -p /app/data`}
+                        {`mkdir -p /app/data
+wget https://example.com/v{{ context.version }}/file.tar.gz
+dpkg -i package_{{ context.version }}.deb`}
                     </pre>
                 </div>
             </div>
@@ -141,23 +148,22 @@ export default function RunCommandDirectiveComponent({
                 allowReorder={true}
                 focusedIndex={focusedIndex}
                 renderItem={(command, index, onChangeCommand) => (
-                    <Textarea
+                    <Jinja2TemplateInput
                         ref={(el) => { (textareaRefs.current[index] = el) }}
                         className={cn(
                             textareaStyles(isDark, {
                                 monospace: true,
                                 height: 'min-h-[2.5rem]'
                             }),
-                            "border-0 rounded-none focus:ring-0 focus:border-transparent resize-none overflow-hidden leading-5"
+                            "border-0 rounded-none focus:ring-0 focus:border-transparent resize-none leading-5"
                         )}
                         value={command}
-                        onChange={(e) => handleTextareaChange(e, index, onChangeCommand)}
+                        onChange={onChangeCommand}
                         onKeyDown={(e) => handleKeyDown(e, index)}
                         onFocus={() => setFocusedIndex(index)}
                         onBlur={() => setFocusedIndex(null)}
-                        placeholder="Command to run (Enter for new command, Shift+Enter for new line)"
+                        placeholder="Command to run with Jinja2 templates (e.g., wget {{ context.version }})"
                         rows={1}
-                        monospace
                     />
                 )}
             />

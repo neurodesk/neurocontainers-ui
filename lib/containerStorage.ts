@@ -17,15 +17,6 @@ export interface SavedContainer {
 
 const LOCAL_STORAGE_KEY = "neurocontainers-builder-saved";
 
-export async function getDefaultYAML(): Promise<ContainerRecipe> {
-    const res = await fetch("/qsmxt.yaml");
-    if (!res.ok) {
-        throw new Error("Failed to fetch YAML file");
-    }
-    const text = await res.text();
-    return loadYAML(text) as ContainerRecipe;
-}
-
 export function getNewContainerYAML(): ContainerRecipe {
     return {
         name: "",

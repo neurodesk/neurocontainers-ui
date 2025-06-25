@@ -1,6 +1,6 @@
 "use client";
 
-import { load as loadYAML } from "js-yaml";
+import { load as loadYAML, dump as dumpYAML } from "js-yaml";
 import { useState, useEffect, useCallback } from "react";
 import { ExclamationTriangleIcon, PlusIcon, ArrowUpTrayIcon } from "@heroicons/react/24/outline";
 import { ContainerRecipe, migrateLegacyRecipe, mergeAdditionalFilesIntoRecipe } from "@/components/common";
@@ -22,7 +22,7 @@ import { Footer } from "@/components/Footer";
 
 // Extracted utilities and types
 import { sections } from "@/lib/sections";
-import { getDefaultYAML, getNewContainerYAML } from "@/lib/containerStorage";
+import { getNewContainerYAML } from "@/lib/containerStorage";
 
 // Extracted hooks
 import { useContainerStorage } from "@/hooks/useContainerStorage";
@@ -31,13 +31,13 @@ import { useContainerPublishing } from "@/hooks/useContainerPublishing";
 export default function Home() {
     const { isDark } = useTheme();
     const styles = useThemeStyles(isDark);
-    
+
     // Core state
     const [yamlData, setYamlData] = useState<ContainerRecipe | null>(null);
     const [loading, setLoading] = useState(true);
     const [loadingContainer, setLoadingContainer] = useState<string | null>(null);
     const [containerError, setContainerError] = useState<string | null>(null);
-    const [yamlText] = useState("");
+    const [yamlText, setYamlText] = useState("");
     const [isGitHubModalOpen, setIsGitHubModalOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isEditingName] = useState<boolean>(false);
@@ -47,15 +47,15 @@ export default function Home() {
     const [hasMetadataErrors, setHasMetadataErrors] = useState<boolean>(false);
 
     // Custom hooks
-    const { 
-        saveStatus, 
-        currentContainerId, 
-        saveToStorage, 
-        deleteContainer, 
+    const {
+        saveStatus,
+        currentContainerId,
+        saveToStorage,
+        deleteContainer,
         exportYAML,
-        setCurrentContainerId 
+        setCurrentContainerId
     } = useContainerStorage();
-    
+
     const {
         isPublishedContainer,
         isModifiedFromGithub,
@@ -99,9 +99,9 @@ export default function Home() {
 
     // Check if a container should be auto-saved
     const shouldAutoSave = useCallback((recipe: ContainerRecipe): boolean => {
-        return recipe.name.trim() !== '' || 
-               recipe.version.trim() !== '' ||
-               (recipe.build.directives && recipe.build.directives.length > 0);
+        return recipe.name.trim() !== '' ||
+            recipe.version.trim() !== '' ||
+            (recipe.build.directives && recipe.build.directives.length > 0);
     }, []);
 
     // Auto-save container data
@@ -115,12 +115,12 @@ export default function Home() {
     const loadContainer = useCallback(async (recipe: ContainerRecipe, id?: string) => {
         setYamlData(recipe);
         setCurrentContainerId(id || null);
-        
+
         // Check if published
         if (recipe.name) {
             checkIfPublished(recipe.name, files);
         }
-        
+
         updateUrl(recipe);
         setContainerError(null);
         setLoadingContainer(null);
@@ -152,7 +152,7 @@ export default function Home() {
                             return await fileResponse.text();
                         }
                     );
-                    
+
                     setOriginalYaml(yamlText);
                     await loadContainer(recipe);
                     return;
@@ -163,7 +163,7 @@ export default function Home() {
             const newContainer = getNewContainerYAML();
             newContainer.name = containerName.replace(/-/g, '').toLowerCase();
             await loadContainer(newContainer);
-            
+
         } catch (error) {
             console.error('Error loading container:', error);
             setContainerError(`Container "${containerName}" could not be loaded.`);
@@ -176,16 +176,16 @@ export default function Home() {
     const handleDataChange = useCallback((newData: ContainerRecipe) => {
         setYamlData(newData);
         updateUrl(newData);
-        
+
         if (newData.name) {
             checkIfPublished(newData.name, files);
         }
-        
+
         // Check if modified from GitHub
         if (isPublishedContainer) {
             checkIfModifiedFromGithub(newData).then(setIsModifiedFromGithub);
         }
-        
+
         autoSaveContainer(newData);
     }, [updateUrl, checkIfPublished, files, isPublishedContainer, checkIfModifiedFromGithub, setIsModifiedFromGithub, autoSaveContainer]);
 
@@ -202,8 +202,17 @@ export default function Home() {
 
     // Handle GitHub export
     const handleOpenGitHub = useCallback(() => {
+        if (yamlData) {
+            const yamlString = dumpYAML(yamlData, {
+                indent: 2,
+                lineWidth: -1,
+                noRefs: true,
+                sortKeys: false
+            });
+            setYamlText(yamlString);
+        }
         setIsGitHubModalOpen(true);
-    }, []);
+    }, [yamlData]);
 
     // Handle YAML export
     const handleExportYAML = useCallback(() => {
@@ -215,7 +224,7 @@ export default function Home() {
     // Save to local filesystem
     const saveToLocalFilesystem = useCallback(async () => {
         if (!yamlData) return;
-        
+
         try {
             // TODO: Implement saveYamlFile method in filesystem service
             console.log('Save to filesystem:', yamlData);
@@ -233,10 +242,6 @@ export default function Home() {
                 if (hash.startsWith('#/')) {
                     const containerName = hash.substring(2);
                     await loadContainerByName(containerName);
-                } else {
-                    // Load default container
-                    const defaultRecipe = await getDefaultYAML();
-                    await loadContainer(defaultRecipe);
                 }
             } catch (error) {
                 console.error('Failed to initialize:', error);
@@ -381,15 +386,15 @@ export default function Home() {
                                     <p className={cn("text-lg mb-8", isDark ? "text-[#91c84a]" : "text-[#4f7b38]")}>
                                         Create, customize, and validate containerized neuroimaging tools
                                     </p>
-                                    
+
                                     {/* Action Buttons */}
                                     <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-12">
                                         <button
                                             onClick={() => loadContainer(getNewContainerYAML())}
                                             className={cn(
                                                 "group flex items-center space-x-3 px-8 py-4 rounded-xl text-white font-semibold transition-all duration-200 text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5",
-                                                isDark 
-                                                    ? "bg-gradient-to-r from-[#7bb33a] to-[#6aa329] hover:from-[#6aa329] hover:to-[#5a8f23]" 
+                                                isDark
+                                                    ? "bg-gradient-to-r from-[#7bb33a] to-[#6aa329] hover:from-[#6aa329] hover:to-[#5a8f23]"
                                                     : "bg-gradient-to-r from-[#6aa329] to-[#4f7b38] hover:from-[#5a8f23] hover:to-[#3a5c1b]"
                                             )}
                                         >
@@ -404,7 +409,7 @@ export default function Home() {
                                                 <span className="text-sm opacity-90 font-normal">Start from scratch</span>
                                             </div>
                                         </button>
-                                        
+
                                         <div className="relative">
                                             <input
                                                 type="file"
@@ -435,15 +440,15 @@ export default function Home() {
                                                 htmlFor="yaml-upload"
                                                 className={cn(
                                                     "group flex items-center space-x-3 px-8 py-4 rounded-xl font-semibold transition-all duration-200 cursor-pointer text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5",
-                                                    isDark 
-                                                        ? "bg-gradient-to-r from-[#2d4222] to-[#3a5c29] text-[#91c84a] hover:from-[#3a5c29] hover:to-[#4f7b38] border border-[#4f7b38]/30" 
+                                                    isDark
+                                                        ? "bg-gradient-to-r from-[#2d4222] to-[#3a5c29] text-[#91c84a] hover:from-[#3a5c29] hover:to-[#4f7b38] border border-[#4f7b38]/30"
                                                         : "bg-gradient-to-r from-[#e6f1d6] to-[#d3e7b6] text-[#4f7b38] hover:from-[#d3e7b6] hover:to-[#c0d89f] border border-[#4f7b38]/20"
                                                 )}
                                             >
                                                 <div className={cn(
                                                     "p-2 rounded-lg transition-colors",
-                                                    isDark 
-                                                        ? "bg-[#91c84a]/20 group-hover:bg-[#91c84a]/30" 
+                                                    isDark
+                                                        ? "bg-[#91c84a]/20 group-hover:bg-[#91c84a]/30"
                                                         : "bg-[#4f7b38]/20 group-hover:bg-[#4f7b38]/30"
                                                 )}>
                                                     <ArrowUpTrayIcon className="h-6 w-6" />

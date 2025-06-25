@@ -1,4 +1,3 @@
-import { load as loadYAML } from "js-yaml";
 import { ContainerRecipe } from "@/components/common";
 
 export enum SaveStatus {

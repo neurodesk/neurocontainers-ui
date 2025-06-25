@@ -169,8 +169,16 @@ export function createNeuroDockerTemplateComponent(templateInfo: NeuroDockerTemp
                 <div className={getHelpSection(isDark).text}>
                     <p>{templateInfo.description}</p>
                     {templateInfo.alert && (
-                        <div className="bg-yellow-50 border border-yellow-200 rounded-md p-2">
-                            <p className={cn(textStyles(isDark, { size: 'xs', weight: 'medium' }), "text-yellow-800")}>⚠️ {templateInfo.alert}</p>
+                        <div className={cn(
+                            "border rounded-md p-2",
+                            isDark 
+                                ? "bg-yellow-900/20 border-yellow-700/30" 
+                                : "bg-yellow-50 border-yellow-200"
+                        )}>
+                            <p className={cn(
+                                textStyles(isDark, { size: 'xs', weight: 'medium' }),
+                                isDark ? "text-yellow-400" : "text-yellow-800"
+                            )}>⚠️ {templateInfo.alert}</p>
                         </div>
                     )}
                     {templateInfo.url && (
@@ -254,7 +262,12 @@ export function createNeuroDockerTemplateComponent(templateInfo: NeuroDockerTemp
                             </button>
                         </div>
                         {showAdvanced && (
-                            <div className="space-y-4 border-l-4 border-[#d3e7b6] pl-4 bg-gray-50 dark:bg-gray-800">
+                            <div className={cn(
+                                "space-y-4 border-l-4 pl-4",
+                                isDark 
+                                    ? "border-[#4f7b38] bg-[#1a1f17]" 
+                                    : "border-[#d3e7b6] bg-[#fafff4]"
+                            )}>
                                 {advancedArgs.map(renderArgument)}
                             </div>
                         )}

@@ -1,6 +1,6 @@
 import { TrashIcon, DocumentDuplicateIcon } from "@heroicons/react/24/outline";
 import { useState, useEffect, useRef } from "react";
-import { DirectiveContainer, FormField, Input, ToggleButtonGroup, TagEditor } from "@/components/ui";
+import { DirectiveContainer, FormField, Input, Select, ToggleButtonGroup, TagEditor } from "@/components/ui";
 import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
 import { Template } from "@/components/common";
 import { VariableComponent } from "@/components/directives/variable";
@@ -95,15 +95,14 @@ export function createNeuroDockerTemplateComponent(templateInfo: NeuroDockerTemp
                 case 'dropdown':
                     return (
                         <FormField key={arg.name} label={arg.name} description={arg.description}>
-                            <select
-                                className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#6aa329] focus:border-transparent"
+                            <Select
                                 value={String(currentValue)}
                                 onChange={(e) => updateParam(arg.name, e.target.value)}
                             >
                                 {arg.options.map(option => (
                                     <option key={option} value={option}>{option}</option>
                                 ))}
-                            </select>
+                            </Select>
                         </FormField>
                     );
 

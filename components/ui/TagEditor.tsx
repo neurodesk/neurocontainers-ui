@@ -92,6 +92,18 @@ export default function TagEditor({
         }
     };
 
+    const handleBlur = () => {
+        // Auto-commit the tag when input loses focus
+        if (inputValue.trim()) {
+            addTag();
+        }
+    };
+
+    const handleEditBlur = () => {
+        // Auto-save edit when editing input loses focus
+        saveEdit();
+    };
+
     const handleTagKeyDown = (
         e: React.KeyboardEvent<HTMLButtonElement>,
         index: number
@@ -128,6 +140,7 @@ export default function TagEditor({
                                             value={editValue}
                                             onChange={(e) => setEditValue(e.target.value)}
                                             onKeyDown={handleEditKeyDown}
+                                            onBlur={handleEditBlur}
                                             className="min-w-0 flex-1 text-sm font-mono border-0 bg-transparent p-0 focus:ring-0"
                                             monospace
                                         />
@@ -226,6 +239,7 @@ export default function TagEditor({
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
                         onKeyDown={handleKeyDown}
+                        onBlur={handleBlur}
                         placeholder={placeholder}
                         monospace
                         className="flex-grow rounded-r-none"

@@ -31,7 +31,10 @@ export function getNewContainerYAML(): ContainerRecipe {
             kind: "neurodocker",
             "base-image": "ubuntu:24.04",
             "pkg-manager": "apt",
-            directives: [],
+            directives: [
+                { deploy: {} },
+                { test: { name: "testScript", script: "#!/bin/bash\n# Write your test script here\nexit 1" } },
+            ],
         },
     };
 }

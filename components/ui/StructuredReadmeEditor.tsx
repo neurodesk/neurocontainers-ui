@@ -101,7 +101,7 @@ export function StructuredReadmeEditor({ value, onChange, containerName, contain
                         <textarea
                             value={value.example}
                             onChange={(e) => updateField("example", e.target.value)}
-                            placeholder="ml toolname/version&#10;toolname --help"
+                            placeholder="toolname --help"
                             className={textareaStyles(isDark, { monospace: true })}
                             rows={3}
                         />

@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { DirectiveContainer, ListEditor, Jinja2TemplateInput } from "@/components/ui";
 import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
 import { PlayIcon } from "@heroicons/react/24/outline";
@@ -31,10 +31,28 @@ export default function RunCommandDirectiveComponent({
     const textareaRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
     const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
 
-    // Update refs array when run array changes
+    // Filter out pure comment lines and ensure run is an array
+    const sanitizedRun = React.useMemo(() => {
+        if (!Array.isArray(run)) return [];
+        return run.filter(cmd => {
+            if (typeof cmd !== 'string') return false;
+            // Keep non-comment lines and lines that have commands with inline comments
+            const trimmed = cmd.trim();
+            return trimmed && !trimmed.startsWith('#');
+        });
+    }, [run]);
+
+    // Update parent if we filtered out any items
+    React.useEffect(() => {
+        if (sanitizedRun.length !== run.length) {
+            onChange(sanitizedRun);
+        }
+    }, [sanitizedRun, run.length, onChange]);
+
+    // Update refs array when sanitizedRun array changes
     useEffect(() => {
-        textareaRefs.current = textareaRefs.current.slice(0, run.length);
-    }, [run.length]);
+        textareaRefs.current = textareaRefs.current.slice(0, sanitizedRun.length);
+    }, [sanitizedRun.length]);
 
     const adjustTextareaHeight = (textarea: HTMLTextAreaElement) => {
         textarea.style.height = "auto";
@@ -62,7 +80,7 @@ export default function RunCommandDirectiveComponent({
             e.stopPropagation();
 
             // Insert new command after current one
-            const newRun = [...run];
+            const newRun = [...sanitizedRun];
             newRun.splice(index + 1, 0, "");
             onChange(newRun);
 
@@ -81,7 +99,7 @@ export default function RunCommandDirectiveComponent({
                 adjustTextareaHeight(textarea);
             }
         });
-    }, [run]);
+    }, [sanitizedRun]);
 
     const helpContent = (
         <div className={getHelpSection(isDark).container}>
@@ -140,7 +158,7 @@ dpkg -i package_{{ context.version }}.deb`}
             controllers={controllers}
         >
             <ListEditor
-                items={run}
+                items={sanitizedRun}
                 onChange={onChange}
                 createNewItem={() => ""}
                 addButtonText="Add Command"

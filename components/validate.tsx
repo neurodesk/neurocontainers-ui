@@ -235,14 +235,6 @@ export default function ContainerValidator({
                                     </p>
                                 )}
                             </div>
-                            {!pyodide && !pyodideLoading && (
-                                <button
-                                    onClick={loadPyodide}
-                                    className={cn(buttonStyles(isDark, 'secondary', 'sm'))}
-                                >
-                                    Load Pyodide
-                                </button>
-                            )}
                         </div>
 
                         {/* Builder Status */}
@@ -375,22 +367,41 @@ export default function ContainerValidator({
                 <div className="mb-6">
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
                         <h3 className={textStyles(isDark, { size: 'lg', weight: 'medium', color: 'primary' })}>Validation</h3>
-                        <button
-                            onClick={validateRecipe}
-                            disabled={!canValidate}
-                            className={cn(
-                                buttonStyles(isDark, 'primary', 'md'),
-                                "flex items-center gap-2",
-                                !canValidate && "disabled:opacity-50 disabled:cursor-not-allowed"
-                            )}
-                        >
-                            {validating ? (
-                                <ArrowPathIcon className={cn(iconStyles(isDark, 'sm'), "animate-spin")} />
-                            ) : (
-                                <PlayIcon className={iconStyles(isDark, 'sm')} />
-                            )}
-                            {validating ? "Validating..." : "Validate & Generate"}
-                        </button>
+                        {!pyodide ? (
+                            <button
+                                onClick={loadPyodide}
+                                disabled={pyodideLoading}
+                                className={cn(
+                                    buttonStyles(isDark, 'primary', 'md'),
+                                    "flex items-center gap-2",
+                                    pyodideLoading && "disabled:opacity-50 disabled:cursor-not-allowed"
+                                )}
+                            >
+                                {pyodideLoading ? (
+                                    <ArrowPathIcon className={cn(iconStyles(isDark, 'sm'), "animate-spin")} />
+                                ) : (
+                                    <PlayIcon className={iconStyles(isDark, 'sm')} />
+                                )}
+                                {pyodideLoading ? "Loading Pyodide..." : "Load Pyodide"}
+                            </button>
+                        ) : (
+                            <button
+                                onClick={validateRecipe}
+                                disabled={!canValidate}
+                                className={cn(
+                                    buttonStyles(isDark, 'primary', 'md'),
+                                    "flex items-center gap-2",
+                                    !canValidate && "disabled:opacity-50 disabled:cursor-not-allowed"
+                                )}
+                            >
+                                {validating ? (
+                                    <ArrowPathIcon className={cn(iconStyles(isDark, 'sm'), "animate-spin")} />
+                                ) : (
+                                    <PlayIcon className={iconStyles(isDark, 'sm')} />
+                                )}
+                                {validating ? "Validating..." : "Validate & Generate"}
+                            </button>
+                        )}
                     </div>
 
                     {disabled && disabledReason && (

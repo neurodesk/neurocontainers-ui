@@ -1,10 +1,10 @@
-import { DirectiveContainer, KeyValueEditor, FormField } from "@/components/ui";
+import { DirectiveContainer } from "@/components/ui";
 import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
-import { CogIcon, CloudArrowUpIcon } from "@heroicons/react/24/outline";
+import { CogIcon } from "@heroicons/react/24/outline";
 import { registerDirective, DirectiveMetadata } from "./registry";
 import { getHelpSection } from "@/lib/styles";
 import { useTheme } from "@/lib/ThemeContext";
-import DeployEnvEditor from "./DeployEnvEditor";
+import DeployEnvEditor from "../ui/DeployEnvEditor";
 
 export default function EnvironmentDirectiveComponent({
     environment,

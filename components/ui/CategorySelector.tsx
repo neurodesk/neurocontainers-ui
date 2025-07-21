@@ -1,5 +1,5 @@
 import { CATEGORIES } from "@/components/common";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ChevronDownIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { getThemePresets, iconStyles, textStyles, cn } from "@/lib/styles";
 import { useTheme } from "@/lib/ThemeContext";
@@ -17,6 +17,21 @@ export function CategorySelector({
 }) {
     const { isDark } = useTheme();
     const [isOpen, setIsOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+
+        if (isOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+            return () => document.removeEventListener('mousedown', handleClickOutside);
+        }
+    }, [isOpen]);
 
     const toggleCategory = (category: keyof typeof CATEGORIES) => {
         if (selectedCategories.includes(category)) {
@@ -32,16 +47,27 @@ export function CategorySelector({
 
     return (
         <div>
-            <div className="relative">
-                <button
-                    type="button"
+            <div className="relative" ref={dropdownRef}>
+                <div
+                    role="button"
+                    tabIndex={0}
                     onClick={() => setIsOpen(!isOpen)}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            setIsOpen(!isOpen);
+                        }
+                    }}
                     className={cn(
                         getThemePresets(isDark).input,
-                        "text-left shadow-sm",
+                        "text-left shadow-sm cursor-pointer",
                         isDark ? "bg-[#161a0e]" : "bg-white",
-                        showValidation && error ? 'border-red-500' : ''
+                        showValidation && error ? 'border-red-500' : '',
+                        "focus:outline-none focus:ring-2 focus:ring-offset-2",
+                        isDark ? "focus:ring-[#7bb33a]" : "focus:ring-[#6aa329]"
                     )}
+                    aria-expanded={isOpen}
+                    aria-haspopup="listbox"
                 >
                     <div className="flex items-center justify-between">
                         <div className="flex-1">
@@ -65,7 +91,10 @@ export function CategorySelector({
                                                     e.stopPropagation();
                                                     removeCategory(category);
                                                 }}
-                                                className={isDark ? "hover:text-[#7bb33a]" : "hover:text-[#6aa329]"}
+                                                className={cn(
+                                                    "inline-flex items-center justify-center rounded-full p-0.5",
+                                                    isDark ? "hover:text-[#7bb33a] hover:bg-[#1f2e18]" : "hover:text-[#6aa329] hover:bg-[#e6f1d6]"
+                                                )}
                                             >
                                                 <XMarkIcon className="h-3 w-3" />
                                             </button>
@@ -81,7 +110,7 @@ export function CategorySelector({
                             isOpen && "rotate-180"
                         )} />
                     </div>
-                </button>
+                </div>
 
                 {isOpen && (
                     <div className={cn(

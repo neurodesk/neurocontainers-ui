@@ -1,9 +1,10 @@
-import { DirectiveContainer, KeyValueEditor } from "@/components/ui";
+import { DirectiveContainer, KeyValueEditor, FormField } from "@/components/ui";
 import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
-import { CogIcon } from "@heroicons/react/24/outline";
+import { CogIcon, CloudArrowUpIcon } from "@heroicons/react/24/outline";
 import { registerDirective, DirectiveMetadata } from "./registry";
 import { getHelpSection } from "@/lib/styles";
 import { useTheme } from "@/lib/ThemeContext";
+import DeployEnvEditor from "./DeployEnvEditor";
 
 export default function EnvironmentDirectiveComponent({
     environment,
@@ -37,7 +38,16 @@ export default function EnvironmentDirectiveComponent({
                     The ENVIRONMENT directive sets environment variables that will be available in the container.
                 </p>
                 <div>
-                    <strong>Usage Guidelines:</strong>
+                    <strong>Deploy Environment Variables (DEPLOY_ENV_):</strong>
+                    <ul className="list-disc list-inside mt-1 space-y-1">
+                        <li>Variables with DEPLOY_ENV_ prefix are exported by neurocommand for module usage</li>
+                        <li>These variables become available to users when they load your module</li>
+                        <li>Perfect for paths, URLs, and configuration that modules need</li>
+                        <li>Example: DEPLOY_ENV_APP_PATH → available as APP_PATH in modules</li>
+                    </ul>
+                </div>
+                <div>
+                    <strong>Standard Environment Variables:</strong>
                     <ul className="list-disc list-inside mt-1 space-y-1">
                         <li>Use UPPERCASE names for environment variables by convention</li>
                         <li>Avoid spaces in variable names (use underscores instead)</li>
@@ -48,10 +58,10 @@ export default function EnvironmentDirectiveComponent({
                 <div>
                     <strong>Common Examples:</strong>
                     <div className={getHelpSection(isDark).code}>
+                        <div><strong>DEPLOY_ENV_TOOL_PATH:</strong> /opt/tool/bin</div>
+                        <div><strong>DEPLOY_ENV_CONFIG_URL:</strong> https://example.com/config</div>
                         <div><strong>PATH:</strong> /usr/local/bin:/usr/bin:/bin</div>
                         <div><strong>APP_ENV:</strong> production</div>
-                        <div><strong>DATABASE_URL:</strong> postgresql://user:pass@localhost/db</div>
-                        <div><strong>DEBUG:</strong> true</div>
                     </div>
                 </div>
             </div>
@@ -70,16 +80,9 @@ export default function EnvironmentDirectiveComponent({
             icon={icon}
             controllers={controllers}
         >
-            <KeyValueEditor
+            <DeployEnvEditor
                 data={environment}
                 onChange={onChange}
-                keyLabel="Key"
-                valueLabel="Value"
-                keyPlaceholder="VARIABLE_NAME"
-                valuePlaceholder="value"
-                addButtonText="Add Environment Variable"
-                emptyMessage="No environment variables set."
-                monospace
             />
         </DirectiveContainer>
     );

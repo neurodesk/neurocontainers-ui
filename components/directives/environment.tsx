@@ -1,4 +1,5 @@
-import { DirectiveContainer, KeyValueEditor } from "@/components/ui";
+import { DirectiveContainer } from "@/components/ui";
+import DeployableKeyValueEditor from "@/components/ui/DeployableKeyValueEditor";
 import { DirectiveControllers } from "@/components/ui/DirectiveContainer";
 import { CogIcon } from "@heroicons/react/24/outline";
 import { registerDirective, DirectiveMetadata } from "./registry";
@@ -43,7 +44,16 @@ export default function EnvironmentDirectiveComponent({
                         <li>Avoid spaces in variable names (use underscores instead)</li>
                         <li>Values can contain spaces and special characters</li>
                         <li>Variables persist throughout the container lifecycle</li>
+                        <li>Check "Deploy" to export variables for module usage (adds DEPLOY_ENV_ prefix)</li>
                     </ul>
+                </div>
+                <div>
+                    <strong>Deploy Environment Variables:</strong>
+                    <p className="text-sm mb-2">
+                        Variables with the "Deploy" checkbox checked will be exported by neurocommand 
+                        and made available in modules. These variables are automatically prefixed with 
+                        DEPLOY_ENV_ in the final container.
+                    </p>
                 </div>
                 <div>
                     <strong>Common Examples:</strong>
@@ -51,7 +61,7 @@ export default function EnvironmentDirectiveComponent({
                         <div><strong>PATH:</strong> /usr/local/bin:/usr/bin:/bin</div>
                         <div><strong>APP_ENV:</strong> production</div>
                         <div><strong>DATABASE_URL:</strong> postgresql://user:pass@localhost/db</div>
-                        <div><strong>DEBUG:</strong> true</div>
+                        <div><strong>DEBUG:</strong> true (check Deploy to export)</div>
                     </div>
                 </div>
             </div>
@@ -70,10 +80,10 @@ export default function EnvironmentDirectiveComponent({
             icon={icon}
             controllers={controllers}
         >
-            <KeyValueEditor
+            <DeployableKeyValueEditor
                 data={environment}
                 onChange={onChange}
-                keyLabel="Key"
+                keyLabel="Variable Name"
                 valueLabel="Value"
                 keyPlaceholder="VARIABLE_NAME"
                 valuePlaceholder="value"

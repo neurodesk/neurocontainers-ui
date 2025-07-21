@@ -368,16 +368,6 @@ export default function ContainerMetadata({
                             onNameEditStart={onNameEditStart}
                             onNameEditFinish={onNameEditFinish}
                         />
-
-                        {/* Icon Editor */}
-                        <div className="mt-6">
-                            <IconEditor
-                                value={recipe.icon}
-                                onChange={updateIcon}
-                                containerName={recipe.name}
-                                showValidation={showValidation}
-                            />
-                        </div>
                     </div>
 
                     {/* Architecture Section */}
@@ -462,6 +452,17 @@ export default function ContainerMetadata({
                             selectedCategories={recipe.categories || []}
                             onChange={updateCategories}
                             error={categoryError}
+                            showValidation={showValidation}
+                        />
+                    </div>
+
+                    {/* Icon Editor */}
+                    <div className="mb-8">
+                        <IconEditor
+                            value={recipe.icon}
+                            onChange={updateIcon}
+                            containerName={recipe.name}
+                            categories={recipe.categories}
                             showValidation={showValidation}
                         />
                     </div>

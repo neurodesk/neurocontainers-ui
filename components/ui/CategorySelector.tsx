@@ -79,11 +79,15 @@ export function CategorySelector({
                                         <span
                                             key={category}
                                             className={cn(
-                                                "inline-flex items-center gap-1 px-2 py-1 rounded-full",
+                                                "inline-flex items-center gap-1.5 px-2 py-1 rounded-full",
                                                 textStyles(isDark, { size: 'xs', weight: 'medium', color: 'secondary' }),
                                                 isDark ? "bg-[#2d4222]" : "bg-[#f0f8e8]"
                                             )}
                                         >
+                                            <div 
+                                                className="w-2 h-2 rounded-full flex-shrink-0"
+                                                style={{ backgroundColor: CATEGORIES[category]?.color || "#7bb33a" }}
+                                            />
                                             {category}
                                             <button
                                                 type="button"
@@ -119,7 +123,7 @@ export function CategorySelector({
                             ? "bg-[#161a0e] border-[#374151]"
                             : "bg-white border-gray-300"
                     )}>
-                        {(Object.entries(CATEGORIES) as [keyof typeof CATEGORIES, string][]).map(([category, description]) => (
+                        {(Object.entries(CATEGORIES) as [keyof typeof CATEGORIES, { description: string; color: string }][]).map(([category, { description, color }]) => (
                             <label
                                 key={category}
                                 className={cn(
@@ -137,6 +141,10 @@ export function CategorySelector({
                                             ? "text-[#7bb33a] border-[#374151] focus:ring-[#7bb33a] bg-[#161a0e]"
                                             : "text-[#6aa329] border-gray-300 focus:ring-[#6aa329]"
                                     )}
+                                />
+                                <div 
+                                    className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5"
+                                    style={{ backgroundColor: color }}
                                 />
                                 <div className="flex-1">
                                     <div className={textStyles(isDark, { size: 'sm', weight: 'medium' })}>{category}</div>

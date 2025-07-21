@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { PhotoIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { cn, buttonStyles, textStyles } from "@/lib/styles";
+import { PhotoIcon, XMarkIcon, InformationCircleIcon } from "@heroicons/react/24/outline";
+import { cn, buttonStyles, textStyles, iconStyles, getHelpSection } from "@/lib/styles";
 import { useTheme } from "@/lib/ThemeContext";
 import Image from "next/image";
 
@@ -79,6 +79,7 @@ export default function IconEditor({ value, onChange, containerName, error, show
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isGenerating, setIsGenerating] = useState(false);
     const [dragOver, setDragOver] = useState(false);
+    const [showHelp, setShowHelp] = useState(false);
 
     // Generate default icon when container name changes and no icon is set
     useEffect(() => {
@@ -156,50 +157,93 @@ export default function IconEditor({ value, onChange, containerName, error, show
         fileInputRef.current?.click();
     }, []);
 
+    const helpContent = (
+        <>
+            <h4 className={getHelpSection(isDark).title}>Container Icon</h4>
+            <div className={cn(getHelpSection(isDark).text, "space-y-2")}>
+                <p>Upload a custom icon to help identify your container visually:</p>
+                <div>
+                    <strong>Features:</strong>
+                    <ul className="list-disc list-inside mt-1 space-y-1">
+                        <li>Upload any image format (PNG, JPG, GIF, etc.)</li>
+                        <li>Images are automatically cropped to square and resized to 64×64 pixels</li>
+                        <li>Default icons are generated from the first 1-2 letters of the container name</li>
+                        <li>Icons are embedded as base64 data in the YAML definition</li>
+                    </ul>
+                </div>
+                <p className={textStyles(isDark, { size: 'xs' })}>
+                    💡 <strong>Tip:</strong> Icons help users visually identify containers in lists and interfaces.
+                </p>
+            </div>
+        </>
+    );
+
     return (
-        <div className="space-y-4">
+        <div className="space-y-3">
             <div className="flex items-center gap-2">
-                <label className={textStyles(isDark, { weight: 'medium' })}>
+                <label className={textStyles(isDark, { size: 'lg', weight: 'medium', color: 'primary' })}>
                     Container Icon
                 </label>
+                <button
+                    type="button"
+                    className={cn(
+                        buttonStyles(isDark, 'ghost', 'sm'),
+                        "p-1 transition-colors",
+                        showHelp
+                            ? (isDark ? 'text-[#7bb33a]' : 'text-[#6aa329]')
+                            : (isDark ? 'text-[#91c84a] hover:text-[#7bb33a]' : 'text-[#4f7b38] hover:text-[#6aa329]')
+                    )}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setShowHelp(!showHelp);
+                    }}
+                    title={showHelp ? "Hide documentation" : "Show documentation"}
+                >
+                    <InformationCircleIcon className={iconStyles(isDark, 'sm')} />
+                </button>
                 {showValidation && error && (
-                    <span className="text-red-500 text-sm">* {error}</span>
+                    <span className="text-red-500 text-xs">* {error}</span>
                 )}
             </div>
 
-            <div className="flex items-start gap-4">
+            {showHelp && (
+                <div className={cn(getHelpSection(isDark).container, "mb-2")}>
+                    {helpContent}
+                </div>
+            )}
+
+            <div className="flex items-center gap-3">
                 {/* Icon Preview */}
                 <div className="flex-shrink-0">
                     <div className={cn(
-                        "w-16 h-16 rounded-lg border-2 flex items-center justify-center",
+                        "w-12 h-12 rounded-md border flex items-center justify-center",
                         isDark ? "border-gray-600 bg-gray-700" : "border-gray-300 bg-gray-50"
                     )}>
                         {value ? (
                             <Image 
                                 src={value} 
                                 alt="Container icon" 
-                                width={64}
-                                height={64}
-                                className="w-full h-full rounded-lg object-cover"
+                                width={48}
+                                height={48}
+                                className="w-full h-full rounded-md object-cover"
                                 unoptimized
                             />
                         ) : (
                             <PhotoIcon className={cn(
-                                "w-8 h-8",
+                                "w-6 h-6",
                                 isDark ? "text-gray-400" : "text-gray-500"
                             )} />
                         )}
                     </div>
                 </div>
 
-                {/* Upload/Controls Area */}
-                <div className="flex-1 space-y-3">
-                    {/* Upload Area */}
+                {/* Compact Upload Area */}
+                <div className="flex-1">
                     <div
                         className={cn(
-                            "border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors",
+                            "border border-dashed rounded-md p-3 text-center cursor-pointer transition-colors",
                             dragOver ? (
-                                isDark ? "border-[#7bb33a] bg-[#7bb33a]/10" : "border-[#4f7b38] bg-[#4f7b38]/10"
+                                isDark ? "border-[#7bb33a] bg-[#7bb33a]/5" : "border-[#4f7b38] bg-[#4f7b38]/5"
                             ) : (
                                 isDark ? "border-gray-600 hover:border-gray-500" : "border-gray-300 hover:border-gray-400"
                             ),
@@ -219,74 +263,59 @@ export default function IconEditor({ value, onChange, containerName, error, show
                         />
                         
                         {isGenerating ? (
-                            <div className="space-y-2">
+                            <div className="flex items-center justify-center gap-2">
                                 <div className={cn(
-                                    "animate-spin h-6 w-6 border-2 border-t-transparent rounded-full mx-auto",
+                                    "animate-spin h-4 w-4 border-2 border-t-transparent rounded-full",
                                     isDark ? "border-[#7bb33a]" : "border-[#4f7b38]"
                                 )}></div>
-                                <p className={textStyles(isDark, { size: 'sm', color: 'secondary' })}>
-                                    Processing image...
-                                </p>
+                                <span className={textStyles(isDark, { size: 'xs', color: 'secondary' })}>
+                                    Processing...
+                                </span>
                             </div>
                         ) : (
-                            <div className="space-y-2">
-                                <PhotoIcon className={cn(
-                                    "w-8 h-8 mx-auto",
-                                    isDark ? "text-gray-400" : "text-gray-500"
-                                )} />
-                                <div className="space-y-1">
-                                    <p className={textStyles(isDark, { size: 'sm', weight: 'medium' })}>
-                                        {dragOver ? 'Drop image here' : 'Click to upload or drag & drop'}
-                                    </p>
-                                    <p className={textStyles(isDark, { size: 'xs', color: 'secondary' })}>
-                                        Images will be automatically cropped and resized to 64×64 pixels
-                                    </p>
-                                </div>
+                            <div className="space-y-1">
+                                <p className={textStyles(isDark, { size: 'xs', weight: 'medium' })}>
+                                    {dragOver ? 'Drop image here' : 'Click to upload or drag & drop'}
+                                </p>
+                                <p className={textStyles(isDark, { size: 'xs', color: 'muted' })}>
+                                    Auto-resized to 64×64px
+                                </p>
                             </div>
-                        )}
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex gap-2">
-                        <button
-                            type="button"
-                            onClick={generateDefault}
-                            className={buttonStyles(isDark, 'secondary', 'sm')}
-                            disabled={!containerName.trim() || isGenerating}
-                        >
-                            Generate Default
-                        </button>
-                        
-                        {value && (
-                            <button
-                                type="button"
-                                onClick={removeIcon}
-                                className={cn(
-                                    buttonStyles(isDark, 'secondary', 'sm'),
-                                    "text-red-500 hover:text-red-600"
-                                )}
-                                disabled={isGenerating}
-                            >
-                                <XMarkIcon className="w-4 h-4 mr-1" />
-                                Remove
-                            </button>
                         )}
                     </div>
                 </div>
-            </div>
 
-            {/* Helper Text */}
-            <div className={cn(
-                "text-xs p-3 rounded-lg",
-                isDark ? "bg-gray-800/50 text-gray-300" : "bg-gray-50 text-gray-600"
-            )}>
-                <p className="mb-1"><strong>Tips:</strong></p>
-                <ul className="list-disc list-inside space-y-1">
-                    <li>Upload any image format (PNG, JPG, GIF, etc.)</li>
-                    <li>Images are automatically cropped to square and resized to 64×64 pixels</li>
-                    <li>Default icons are generated using the first 1-2 letters of the container name</li>
-                    <li>Icons are stored as base64 data in the YAML definition</li>
-                </ul>
+                {/* Action Buttons */}
+                <div className="flex gap-1">
+                    <button
+                        type="button"
+                        onClick={generateDefault}
+                        className={cn(
+                            buttonStyles(isDark, 'ghost', 'sm'),
+                            "text-xs px-2 py-1 whitespace-nowrap"
+                        )}
+                        disabled={!containerName.trim() || isGenerating}
+                        title="Generate default icon from container name"
+                    >
+                        Generate
+                    </button>
+                    
+                    {value && (
+                        <button
+                            type="button"
+                            onClick={removeIcon}
+                            className={cn(
+                                buttonStyles(isDark, 'ghost', 'sm'),
+                                "text-xs px-2 py-1 whitespace-nowrap",
+                                isDark ? "text-red-400 hover:text-red-300" : "text-red-500 hover:text-red-600"
+                            )}
+                            disabled={isGenerating}
+                            title="Remove icon"
+                        >
+                            <XMarkIcon className="w-3 h-3" />
+                        </button>
+                    )}
+                </div>
             </div>
         </div>
     );

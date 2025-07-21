@@ -11,6 +11,7 @@ import {
 } from "@/components/ui";
 import { iconStyles, textStyles, cn, cardStyles, buttonStyles, getHelpSection } from "@/lib/styles";
 import { useTheme } from "@/lib/ThemeContext";
+import IconEditor from "@/components/IconEditor";
 
 // Validation functions
 function validateName(name: string): string | null {
@@ -119,6 +120,10 @@ export default function ContainerMetadata({
 
     const updateVersion = (version: string) => {
         onChange({ ...recipe, version });
+    };
+
+    const updateIcon = (icon: string | undefined) => {
+        onChange({ ...recipe, icon });
     };
 
     const updateArchitectures = (architectures: Architecture[]) => {
@@ -233,6 +238,15 @@ export default function ContainerMetadata({
                         <li>Use semantic versioning (e.g., 1.0.0, 2.1.3)</li>
                         <li>Or tool-specific versions (e.g., 6.0.5, latest)</li>
                         <li>Helps users identify which version they&apos;re using</li>
+                    </ul>
+                </div>
+                <div>
+                    <strong>Container Icon:</strong>
+                    <ul className="list-disc list-inside mt-1 space-y-1">
+                        <li>Upload any image format (automatically resized to 64×64 pixels)</li>
+                        <li>Default icons are generated from the first 1-2 letters of the container name</li>
+                        <li>Icons are embedded as base64 data in the YAML definition</li>
+                        <li>Helps users visually identify containers in lists and interfaces</li>
                     </ul>
                 </div>
             </div>
@@ -354,6 +368,16 @@ export default function ContainerMetadata({
                             onNameEditStart={onNameEditStart}
                             onNameEditFinish={onNameEditFinish}
                         />
+
+                        {/* Icon Editor */}
+                        <div className="mt-6">
+                            <IconEditor
+                                value={recipe.icon}
+                                onChange={updateIcon}
+                                containerName={recipe.name}
+                                showValidation={showValidation}
+                            />
+                        </div>
                     </div>
 
                     {/* Architecture Section */}

@@ -181,6 +181,7 @@ export const CATEGORIES = {
 export interface ContainerRecipe {
     name: string;
     version: string;
+    icon?: string; // Base64 encoded image, 64x64 pixels
     copyright?: CopyrightInfo[];
     architectures: Architecture[];
     readme?: string;

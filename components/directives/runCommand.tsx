@@ -31,28 +31,11 @@ export default function RunCommandDirectiveComponent({
     const textareaRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
     const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
 
-    // Filter out pure comment lines and ensure run is an array
-    const sanitizedRun = React.useMemo(() => {
-        if (!Array.isArray(run)) return [];
-        return run.filter(cmd => {
-            if (typeof cmd !== 'string') return false;
-            // Keep non-comment lines and lines that have commands with inline comments
-            const trimmed = cmd.trim();
-            return trimmed && !trimmed.startsWith('#');
-        });
-    }, [run]);
-
-    // Update parent if we filtered out any items
-    React.useEffect(() => {
-        if (sanitizedRun.length !== run.length) {
-            onChange(sanitizedRun);
-        }
-    }, [sanitizedRun, run.length, onChange]);
-
-    // Update refs array when sanitizedRun array changes
+    // Update refs array when run array changes
     useEffect(() => {
-        textareaRefs.current = textareaRefs.current.slice(0, sanitizedRun.length);
-    }, [sanitizedRun.length]);
+        const runLength = Array.isArray(run) ? run.length : 0;
+        textareaRefs.current = textareaRefs.current.slice(0, runLength);
+    }, [run]);
 
     const adjustTextareaHeight = (textarea: HTMLTextAreaElement) => {
         textarea.style.height = "auto";
@@ -80,7 +63,8 @@ export default function RunCommandDirectiveComponent({
             e.stopPropagation();
 
             // Insert new command after current one
-            const newRun = [...sanitizedRun];
+            const currentRun = Array.isArray(run) ? run : [];
+            const newRun = [...currentRun];
             newRun.splice(index + 1, 0, "");
             onChange(newRun);
 
@@ -99,7 +83,7 @@ export default function RunCommandDirectiveComponent({
                 adjustTextareaHeight(textarea);
             }
         });
-    }, [sanitizedRun]);
+    }, [run]);
 
     const helpContent = (
         <div className={getHelpSection(isDark).container}>
@@ -158,7 +142,7 @@ dpkg -i package_{{ context.version }}.deb`}
             controllers={controllers}
         >
             <ListEditor
-                items={sanitizedRun}
+                items={Array.isArray(run) ? run : []}
                 onChange={onChange}
                 createNewItem={() => ""}
                 addButtonText="Add Command"

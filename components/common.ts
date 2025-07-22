@@ -275,11 +275,37 @@ export function migrateLegacyRecipe(
         );
     }
 
+    // Sanitize run commands by removing pure comment lines
+    const sanitizeRunCommands = (directives: Directive[]): Directive[] => {
+        return directives.map(directive => {
+            if ('run' in directive && Array.isArray(directive.run)) {
+                return {
+                    ...directive,
+                    run: directive.run.filter(cmd => {
+                        if (typeof cmd !== 'string') return false;
+                        // Keep non-comment lines and lines that have commands with inline comments
+                        const trimmed = cmd.trim();
+                        return trimmed && !trimmed.startsWith('#');
+                    })
+                };
+            } else if ('group' in directive && Array.isArray(directive.group)) {
+                return {
+                    ...directive,
+                    group: sanitizeRunCommands(directive.group)
+                };
+            }
+            return directive;
+        });
+    };
+
+    const allDirectives = [...directives, ...recipe.build.directives];
+    const sanitizedDirectives = sanitizeRunCommands(allDirectives);
+
     const ret = {
         ...recipe,
         build: {
             ...recipe.build,
-            directives: [...directives, ...recipe.build.directives],
+            directives: sanitizedDirectives,
         },
     };
     delete ret.files;

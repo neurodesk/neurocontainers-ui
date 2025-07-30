@@ -222,7 +222,7 @@ export function convertStructuredReadmeToText(
         structured.example.trim(),
         "```",
         "",
-        `More documentation can be found here: ${structured.documentation.trim()}`,
+        `More documentation can be found here: [${structured.documentation.trim()}](${structured.documentation.trim()})`,
         "",
         "Citation:",
         "```",

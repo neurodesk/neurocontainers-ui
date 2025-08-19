@@ -40,22 +40,19 @@ function DirectiveDeleteModal({
     return (
         <div className={cn(
             "fixed inset-0 flex items-center justify-center z-50 p-4",
-            "backdrop-blur-sm",
             isDark ? "bg-black/70" : "bg-black/50"
         )}>
             <div className={cn(
                 "rounded-2xl shadow-2xl max-w-md w-full border",
-                "backdrop-blur-xl",
                 isDark 
-                    ? "bg-[#161a0e]/95 border-[#2d4222]/50" 
-                    : "bg-white/95 border-gray-200/50"
+                    ? "bg-[#161a0e] border-[#2d4222]" 
+                    : "bg-white border-gray-200"
             )}>
                 <div className="p-6">
                     <div className="flex items-center gap-3 mb-4">
                         <div className={cn(
                             "flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center",
-                            "backdrop-blur-sm",
-                            isDark ? "bg-red-900/40" : "bg-red-100/80"
+                            isDark ? "bg-red-900/60" : "bg-red-100"
                         )}>
                             <TrashIcon className={cn(
                                 iconStyles(isDark, 'lg'),
@@ -89,10 +86,9 @@ function DirectiveDeleteModal({
                 {/* Footer with shortcuts */}
                 <div className={cn(
                     "px-6 py-3 border-t text-xs rounded-b-2xl",
-                    "backdrop-blur-sm",
                     isDark
-                        ? "border-[#2d4222]/50 bg-[#1f2e18]/30 text-[#9ca3af]"
-                        : "border-gray-100/50 bg-[#f8fdf2]/30 text-gray-500"
+                        ? "border-[#2d4222] bg-[#1f2e18] text-[#9ca3af]"
+                        : "border-gray-100 bg-[#f8fdf2] text-gray-500"
                 )}>
                     <div className="text-center">
                         <span>Press Esc to cancel</span>

@@ -284,16 +284,14 @@ export default function AddDirectiveSection({
                 {isOpen && (
                     <div className={cn(
                         "fixed inset-0 z-50 sm:hidden",
-                        "backdrop-blur-sm",
                         isDark ? "bg-black/70" : "bg-black/50"
                     )}>
                         <div className="flex items-center justify-center min-h-screen p-4">
                             <div className={cn(
-                                "w-full max-w-md rounded-2xl shadow-2xl max-h-[90vh] overflow-hidden",
-                                "backdrop-blur-xl border",
+                                "w-full max-w-md rounded-2xl shadow-2xl max-h-[90vh] overflow-hidden border",
                                 isDark 
-                                    ? "bg-[#161a0e]/95 border-[#2d4222]/50" 
-                                    : "bg-white/95 border-gray-200/50"
+                                    ? "bg-[#161a0e] border-[#2d4222]" 
+                                    : "bg-white border-gray-200"
                             )}>
                                 {/* Mobile Header */}
                                 <div className={cn(
@@ -344,10 +342,9 @@ export default function AddDirectiveSection({
                                             className={cn(
                                                 "w-full pl-10 pr-4 py-3 text-base rounded-xl border",
                                                 "focus:outline-none focus:ring-2 focus:ring-offset-1",
-                                                "backdrop-blur-sm",
                                                 isDark
-                                                    ? "bg-[#1f2e18]/50 text-[#e8f5d0] placeholder-[#9ca3af] border-[#2d4222]/50 focus:border-[#7bb33a] focus:ring-[#7bb33a]"
-                                                    : "bg-white/50 text-gray-800 placeholder-gray-400 border-gray-200/50 focus:border-[#6aa329] focus:ring-[#6aa329]"
+                                                    ? "bg-[#1f2e18] text-[#e8f5d0] placeholder-[#9ca3af] border-[#2d4222] focus:border-[#7bb33a] focus:ring-[#7bb33a]"
+                                                    : "bg-white text-gray-800 placeholder-gray-400 border-gray-200 focus:border-[#6aa329] focus:ring-[#6aa329]"
                                             )}
                                         />
                                     </div>
@@ -435,16 +432,14 @@ export default function AddDirectiveSection({
                         "hidden sm:block absolute top-full left-0 right-0 mt-1 z-50",
                         "rounded-lg border shadow-xl overflow-hidden",
                         "animate-in fade-in-0 slide-in-from-top-1 duration-200",
-                        "backdrop-blur-xl",
                         isDark 
-                            ? "bg-[#161a0e]/95 border-[#2d4222]/50" 
-                            : "bg-white/95 border-gray-200/50"
+                            ? "bg-[#161a0e] border-[#2d4222]" 
+                            : "bg-white border-gray-200"
                     )}>
                         {/* Desktop Search */}
                         <div className={cn(
                             "p-3 border-b",
-                            "backdrop-blur-sm",
-                            isDark ? "border-[#2d4222]/50 bg-[#1f2e18]/30" : "border-gray-100/50 bg-[#f8fdf2]/30"
+                            isDark ? "border-[#2d4222] bg-[#1f2e18]" : "border-gray-100 bg-[#f8fdf2]"
                         )}>
                             <div className="relative">
                                 <MagnifyingGlassIcon className={cn(
@@ -461,10 +456,9 @@ export default function AddDirectiveSection({
                                     className={cn(
                                         "w-full pl-10 pr-4 py-2 text-sm rounded-md border",
                                         "focus:outline-none focus:ring-2 focus:ring-offset-1",
-                                        "backdrop-blur-sm",
                                         isDark
-                                            ? "bg-[#1f2e18]/50 text-[#e8f5d0] placeholder-[#9ca3af] border-[#2d4222]/50 focus:border-[#7bb33a] focus:ring-[#7bb33a]"
-                                            : "bg-white/50 text-gray-800 placeholder-gray-400 border-gray-200/50 focus:border-[#6aa329] focus:ring-[#6aa329]"
+                                            ? "bg-[#1f2e18] text-[#e8f5d0] placeholder-[#9ca3af] border-[#2d4222] focus:border-[#7bb33a] focus:ring-[#7bb33a]"
+                                            : "bg-white text-gray-800 placeholder-gray-400 border-gray-200 focus:border-[#6aa329] focus:ring-[#6aa329]"
                                     )}
                                 />
                             </div>
@@ -541,10 +535,9 @@ export default function AddDirectiveSection({
                         {filteredDirectives.length > 0 && (
                             <div className={cn(
                                 "px-4 py-2 border-t text-xs",
-                                "backdrop-blur-sm",
                                 isDark
-                                    ? "border-[#2d4222]/50 bg-[#1f2e18]/30 text-[#9ca3af]"
-                                    : "border-gray-100/50 bg-[#f8fdf2]/30 text-gray-500"
+                                    ? "border-[#2d4222] bg-[#1f2e18] text-[#9ca3af]"
+                                    : "border-gray-100 bg-[#f8fdf2] text-gray-500"
                             )}>
                                 <div className="flex items-center justify-between">
                                     <span>Use ↑↓ to navigate</span>

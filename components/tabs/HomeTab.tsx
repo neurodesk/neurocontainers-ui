@@ -60,7 +60,7 @@ export function HomeTab() {
     <div className={cn(layout.container, "py-4 sm:py-6")}> 
       <div className="text-center mb-8 mt-8">
         <div
-          className="inline-flex items-center gap-4 mb-4 group"
+          className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4 group"
         >
           <div className="transition-transform duration-200 group-hover:scale-105">
             <Logo className="h-12 w-auto" />

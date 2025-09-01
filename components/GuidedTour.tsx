@@ -617,23 +617,41 @@ const GuidedTour: React.FC<GuidedTourProps> = ({
                                 Container Summary
                             </h4>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                                <div>
-                                    <span className={cn(
-                                        "font-medium",
-                                        isDark ? "text-gray-300" : "text-gray-700"
-                                    )}>Name:</span>{" "}
-                                    <span className={cn(
-                                        isDark ? "text-white" : "text-gray-900"
-                                    )}>{String(formData.containerName || formData.name || 'Unnamed')}</span>
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:gap-1">
+                                    <span
+                                        className={cn(
+                                            "font-medium",
+                                            isDark ? "text-gray-300" : "text-gray-700"
+                                        )}
+                                    >
+                                        Name:
+                                    </span>
+                                    <span
+                                        className={cn(
+                                            "break-all",
+                                            isDark ? "text-white" : "text-gray-900"
+                                        )}
+                                    >
+                                        {String(formData.containerName || formData.name || 'Unnamed')}
+                                    </span>
                                 </div>
-                                <div>
-                                    <span className={cn(
-                                        "font-medium",
-                                        isDark ? "text-gray-300" : "text-gray-700"
-                                    )}>Version:</span>{" "}
-                                    <span className={cn(
-                                        isDark ? "text-white" : "text-gray-900"
-                                    )}>{String(formData.version || '1.0.0')}</span>
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:gap-1">
+                                    <span
+                                        className={cn(
+                                            "font-medium",
+                                            isDark ? "text-gray-300" : "text-gray-700"
+                                        )}
+                                    >
+                                        Version:
+                                    </span>
+                                    <span
+                                        className={cn(
+                                            "break-all",
+                                            isDark ? "text-white" : "text-gray-900"
+                                        )}
+                                    >
+                                        {String(formData.version || '1.0.0')}
+                                    </span>
                                 </div>
                                 <div>
                                     <span className={cn(

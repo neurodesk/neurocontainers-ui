@@ -285,11 +285,9 @@ const GuidedTour: React.FC<GuidedTourProps> = ({
 
             return (
                 <div
-                    key={field.id}
                     className={cn(
                         "p-4 rounded-lg shadow-sm",
-                        isDark ? "bg-white/5" : "bg-white/90",
-                        field.id === "githubUrl" ? "col-span-2" : ""
+                        isDark ? "bg-white/5" : "bg-white/90"
                     )}
                 >
                     <label
@@ -570,22 +568,29 @@ const GuidedTour: React.FC<GuidedTourProps> = ({
                                 // GitHub URL full width
                                 if (field.id === "githubUrl") {
                                     return (
-                                        <div key={field.id} className="col-span-2">
+                                        <div key={field.id} className="lg:col-span-2">
                                             {renderField(field)}
                                         </div>
                                     );
                                 }
                                 // Container Name and Version on same row
                                 if (field.id === "containerName" || field.id === "version") {
-                                    return renderField(field);
+                                    return (
+                                        <React.Fragment key={field.id}>{renderField(field)}</React.Fragment>
+                                    );
                                 }
                                 // R Package Name on same row as R Version for R templates
-                                if (selectedTemplate.id === 'r-package' && (field.id === "rPackageName" || field.id === "rVersion")) {
-                                    return renderField(field);
+                                if (
+                                    selectedTemplate.id === 'r-package' &&
+                                    (field.id === "rPackageName" || field.id === "rVersion")
+                                ) {
+                                    return (
+                                        <React.Fragment key={field.id}>{renderField(field)}</React.Fragment>
+                                    );
                                 }
                                 // All others full width
                                 return (
-                                    <div key={field.id} className="col-span-2">
+                                    <div key={field.id} className="lg:col-span-2">
                                         {renderField(field)}
                                     </div>
                                 );

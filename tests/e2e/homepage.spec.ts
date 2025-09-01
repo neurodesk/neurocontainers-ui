@@ -5,10 +5,10 @@ test.describe('NeuroContainers UI Homepage', () => {
     await page.goto('/');
 
     // Check page title
-    await expect(page).toHaveTitle(/NeuroContainers/);
+    await expect(page).toHaveTitle(/Neurocontainers/);
 
     // Check main heading exists
-    await expect(page.locator('h1')).toContainText('NeuroContainers Builder');
+    await expect(page.locator('h1')).toContainText('Neurocontainers Builder');
 
     // Check main action buttons exist
     await expect(page.locator('text=Create New Container')).toBeVisible();
@@ -78,7 +78,7 @@ test.describe('NeuroContainers UI Homepage', () => {
       await themeToggle.click();
       
       // Theme should change (we'll check if page still loads without errors)
-      await expect(page.locator('h1')).toContainText('NeuroContainers Builder');
+      await expect(page.locator('h1')).toContainText('Neurocontainers Builder');
     }
   });
 
@@ -90,7 +90,7 @@ test.describe('NeuroContainers UI Homepage', () => {
     await page.goto('/');
 
     // Page should still load despite API failures
-    await expect(page.locator('h1')).toContainText('NeuroContainers Builder');
+    await expect(page.locator('h1')).toContainText('Neurocontainers Builder');
     await expect(page.locator('text=Create New Container')).toBeVisible();
 
     // Published containers section may show error, but that's expected

@@ -257,7 +257,7 @@ export default function ContainerValidator({
     }, [validationResult?.dockerfile]);
     
     // Handle GitHub issue creation
-    const handleCreateIssue = useCallback((isUpdate: boolean = false) => {
+    const handleCreateIssue = useCallback(async (isUpdate: boolean = false) => {
         if (!recipe) return;
 
         // Regenerate groups and structured readme before publishing
@@ -266,10 +266,10 @@ export default function ContainerValidator({
 
         const yamlText = generateYAMLString(updatedRecipe);
         const compressedYaml = compressToBase64(yamlText);
-        
+
         const action = isUpdate ? 'Update' : 'Add';
         const issueTitle = `[CONTRIBUTION] ${action} ${updatedRecipe.name} container`;
-        
+
         const issueBodyWithYaml = `### ${action} Container Request
 
 **Container Name:** ${updatedRecipe.name}
@@ -285,7 +285,7 @@ ${compressedYaml}
 *This issue was generated automatically by the Neurocontainers Builder UI*`;
 
         const isContentTooLarge = new Blob([issueBodyWithYaml]).size > 6 * 1024;
-        
+
         let issueBody;
         if (isContentTooLarge) {
             issueBody = `### ${action} Container Request
@@ -303,6 +303,12 @@ Please paste the compressed YAML content from your clipboard below:
 
 ---
 *This issue was generated automatically by the Neurocontainers Builder UI*`;
+
+            try {
+                await navigator.clipboard.writeText(compressedYaml);
+            } catch (err) {
+                console.error('Failed to copy compressed YAML to clipboard:', err);
+            }
         } else {
             issueBody = issueBodyWithYaml;
         }
@@ -312,7 +318,7 @@ Please paste the compressed YAML content from your clipboard below:
         targetUrl.searchParams.append("body", issueBody);
 
         window.open(targetUrl.toString(), "_blank", "noopener,noreferrer");
-    }, [recipe, generateYAMLString, compressToBase64]);
+    }, [recipe, generateYAMLString, compressToBase64, regenerateRecipe]);
     
     // Determine button state and text
     const getButtonState = () => {

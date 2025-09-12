@@ -17,7 +17,8 @@ export function useContainerPublishing() {
                 indent: 2,
                 lineWidth: -1,
                 noRefs: true,
-                sortKeys: true
+                sortKeys: true,
+                quotingType: '"'
             }).trim();
         } catch {
             // If parsing fails, just trim whitespace
@@ -37,7 +38,8 @@ export function useContainerPublishing() {
                 indent: 2,
                 lineWidth: -1,
                 noRefs: true,
-                sortKeys: true
+                sortKeys: true,
+                quotingType: '"'
             });
 
             // Normalize both for comparison

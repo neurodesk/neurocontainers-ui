@@ -24,7 +24,7 @@ export function Ribbon() {
         {/* Brand */}
         <div className="flex items-center gap-2 flex-shrink-0">
           <Logo className="h-5 w-auto" />
-          <span className={cn(textStyles(isDark, { size: 'xs', color: 'secondary' }), "hidden xs:inline")}>NeuroContainers Builder</span>
+          <span className={cn(textStyles(isDark, { size: 'xs', color: 'secondary' }), "hidden xs:inline")}>Neurocontainers Builder</span>
         </div>
 
         {/* Actions: use a horizontally scrollable region on small screens */}

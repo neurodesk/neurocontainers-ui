@@ -12,7 +12,7 @@ export function TopHeader() {
       isDark ? "bg-[#080a07] border-[#1f2e18]" : "bg-white border-[#e6f1d6]"
     )}>
       <Logo className="h-5 w-auto" />
-      <span className={cn("text-xs", isDark?"text-[#91c84a]":"text-green-700")}>NeuroContainers Builder</span>
+      <span className={cn("text-xs", isDark?"text-[#91c84a]":"text-green-700")}>Neurocontainers Builder</span>
     </div>
   );
 }

@@ -60,7 +60,7 @@ export function HomeTab() {
     <div className={cn(layout.container, "py-4 sm:py-6")}> 
       <div className="text-center mb-8 mt-8">
         <div
-          className="inline-flex items-center gap-4 mb-4 group"
+          className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4 group"
         >
           <div className="transition-transform duration-200 group-hover:scale-105">
             <Logo className="h-12 w-auto" />
@@ -68,7 +68,7 @@ export function HomeTab() {
           <h1 className={cn("text-3xl font-bold transition-colors duration-200",
             isDark ? "text-[#e8f5d0] group-hover:text-[#91c84a]" : "text-[#0c0e0a] group-hover:text-[#4f7b38]"
           )}>
-            NeuroContainers Builder
+            Neurocontainers Builder
           </h1>
         </div>
         <p className={cn("text-lg mb-8", isDark ? "text-[#91c84a]" : "text-[#4f7b38]")}>

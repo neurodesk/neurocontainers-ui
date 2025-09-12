@@ -285,11 +285,9 @@ const GuidedTour: React.FC<GuidedTourProps> = ({
 
             return (
                 <div
-                    key={field.id}
                     className={cn(
                         "p-4 rounded-lg shadow-sm",
-                        isDark ? "bg-white/5" : "bg-white/90",
-                        field.id === "githubUrl" ? "col-span-2" : ""
+                        isDark ? "bg-white/5" : "bg-white/90"
                     )}
                 >
                     <label
@@ -570,22 +568,29 @@ const GuidedTour: React.FC<GuidedTourProps> = ({
                                 // GitHub URL full width
                                 if (field.id === "githubUrl") {
                                     return (
-                                        <div key={field.id} className="col-span-2">
+                                        <div key={field.id} className="lg:col-span-2">
                                             {renderField(field)}
                                         </div>
                                     );
                                 }
                                 // Container Name and Version on same row
                                 if (field.id === "containerName" || field.id === "version") {
-                                    return renderField(field);
+                                    return (
+                                        <React.Fragment key={field.id}>{renderField(field)}</React.Fragment>
+                                    );
                                 }
                                 // R Package Name on same row as R Version for R templates
-                                if (selectedTemplate.id === 'r-package' && (field.id === "rPackageName" || field.id === "rVersion")) {
-                                    return renderField(field);
+                                if (
+                                    selectedTemplate.id === 'r-package' &&
+                                    (field.id === "rPackageName" || field.id === "rVersion")
+                                ) {
+                                    return (
+                                        <React.Fragment key={field.id}>{renderField(field)}</React.Fragment>
+                                    );
                                 }
                                 // All others full width
                                 return (
-                                    <div key={field.id} className="col-span-2">
+                                    <div key={field.id} className="lg:col-span-2">
                                         {renderField(field)}
                                     </div>
                                 );
@@ -617,23 +622,41 @@ const GuidedTour: React.FC<GuidedTourProps> = ({
                                 Container Summary
                             </h4>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                                <div>
-                                    <span className={cn(
-                                        "font-medium",
-                                        isDark ? "text-gray-300" : "text-gray-700"
-                                    )}>Name:</span>{" "}
-                                    <span className={cn(
-                                        isDark ? "text-white" : "text-gray-900"
-                                    )}>{String(formData.containerName || formData.name || 'Unnamed')}</span>
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:gap-1">
+                                    <span
+                                        className={cn(
+                                            "font-medium",
+                                            isDark ? "text-gray-300" : "text-gray-700"
+                                        )}
+                                    >
+                                        Name:
+                                    </span>
+                                    <span
+                                        className={cn(
+                                            "break-all",
+                                            isDark ? "text-white" : "text-gray-900"
+                                        )}
+                                    >
+                                        {String(formData.containerName || formData.name || 'Unnamed')}
+                                    </span>
                                 </div>
-                                <div>
-                                    <span className={cn(
-                                        "font-medium",
-                                        isDark ? "text-gray-300" : "text-gray-700"
-                                    )}>Version:</span>{" "}
-                                    <span className={cn(
-                                        isDark ? "text-white" : "text-gray-900"
-                                    )}>{String(formData.version || '1.0.0')}</span>
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:gap-1">
+                                    <span
+                                        className={cn(
+                                            "font-medium",
+                                            isDark ? "text-gray-300" : "text-gray-700"
+                                        )}
+                                    >
+                                        Version:
+                                    </span>
+                                    <span
+                                        className={cn(
+                                            "break-all",
+                                            isDark ? "text-white" : "text-gray-900"
+                                        )}
+                                    >
+                                        {String(formData.version || '1.0.0')}
+                                    </span>
                                 </div>
                                 <div>
                                     <span className={cn(

@@ -49,6 +49,15 @@ export const GeistMono = {
 - Alternative: `npm run lint` -- takes ~4.5 seconds. NEVER CANCEL. Set timeout to 30+ seconds.
 - **Always run linting before committing changes** or the CI (.github/workflows/deploy.yaml) will fail.
 
+### Testing
+- **Unit Tests:** `bun run test` or `npm run test` -- runs Jest unit tests (~1.5 seconds). All tests should pass.
+- **Test Watch Mode:** `bun run test:watch` or `npm run test:watch` -- runs tests in watch mode for development.
+- **Test Coverage:** `bun run test:coverage` or `npm run test:coverage` -- generates test coverage reports.
+- **E2E Tests:** `bun run test:e2e` or `npm run test:e2e` -- runs Playwright end-to-end tests.
+- **E2E UI Mode:** `bun run test:e2e:ui` or `npm run test:e2e:ui` -- runs Playwright tests with UI for debugging.
+- **All Tests:** `bun run test:all` or `npm run test:all` -- runs both unit and E2E tests.
+- **Always run tests after making code changes** to ensure no regressions.
+
 ## Validation Scenarios
 
 **CRITICAL: After making any changes, ALWAYS test the complete user workflow:**
@@ -131,7 +140,8 @@ bun install  # 8-50s (faster with cache), timeout 90s
 
 # Daily development
 bun run dev        # Start development server (~1.8s)
-bun run lint       # Check code quality (~2.3s, timeout 30s) 
+bun run lint       # Check code quality (~2.3s, timeout 30s)
+bun run test       # Run unit tests (~1.5s)
 bun run build      # Build for production (~29s, timeout 60+ minutes)
 ```
 
@@ -143,6 +153,7 @@ npm install        # 8-51s (faster with cache), timeout 90s
 # Development
 npm run dev        # Start development server (~1.5s)
 npm run lint       # Check code quality (~4.5s, timeout 30s)
+npm run test       # Run unit tests (~1.5s)
 npm run build      # Build for production (~29s, timeout 60+ minutes)
                    # Requires fonts.ts workaround in network-restricted environments
 ```

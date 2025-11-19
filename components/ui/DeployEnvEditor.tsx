@@ -93,8 +93,8 @@ export default function DeployEnvEditor({
                         </div>
 
                         {variables.map((variable, index) => (
-                            <div key={index} className="grid grid-cols-12 gap-2 mb-2 items-center">
-                                <div className="col-span-1 flex justify-center">
+                            <div key={index} className="grid grid-cols-12 gap-2 mb-2 items-start">
+                                <div className="col-span-1 flex justify-center pt-2">
                                     <input
                                         type="checkbox"
                                         checked={variable.isDeploy}
@@ -151,7 +151,7 @@ export default function DeployEnvEditor({
                                         readOnly={readOnly}
                                     />
                                 </div>
-                                <div className="col-span-1 flex justify-center">
+                                <div className="col-span-1 flex justify-center pt-1">
                                     {!readOnly && (
                                         <button
                                             className={cn(

@@ -51,9 +51,32 @@ export const BaseDirectiveSchema = z.object({
 // Deploy Info
 // ============================================================================
 
+export const AdditionalProxySchema = z.object({
+    name: z.string(),
+    port: z.number(),
+});
+
+export const WebappPortsSchema = z.object({
+    main: z.number(),
+});
+
+export const WebappSchema = z.object({
+    title: z.string(),
+    startup_command: z.string(),
+    start_page: z.string(),
+    ports: WebappPortsSchema,
+    module: z.string().optional(),
+    description: z.string().optional(),
+    startup_timeout: z.number().optional(),
+    category: z.string().optional(),
+    icon: z.string().optional(),
+    additional_proxies: z.array(AdditionalProxySchema).optional(),
+});
+
 export const DeployInfoSchema = z.object({
     path: z.array(z.string()).optional(),
     bins: z.array(z.string()).optional(),
+    webapp: WebappSchema.optional(),
 });
 
 // ============================================================================

@@ -151,6 +151,7 @@ export default function ContainerValidator({
                     buildDirectory: result.buildDirectory,
                     deployBins: result.deployBins,
                     deployPath: result.deployPath,
+                    warnings: result.warnings,
                 };
                 setValidationResult(validationResult);
                 onValidationChange?.(true, true);
@@ -440,6 +441,25 @@ Please paste the compressed YAML content from your clipboard below:
                                         )}>
                                             {validationResult.error}
                                         </pre>
+                                    )}
+
+                                    {validationResult.warnings && validationResult.warnings.length > 0 && (
+                                        <div className={cn(
+                                            "mt-3 rounded-lg border p-3",
+                                            isDark ? "bg-amber-900/20 border-amber-700/40" : "bg-amber-50/60 border-amber-200"
+                                        )}>
+                                            {validationResult.warnings.map((warning, index) => (
+                                                <p
+                                                    key={`${warning}-${index}`}
+                                                    className={cn(
+                                                        "text-sm",
+                                                        isDark ? "text-amber-300" : "text-amber-800"
+                                                    )}
+                                                >
+                                                    {warning}
+                                                </p>
+                                            ))}
+                                        </div>
                                     )}
                                     
                                     {validationResult.success && (

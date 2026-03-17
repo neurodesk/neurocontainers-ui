@@ -210,8 +210,33 @@ if "" not in sys.path:
         fs.readFileSync(path.join(repoPath, "macros", "openrecon", "neurodocker.yaml")),
     );
 
+    pyodide.runPython(`
+import contextlib
+import io
+import traceback
+from builder.build import generate_from_description as _generate_from_description
+
+def run_generate_from_description_with_output(*args):
+    output = io.StringIO()
+    try:
+        with contextlib.redirect_stdout(output), contextlib.redirect_stderr(output):
+            result = _generate_from_description(*args)
+        return {
+            "result": result,
+            "output": output.getvalue(),
+            "error": None,
+        }
+    except Exception:
+        return {
+            "result": None,
+            "output": output.getvalue(),
+            "error": traceback.format_exc(),
+        }
+`);
+
     const pyBuilder = pyodide.pyimport("builder.build");
-    return { pyodide, pyBuilder };
+    const pyGenerateFromDescription = pyodide.globals.get("run_generate_from_description_with_output");
+    return { pyodide, pyBuilder, pyGenerateFromDescription };
 }
 
 function resetRecipeDirectory(pyodide) {
@@ -303,7 +328,18 @@ function sanitizeRecipeDescription(recipeDescription) {
     return sanitized;
 }
 
-function validateSingleRecipe(pyodide, pyBuilder, recipeEntry) {
+function normalizeCapturedOutput(output) {
+    return output
+        .split(/\r?\n/)
+        .map((line) => line.trimEnd())
+        .filter((line) => line.trim().length > 0)
+        .filter((line) => !line.includes("neurodocker not available, skipping Dockerfile generation"))
+        .filter((line) => line.trim() !== "Recipe validation completed (Dockerfile generation skipped)")
+        .filter((line) => line.trim() !== "Recipe validation was successful")
+        .filter((line) => !line.includes("Dockerfile generated successfully at"));
+}
+
+function validateSingleRecipe(pyodide, pyGenerateFromDescription, recipeEntry) {
     resetRecipeDirectory(pyodide);
     copyHostDirectoryToPyodide(pyodide, recipeEntry.dir, "/recipe");
 
@@ -316,9 +352,10 @@ function validateSingleRecipe(pyodide, pyBuilder, recipeEntry) {
 
     const recipeDescriptionPy = pyodide.toPy(recipeDescription);
     let result = null;
+    let wrapped = null;
 
     try {
-        result = pyBuilder.generate_from_description(
+        wrapped = pyGenerateFromDescription(
             "/repo",
             "/recipe",
             recipeDescriptionPy,
@@ -331,6 +368,20 @@ function validateSingleRecipe(pyodide, pyBuilder, recipeEntry) {
             true,
             true,
         );
+
+        const error = wrapped.get("error");
+        const output = String(wrapped.get("output") || "");
+        result = wrapped.get("result");
+
+        if (error) {
+            const renderedError = String(error);
+            const filteredOutput = normalizeCapturedOutput(output);
+            throw new Error(
+                filteredOutput.length > 0
+                    ? `${filteredOutput.join("\n")}\n${renderedError}`.trim()
+                    : renderedError,
+            );
+        }
 
         if (!result) {
             throw new Error("generate_from_description returned null");
@@ -346,7 +397,12 @@ function validateSingleRecipe(pyodide, pyBuilder, recipeEntry) {
                 throw new Error("validation did not produce expected build output");
             }
         }
+
+        return {
+            notes: normalizeCapturedOutput(output),
+        };
     } finally {
+        wrapped?.destroy?.();
         recipeDescriptionPy.destroy();
         result?.destroy?.();
     }
@@ -369,7 +425,7 @@ async function main() {
         console.log(`Found ${recipeDirs.length} recipes with build.yaml`);
         console.log(`Skipped ${allRecipeDirs.length - recipeDirs.length} recipe directories without build.yaml`);
 
-        const { pyodide, pyBuilder } = await createPyodideBuilder(repoPath);
+        const { pyodide, pyBuilder, pyGenerateFromDescription } = await createPyodideBuilder(repoPath);
         const failures = [];
 
         for (const [index, recipeEntry] of recipeDirs.entries()) {
@@ -378,9 +434,12 @@ async function main() {
             process.stdout.write(`${label} ... `);
 
             try {
-                validateSingleRecipe(pyodide, pyBuilder, recipeEntry);
+                const validation = validateSingleRecipe(pyodide, pyGenerateFromDescription, recipeEntry);
                 const seconds = ((performance.now() - recipeStartedAt) / 1000).toFixed(1);
                 console.log(`ok (${seconds}s)`);
+                for (const note of validation.notes) {
+                    console.log(`  ${note.trim()}`);
+                }
             } catch (error) {
                 const message = error instanceof Error ? error.message : String(error);
                 console.log("failed");
@@ -392,6 +451,7 @@ async function main() {
             }
         }
 
+        pyGenerateFromDescription.destroy?.();
         pyBuilder.destroy?.();
 
         const totalSeconds = ((performance.now() - startedAt) / 1000).toFixed(1);

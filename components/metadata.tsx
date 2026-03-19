@@ -1,5 +1,5 @@
 import { InformationCircleIcon, ExclamationTriangleIcon } from "@heroicons/react/24/outline";
-import { ContainerRecipe, Architecture, CopyrightInfo, StructuredReadme, convertStructuredReadmeToText, CATEGORIES } from "@/components/common";
+import { ContainerRecipe, Architecture, CopyrightInfo, StructuredReadme, convertStructuredReadmeToText, CATEGORIES, normalizeStructuredReadme } from "@/components/common";
 import { useState, useEffect } from "react";
 import {
     BasicInfoSection,
@@ -41,11 +41,12 @@ function validateVersion(version: string): string | null {
 function validateDocumentation(recipe: ContainerRecipe): string | null {
     const hasReadme = recipe.readme && recipe.readme.trim();
     const hasReadmeUrl = recipe.readme_url && recipe.readme_url.trim();
+    const structuredReadme = normalizeStructuredReadme(recipe.structured_readme);
     const hasStructuredReadme = recipe.structured_readme && (
-        recipe.structured_readme.description.trim() ||
-        recipe.structured_readme.example.trim() ||
-        recipe.structured_readme.documentation.trim() ||
-        recipe.structured_readme.citation.trim()
+        structuredReadme.description.trim() ||
+        structuredReadme.example.trim() ||
+        structuredReadme.documentation.trim() ||
+        structuredReadme.citation.trim()
     );
 
     if (!hasReadme && !hasReadmeUrl && !hasStructuredReadme) {
@@ -149,11 +150,12 @@ export default function ContainerMetadata({
     };
 
     const updateStructuredReadme = (structured_readme: StructuredReadme) => {
+        const normalizedStructuredReadme = normalizeStructuredReadme(structured_readme);
         // Auto-generate plain text readme for builder
-        const plainTextReadme = convertStructuredReadmeToText(structured_readme, recipe.name, recipe.version);
+        const plainTextReadme = convertStructuredReadmeToText(normalizedStructuredReadme, recipe.name, recipe.version);
         onChange({
             ...recipe,
-            structured_readme,
+            structured_readme: normalizedStructuredReadme,
             readme: plainTextReadme,
             readme_url: undefined
         });

@@ -1,4 +1,4 @@
-import { StructuredReadme, convertStructuredReadmeToText } from "@/components/common";
+import { StructuredReadme, convertStructuredReadmeToText, normalizeStructuredReadme } from "@/components/common";
 import { FormField } from "./FormField";
 import { useState } from "react";
 import { DocumentTextIcon, ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
@@ -15,15 +15,16 @@ interface StructuredReadmeEditorProps {
 export function StructuredReadmeEditor({ value, onChange, containerName, containerVersion }: StructuredReadmeEditorProps) {
     const { isDark } = useTheme();
     const [showPreview, setShowPreview] = useState(false);
+    const safeValue = normalizeStructuredReadme(value);
 
     const updateField = (field: keyof StructuredReadme, fieldValue: string) => {
         onChange({
-            ...value,
+            ...safeValue,
             [field]: fieldValue,
         });
     };
 
-    const previewContent = convertStructuredReadmeToText(value, containerName, containerVersion);
+    const previewContent = convertStructuredReadmeToText(safeValue, containerName, containerVersion);
 
     return (
         <div className="space-y-4">
@@ -86,7 +87,7 @@ export function StructuredReadmeEditor({ value, onChange, containerName, contain
                         description="Brief description of the tool and its capabilities (2-3 paragraphs)"
                     >
                         <textarea
-                            value={value.description}
+                            value={safeValue.description}
                             onChange={(e) => updateField("description", e.target.value)}
                             placeholder="Enter a description of the neuroimaging tool..."
                             className={textareaStyles(isDark)}
@@ -99,7 +100,7 @@ export function StructuredReadmeEditor({ value, onChange, containerName, contain
                         description="Basic usage commands and examples"
                     >
                         <textarea
-                            value={value.example}
+                            value={safeValue.example}
                             onChange={(e) => updateField("example", e.target.value)}
                             placeholder="toolname --help"
                             className={textareaStyles(isDark, { monospace: true })}
@@ -114,7 +115,7 @@ export function StructuredReadmeEditor({ value, onChange, containerName, contain
                         <div className="flex">
                             <input
                                 type="url"
-                                value={value.documentation}
+                                value={safeValue.documentation}
                                 onChange={(e) => updateField("documentation", e.target.value)}
                                 placeholder="https://..."
                                 className={cn(
@@ -125,14 +126,14 @@ export function StructuredReadmeEditor({ value, onChange, containerName, contain
                             <button
                                 type="button"
                                 onClick={() => {
-                                    if (value.documentation.trim()) {
-                                        window.open(value.documentation.trim(), '_blank', 'noopener,noreferrer');
+                                    if (safeValue.documentation.trim()) {
+                                        window.open(safeValue.documentation.trim(), '_blank', 'noopener,noreferrer');
                                     }
                                 }}
-                                disabled={!value.documentation.trim()}
+                                disabled={!safeValue.documentation.trim()}
                                 className={cn(
                                     "px-3 py-2 border rounded-r-md transition-colors flex items-center justify-center",
-                                    !value.documentation.trim()
+                                    !safeValue.documentation.trim()
                                         ? (isDark 
                                             ? "border-[#374151] bg-[#1f2937] text-[#6b7280] cursor-not-allowed" 
                                             : "border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed")
@@ -140,7 +141,7 @@ export function StructuredReadmeEditor({ value, onChange, containerName, contain
                                             ? "border-[#374151] bg-[#2d4222] text-[#91c84a] hover:bg-[#3a5c29] hover:text-[#7bb33a]"
                                             : "border-gray-200 bg-[#f0f7e7] text-[#4f7b38] hover:bg-[#e5f0d5] hover:text-[#6aa329]")
                                 )}
-                                title={value.documentation.trim() ? "Open documentation in new tab" : "Enter a URL to open"}
+                                title={safeValue.documentation.trim() ? "Open documentation in new tab" : "Enter a URL to open"}
                             >
                                 <ArrowTopRightOnSquareIcon className={iconStyles(isDark, 'sm')} />
                             </button>
@@ -152,7 +153,7 @@ export function StructuredReadmeEditor({ value, onChange, containerName, contain
                         description="Academic citation or reference for the tool. Citations containing Jinja2 syntax will be wrapped in raw blocks to prevent template processing conflicts."
                     >
                         <textarea
-                            value={value.citation}
+                            value={safeValue.citation}
                             onChange={(e) => updateField("citation", e.target.value)}
                             placeholder="Author et al. (Year). Title. Journal. DOI: ..."
                             className={textareaStyles(isDark)}

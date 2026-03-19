@@ -194,6 +194,21 @@ export interface ContainerRecipe {
     categories?: (keyof typeof CATEGORIES)[];
 }
 
+function safeTrimmedText(value: unknown): string {
+    return typeof value === "string" ? value.trim() : "";
+}
+
+export function normalizeStructuredReadme(
+    structured?: Partial<StructuredReadme> | null
+): StructuredReadme {
+    return {
+        description: typeof structured?.description === "string" ? structured.description : "",
+        example: typeof structured?.example === "string" ? structured.example : "",
+        documentation: typeof structured?.documentation === "string" ? structured.documentation : "",
+        citation: typeof structured?.citation === "string" ? structured.citation : "",
+    };
+}
+
 function hasJinja2Syntax(text: string): boolean {
     return /\{\{|\}\}|\{\%|\%\}/.test(text);
 }
@@ -207,7 +222,8 @@ export function convertStructuredReadmeToText(
     name: string,
     version: string // eslint-disable-line @typescript-eslint/no-unused-vars
 ): string {
-    const citationText = structured.citation.trim();
+    const normalized = normalizeStructuredReadme(structured);
+    const citationText = safeTrimmedText(normalized.citation);
     const needsRawBlock = hasJinja2Syntax(citationText);
     const processedCitation = needsRawBlock ? wrapInRawBlock(citationText) : citationText;
 
@@ -215,14 +231,14 @@ export function convertStructuredReadmeToText(
         "----------------------------------",
         `## ${name}/{{ context.version }} ##`,
         "",
-        structured.description.trim(),
+        safeTrimmedText(normalized.description),
         "",
         "Example:",
         "```",
-        structured.example.trim(),
+        safeTrimmedText(normalized.example),
         "```",
         "",
-        `More documentation can be found here: ${structured.documentation.trim()}`,
+        `More documentation can be found here: ${safeTrimmedText(normalized.documentation)}`,
         "",
         "Citation:",
         "```",

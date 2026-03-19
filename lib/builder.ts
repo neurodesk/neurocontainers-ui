@@ -398,6 +398,10 @@ async function createLoaderScript(): Promise<string> {
 import micropip
 import os
 
+# Pyodide cannot spawn subprocesses, so builder/build.py must not try to run
+# `python -m pip install ...` via ensure_neurodocker_renderer().
+os.environ["NEURODOCKER_AUTO_UPGRADE"] = "0"
+
 # Install neurodocker
 await micropip.install("pyyaml")
 await micropip.install("neurodocker")
@@ -449,6 +453,10 @@ for url in ${JSON.stringify(REPO_FILES)}:
 import micropip
 from pyodide.http import pyfetch
 import os
+
+# Pyodide cannot spawn subprocesses, so builder/build.py must not try to run
+# `python -m pip install ...` via ensure_neurodocker_renderer().
+os.environ["NEURODOCKER_AUTO_UPGRADE"] = "0"
 
 # Install neurodocker
 await micropip.install("pyyaml")

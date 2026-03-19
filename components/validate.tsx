@@ -319,7 +319,7 @@ Please paste the compressed YAML content from your clipboard below:
         targetUrl.searchParams.append("body", issueBody);
 
         window.open(targetUrl.toString(), "_blank", "noopener,noreferrer");
-    }, [recipe, generateYAMLString, compressToBase64, regenerateRecipe]);
+    }, [recipe, generateYAMLString, compressToBase64]);
     
     // Determine button state and text
     const getButtonState = () => {

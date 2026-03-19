@@ -50,10 +50,12 @@ describe('containerStorage', () => {
     });
 
     it('should handle corrupted localStorage data gracefully', () => {
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
       mockLocalStorage.setItem('neurocontainers-builder-saved', 'invalid-json');
       
       const containers = getSavedContainers();
       expect(containers).toEqual([]);
+      consoleErrorSpy.mockRestore();
     });
   });
 

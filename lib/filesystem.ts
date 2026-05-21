@@ -98,12 +98,16 @@ export class FilesystemService {
             // Check for recipes directory (required)
             await directoryHandle.getDirectoryHandle('recipes');
             
-            // Check for builder/build.py (critical for local Pyodide integration)
+            // Check for the builder package (critical for local Pyodide integration)
             try {
                 const builderHandle = await directoryHandle.getDirectoryHandle('builder');
-                await builderHandle.getFileHandle('build.py');
+                try {
+                    await builderHandle.getFileHandle('recipe.py');
+                } catch {
+                    await builderHandle.getFileHandle('build.py');
+                }
             } catch {
-                throw new Error('Directory appears to be missing builder/build.py - this may not be a complete NeuroContainers repository or may be an older version');
+                throw new Error('Directory appears to be missing the builder Python package - this may not be a complete NeuroContainers repository');
             }
             
             // Check for other expected files/directories
@@ -305,23 +309,56 @@ export class FilesystemService {
         return this.rootDirectoryHandle !== null;
     }
 
+    private async readDirectoryTextFiles(
+        directoryHandle: FileSystemDirectoryHandle,
+        basePath: string,
+        result: Record<string, string>
+    ): Promise<void> {
+        for await (const [name, handle] of directoryHandle.entries()) {
+            if (name === '__pycache__' || name === 'tests' || name === 'tester') {
+                continue;
+            }
+
+            const path = `${basePath}/${name}`;
+            if (handle.kind === 'directory') {
+                await this.readDirectoryTextFiles(handle as FileSystemDirectoryHandle, path, result);
+                continue;
+            }
+
+            if (!name.endsWith('.py') && !name.endsWith('.json') && !name.endsWith('.yaml')) {
+                continue;
+            }
+
+            const file = await (handle as FileSystemFileHandle).getFile();
+            result[path] = await file.text();
+        }
+    }
+
     /**
-     * Get the local builder/build.py file content for Pyodide
+     * Get local builder package file content for Pyodide
      */
-    async getLocalBuilderScript(): Promise<string | null> {
+    async getLocalBuilderPackageFiles(): Promise<Record<string, string> | null> {
         if (!this.rootDirectoryHandle) {
             return null;
         }
 
         try {
             const builderHandle = await this.rootDirectoryHandle.getDirectoryHandle('builder');
-            const buildFileHandle = await builderHandle.getFileHandle('build.py');
-            const file = await buildFileHandle.getFile();
-            return await file.text();
+            const files: Record<string, string> = {};
+            await this.readDirectoryTextFiles(builderHandle, 'builder', files);
+            return Object.keys(files).length ? files : null;
         } catch (error) {
-            console.warn('Failed to read local builder/build.py:', error);
+            console.warn('Failed to read local builder package:', error);
             return null;
         }
+    }
+
+    /**
+     * Get the legacy local builder/build.py file content for Pyodide
+     */
+    async getLocalBuilderScript(): Promise<string | null> {
+        const files = await this.getLocalBuilderPackageFiles();
+        return files?.['builder/build.py'] || null;
     }
 }
 

@@ -7,8 +7,28 @@ const REPO_URL = "https://raw.githubusercontent.com/NeuroDesk/neurocontainers";
 
 const MAIN_REF = "heads/main";
 
-const REQUIRED_FILES = [
-    "builder/build.py",
+const BUILDER_PACKAGE_FILES = [
+    "builder/__init__.py",
+    "builder/cache.py",
+    "builder/dockerfile.py",
+    "builder/ir.py",
+    "builder/recipe.py",
+    "builder/staging.py",
+    "builder/template.py",
+    "builder/template_backend.py",
+    "builder/validation.py",
+    "builder/templates/afni.yaml",
+    "builder/templates/ants.yaml",
+    "builder/templates/bids_validator.yaml",
+    "builder/templates/convert3d.yaml",
+    "builder/templates/dcm2niix.yaml",
+    "builder/templates/freesurfer.yaml",
+    "builder/templates/fsl.yaml",
+    "builder/templates/matlabmcr.yaml",
+    "builder/templates/minc.yaml",
+    "builder/templates/miniconda.yaml",
+    "builder/templates/mrtrix3.yaml",
+    "builder/templates/spm12.yaml",
     "builder/licenses.json",
 ];
 
@@ -45,6 +65,17 @@ export interface BuildResult {
     warnings: string[];
 }
 
+interface PyBuildResult {
+    name: string;
+    version: string;
+    tag: string;
+    dockerfile_name: string;
+    readme: string;
+    build_directory: string;
+    deploy_bins?: string[];
+    deploy_path?: string[];
+}
+
 interface PyBuilderInterface {
     generate_from_description: (
         repoPath: string,
@@ -58,21 +89,12 @@ interface PyBuilderInterface {
         options: string[] | null,
         recreateOutputDir: boolean,
         checkOnly: boolean
-    ) => {
-        name: string;
-        version: string;
-        tag: string;
-        dockerfile_name: string;
-        readme: string;
-        build_directory: string;
-        deploy_bins?: string[];
-        deploy_path?: string[];
-    } | null;
+    ) => PyBuildResult | null;
     init_new_recipe: (repoPath: string, name: string, version: string) => void;
     load_spdx_licenses: () => Set<string>;
     download_with_cache: (url: string, checkOnly?: boolean) => string;
     hash_obj: (obj: unknown) => string;
-    NeuroDockerBuilder: (baseImage: string, pkgManager?: string, addDefault?: boolean) => unknown;
+    NeuroDockerBuilder?: (baseImage: string, pkgManager?: string, addDefault?: boolean) => unknown;
 }
 
 export class Builder {
@@ -212,7 +234,7 @@ os.makedirs("/recipe", exist_ok=True)
             // convert the recipeDescription into a real python object
             const recipeDescriptionPy = this.pyodide.toPy(validationRecipe);
 
-            const result = this.pyBuilder.generate_from_description(
+            const rawResult = this.pyBuilder.generate_from_description(
                 "/repo", // repo_path
                 "/recipe", // recipe_path
                 recipeDescriptionPy,
@@ -225,6 +247,10 @@ os.makedirs("/recipe", exist_ok=True)
                 true, // recreate_output_dir
                 true // check_only
             );
+
+            const result = rawResult && typeof (rawResult as unknown as { toJs?: unknown }).toJs === "function"
+                ? (rawResult as unknown as { toJs: (options?: unknown) => PyBuildResult | null }).toJs({ dict_converter: Object.fromEntries })
+                : rawResult;
 
             if (!result) return null;
 
@@ -287,7 +313,10 @@ os.makedirs("/recipe", exist_ok=True)
      */
     async validateLicense(license: string): Promise<boolean> {
         try {
-            const validLicenses = this.pyBuilder.load_spdx_licenses();
+            const rawLicenses = this.pyBuilder.load_spdx_licenses();
+            const validLicenses = rawLicenses && typeof (rawLicenses as unknown as { toJs?: unknown }).toJs === "function"
+                ? (rawLicenses as unknown as { toJs: () => Set<string> }).toJs()
+                : rawLicenses;
             return validLicenses.has(license);
         } catch (error) {
             console.error("Error validating license:", error);
@@ -310,6 +339,10 @@ os.makedirs("/recipe", exist_ok=True)
         pkgManager: string = "apt",
         addDefault: boolean = true
     ): NeuroDockerBuilder {
+        if (!this.pyBuilder.NeuroDockerBuilder) {
+            throw new Error("NeuroDockerBuilder is not available in the current NeuroContainers builder");
+        }
+
         const builder = this.pyBuilder.NeuroDockerBuilder(
             baseImage,
             pkgManager,
@@ -389,53 +422,28 @@ export class NeuroDockerBuilder {
  * Generate the loader script for Pyodide with local filesystem support
  */
 async function createLoaderScript(): Promise<string> {
-    // Check if we have local builder script available
-    const localBuilderScript = await filesystemService.getLocalBuilderScript();
-    
-    if (localBuilderScript) {
-        console.log('Using local builder/build.py from filesystem');
-        return `
+    const localBuilderFiles = await filesystemService.getLocalBuilderPackageFiles();
+    const packageSetupScript = localBuilderFiles
+        ? createLocalBuilderPackageScript(localBuilderFiles)
+        : createRemoteBuilderPackageScript();
+
+    return `
 import micropip
 import os
+import json
 
-# Pyodide cannot spawn subprocesses, so builder/build.py must not try to run
-# python -m pip install ... via ensure_neurodocker_renderer().
 os.environ["NEURODOCKER_AUTO_UPGRADE"] = "0"
+await micropip.install(["pyyaml", "attrs"])
 
-# Install neurodocker
-await micropip.install("pyyaml")
-await micropip.install("neurodocker")
-
-# Create necessary directories
 os.makedirs("/repo", exist_ok=True)
 os.makedirs("/recipe", exist_ok=True)
 os.makedirs("/tmp", exist_ok=True)
-os.makedirs("builder", exist_ok=True)
 
-print("Using local builder/build.py from filesystem")
+${packageSetupScript}
 
-# Write local builder script
-# Use base64 encoding to avoid quote escaping issues
-import base64
-builder_content = base64.b64decode('''${Buffer.from(localBuilderScript).toString('base64')}''').decode('utf-8')
-with open("builder/build.py", "w", encoding="utf-8") as f:
-    f.write(builder_content)
-
-# Still need to download licenses.json from remote (unless we add it to local fs support)
 from pyodide.http import pyfetch
 base = "${REPO_URL}/${MAIN_REF}/"
 
-# Download licenses.json
-response = await pyfetch(base + "builder/licenses.json")
-if response.ok:
-    content = await response.bytes()
-    print("Downloading builder/licenses.json")
-    with open("builder/licenses.json", "wb") as f:
-        f.write(content)
-else:
-    raise Exception("Failed to download builder/licenses.json")
-
-# Download Repo files
 for url in ${JSON.stringify(REPO_FILES)}:
     response = await pyfetch(base + url)
     if response.ok:
@@ -446,33 +454,28 @@ for url in ${JSON.stringify(REPO_FILES)}:
             f.write(content)
     else:
         raise Exception(f"Failed to download {url}")
+
+${PYODIDE_BRIDGE_SCRIPT}
 `;
-    } else {
-        console.log('Using remote builder/build.py from GitHub');
-        return `
-import micropip
+}
+
+function createLocalBuilderPackageScript(files: Record<string, string>): string {
+    return `
+print("Using local builder package from filesystem")
+for path, content in json.loads(${JSON.stringify(JSON.stringify(files))}).items():
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(content)
+`;
+}
+
+function createRemoteBuilderPackageScript(): string {
+    return `
 from pyodide.http import pyfetch
-import os
-
-# Pyodide cannot spawn subprocesses, so builder/build.py must not try to run
-# python -m pip install ... via ensure_neurodocker_renderer().
-os.environ["NEURODOCKER_AUTO_UPGRADE"] = "0"
-
-# Install neurodocker
-await micropip.install("pyyaml")
-await micropip.install("neurodocker")
-
-# Create necessary directories
-os.makedirs("/repo", exist_ok=True)
-os.makedirs("/recipe", exist_ok=True)
-os.makedirs("/tmp", exist_ok=True)
-
 base = "${REPO_URL}/${MAIN_REF}/"
 
-print("Using remote builder/build.py from GitHub")
-
-# Download required files
-for url in ${JSON.stringify(REQUIRED_FILES)}:
+print("Using remote builder package from GitHub")
+for url in ${JSON.stringify(BUILDER_PACKAGE_FILES)}:
     response = await pyfetch(base + url)
     if response.ok:
         content = await response.bytes()
@@ -482,21 +485,170 @@ for url in ${JSON.stringify(REQUIRED_FILES)}:
             f.write(content)
     else:
         raise Exception(f"Failed to download {url}")
-
-# Download Repo files
-for url in ${JSON.stringify(REPO_FILES)}:
-    response = await pyfetch(base + url)
-    if response.ok:
-        content = await response.bytes()
-        print(f"Downloading to {url}")
-        os.makedirs("/repo/" + os.path.dirname(url), exist_ok=True)
-        with open("/repo/" + url, "wb") as f:
-            f.write(content)
-    else:
-        raise Exception(f"Failed to download {url}")
 `;
-    }
 }
+
+const PYODIDE_BRIDGE_SCRIPT = `
+import hashlib
+import json
+import os
+import shutil
+from pathlib import Path
+from urllib.request import urlopen
+
+import yaml
+
+from builder.dockerfile import render_dockerfile
+from builder.recipe import compile_recipe
+
+
+def _dockerfile_name(name, version):
+    return f"{name}_{str(version).replace(':', '_')}".lower() + ".Dockerfile"
+
+
+def _to_bool(value):
+    return str(value).strip().lower() in {"1", "true", "yes", "y", "on"}
+
+
+def _option_overrides(values):
+    overrides = {}
+    for value in values or []:
+        key, separator, raw = str(value).partition("=")
+        if key and separator == "=":
+            overrides[key] = _to_bool(raw)
+    return overrides
+
+
+def _readme_from_url(recipe):
+    readme_url = recipe.get("readme_url")
+    if not readme_url:
+        return None
+    with urlopen(str(readme_url), timeout=30) as response:
+        return response.read().decode("utf-8")
+
+
+def generate_from_description(
+    repo_path,
+    recipe_path,
+    recipe_description,
+    output_directory,
+    architecture,
+    ignore_architecture,
+    autobuild,
+    max_parallel_jobs,
+    options,
+    recreate_output_dir,
+    check_only,
+):
+    recipe_dir = Path(recipe_path)
+    recipe_dir.mkdir(parents=True, exist_ok=True)
+
+    recipe = dict(recipe_description)
+    recipe_file = recipe_dir / "build.yaml"
+    recipe_file.write_text(yaml.safe_dump(recipe, sort_keys=False), encoding="utf-8")
+
+    compiled = compile_recipe(
+        recipe_dir,
+        architecture=architecture,
+        ignore_architecture=ignore_architecture,
+        include_dirs=(Path(repo_path),),
+        parallel_jobs=max_parallel_jobs,
+        option_overrides=_option_overrides(options),
+    )
+
+    build_dir = Path(output_directory) / compiled.name
+    if build_dir.exists() and recreate_output_dir:
+        shutil.rmtree(build_dir)
+    build_dir.mkdir(parents=True, exist_ok=True)
+
+    dockerfile_name = _dockerfile_name(compiled.name, compiled.version)
+    (build_dir / dockerfile_name).write_text(render_dockerfile(compiled.definition), encoding="utf-8")
+    readme = _readme_from_url(recipe) or compiled.readme
+    (build_dir / "README.md").write_text(readme.rstrip() + "\\n", encoding="utf-8")
+    shutil.copy2(recipe_file, build_dir / "build.yaml")
+
+    return {
+        "name": compiled.name,
+        "version": compiled.version,
+        "tag": compiled.tag,
+        "dockerfile_name": dockerfile_name,
+        "readme": readme,
+        "build_directory": str(build_dir),
+        "deploy_bins": [],
+        "deploy_path": [],
+    }
+
+
+def init_new_recipe(repo_path, name, version):
+    recipe_dir = Path(repo_path) / "recipes" / name
+    recipe_dir.mkdir(parents=True, exist_ok=True)
+    recipe_file = recipe_dir / "build.yaml"
+    recipe_file.write_text(
+        f"""name: {name}
+version: {version}
+
+architectures:
+  - x86_64
+
+copyright:
+  - license: TODO
+    url: TODO
+
+build:
+  kind: neurodocker
+  base-image: ubuntu:24.04
+  pkg-manager: apt
+  directives:
+    - file:
+        name: hello.txt
+        contents: Hello, world!
+    - run:
+        - cat {{{{ get_file("hello.txt") }}}}
+    - deploy:
+        bins:
+          - TODO
+
+readme: TODO
+""",
+        encoding="utf-8",
+    )
+
+
+def load_spdx_licenses():
+    with open("builder/licenses.json", "r", encoding="utf-8") as f:
+        data = json.load(f)
+    return {item["licenseId"] for item in data.get("licenses", []) if "licenseId" in item}
+
+
+def download_with_cache(url, check_only=False):
+    digest = hashlib.sha256(str(url).encode("utf-8")).hexdigest()
+    cache_dir = Path("/tmp/neurocontainers-cache")
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    target = cache_dir / digest
+    if check_only:
+        return str(target)
+    if not target.exists():
+        with urlopen(str(url), timeout=60) as response:
+            target.write_bytes(response.read())
+    return str(target)
+
+
+def hash_obj(obj):
+    if isinstance(obj, str):
+        data = obj.encode("utf-8")
+    else:
+        data = yaml.safe_dump(obj).encode("utf-8")
+    return hashlib.sha256(data).hexdigest()
+
+import types
+ui_bridge = types.SimpleNamespace(
+    generate_from_description=generate_from_description,
+    init_new_recipe=init_new_recipe,
+    load_spdx_licenses=load_spdx_licenses,
+    download_with_cache=download_with_cache,
+    hash_obj=hash_obj,
+)
+`;
 
 export async function loadBuilder(pyodide: PyodideInterface): Promise<Builder> {
     try {
@@ -510,8 +662,8 @@ export async function loadBuilder(pyodide: PyodideInterface): Promise<Builder> {
         // Install requirements and download/load builder files
         await pyodide.runPythonAsync(loaderScript);
 
-        // Import the builder module
-        const pyBuilder = pyodide.pyimport("builder.build");
+        // Get the browser compatibility bridge loaded by the script above.
+        const pyBuilder = pyodide.runPython("ui_bridge");
 
         return new Builder(pyodide, pyBuilder);
     } catch (error) {

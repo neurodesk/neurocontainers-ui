@@ -111,8 +111,8 @@ function resolveRepoPath(options) {
 function validateRepoStructure(repoPath) {
     const requiredPaths = [
         path.join(repoPath, "recipes"),
-        path.join(repoPath, "builder", "build.py"),
-        path.join(repoPath, "builder", "licenses.json"),
+        path.join(repoPath, "builder", "recipe.py"),
+        path.join(repoPath, "builder", "dockerfile.py"),
         path.join(repoPath, "macros", "openrecon", "neurodocker.yaml"),
     ];
 
@@ -168,7 +168,7 @@ function copyHostDirectoryToPyodide(pyodide, sourceDir, targetDir) {
 
 async function createPyodideBuilder(repoPath) {
     const pyodide = await loadPyodide();
-    await pyodide.loadPackage(["pyyaml", "jinja2"]);
+    await pyodide.loadPackage(["pyyaml", "jinja2", "attrs", "requests", "packaging", "lzma"]);
 
     pyodide.runPython(`
 import os
@@ -189,38 +189,39 @@ if "" not in sys.path:
     sys.path.insert(0, "")
 `);
 
-    writeFileToPyodide(
+    copyHostDirectoryToPyodide(
         pyodide,
-        "builder/__init__.py",
-        new Uint8Array(),
+        path.join(repoPath, "builder"),
+        `${pyodide.FS.cwd()}/builder`,
     );
-    writeFileToPyodide(
+    copyHostDirectoryToPyodide(
         pyodide,
-        "builder/build.py",
-        fs.readFileSync(path.join(repoPath, "builder", "build.py")),
-    );
-    writeFileToPyodide(
-        pyodide,
-        "builder/licenses.json",
-        fs.readFileSync(path.join(repoPath, "builder", "licenses.json")),
-    );
-    writeFileToPyodide(
-        pyodide,
-        "/repo/macros/openrecon/neurodocker.yaml",
-        fs.readFileSync(path.join(repoPath, "macros", "openrecon", "neurodocker.yaml")),
+        path.join(repoPath, "macros"),
+        "/repo/macros",
     );
 
     pyodide.runPython(`
 import contextlib
 import io
 import traceback
-from builder.build import generate_from_description as _generate_from_description
+from pathlib import Path
+from builder.recipe import compile_recipe, load_recipe
+from builder.dockerfile import render_dockerfile
+from builder.variants import concrete_variant_specs
 
-def run_generate_from_description_with_output(*args):
+def run_compile_recipe_with_output():
     output = io.StringIO()
     try:
         with contextlib.redirect_stdout(output), contextlib.redirect_stderr(output):
-            result = _generate_from_description(*args)
+            spec = concrete_variant_specs(load_recipe(Path("/recipe")))[0]
+            compiled = compile_recipe(
+                Path("/recipe"),
+                architecture=spec["architecture"],
+                variant=spec["variant"],
+                include_dirs=(Path("/repo"),),
+                parallel_jobs=4,
+            )
+            result = render_dockerfile(compiled.definition)
         return {
             "result": result,
             "output": output.getvalue(),
@@ -234,9 +235,8 @@ def run_generate_from_description_with_output(*args):
         }
 `);
 
-    const pyBuilder = pyodide.pyimport("builder.build");
-    const pyGenerateFromDescription = pyodide.globals.get("run_generate_from_description_with_output");
-    return { pyodide, pyBuilder, pyGenerateFromDescription };
+    const pyCompileRecipe = pyodide.globals.get("run_compile_recipe_with_output");
+    return { pyodide, pyCompileRecipe };
 }
 
 function resetRecipeDirectory(pyodide) {
@@ -249,67 +249,12 @@ os.makedirs("/recipe", exist_ok=True)
 `);
 }
 
-function pickArchitecture(recipe) {
-    if (!Array.isArray(recipe.architectures) || recipe.architectures.length === 0) {
-        return "x86_64";
-    }
-
-    if (recipe.architectures.includes("x86_64")) {
-        return "x86_64";
-    }
-
-    return recipe.architectures[0];
-}
-
 function sanitizeRecipeDescription(recipeDescription) {
     const sanitized = structuredClone(recipeDescription);
-
-    const replaceUrlFileWithPlaceholder = (file) => {
-        if (!file || typeof file !== "object" || typeof file.url !== "string") {
-            return;
-        }
-
-        file.contents = [
-            "# Placeholder generated for Pyodide validation.",
-            `# Source URL: ${file.url}`,
-            "# Remote file fetching is disabled in this validation harness.",
-            "",
-        ].join("\n");
-        delete file.url;
-        delete file.refresh;
-        delete file.retry;
-        delete file.insecure;
-        delete file.curl_options;
-    };
-
-    const visitDirectives = (directives) => {
-        if (!Array.isArray(directives)) {
-            return;
-        }
-
-        for (const directive of directives) {
-            if (directive && typeof directive === "object") {
-                if ("file" in directive) {
-                    replaceUrlFileWithPlaceholder(directive.file);
-                }
-                if ("group" in directive) {
-                    visitDirectives(directive.group);
-                }
-            }
-        }
-    };
 
     if (sanitized.version !== undefined && typeof sanitized.version !== "string") {
         sanitized.version = String(sanitized.version);
     }
-
-    if (Array.isArray(sanitized.files)) {
-        for (const file of sanitized.files) {
-            replaceUrlFileWithPlaceholder(file);
-        }
-    }
-
-    visitDirectives(sanitized.build?.directives);
 
     if (!sanitized.readme && typeof sanitized.readme_url === "string" && sanitized.readme_url.length > 0) {
         sanitized.readme = [
@@ -339,7 +284,7 @@ function normalizeCapturedOutput(output) {
         .filter((line) => !line.includes("Dockerfile generated successfully at"));
 }
 
-function validateSingleRecipe(pyodide, pyGenerateFromDescription, recipeEntry) {
+function validateSingleRecipe(pyodide, pyCompileRecipe, recipeEntry) {
     resetRecipeDirectory(pyodide);
     copyHostDirectoryToPyodide(pyodide, recipeEntry.dir, "/recipe");
 
@@ -350,28 +295,15 @@ function validateSingleRecipe(pyodide, pyGenerateFromDescription, recipeEntry) {
         throw new Error("build.yaml did not parse into an object");
     }
 
-    const recipeDescriptionPy = pyodide.toPy(recipeDescription);
-    let result = null;
+    writeFileToPyodide(pyodide, "/recipe/build.yaml", yaml.dump(recipeDescription));
     let wrapped = null;
 
     try {
-        wrapped = pyGenerateFromDescription(
-            "/repo",
-            "/recipe",
-            recipeDescriptionPy,
-            "/tmp/build",
-            pickArchitecture(recipeDescription),
-            false,
-            false,
-            4,
-            null,
-            true,
-            true,
-        );
+        wrapped = pyCompileRecipe();
 
         const error = wrapped.get("error");
         const output = String(wrapped.get("output") || "");
-        result = wrapped.get("result");
+        const result = wrapped.get("result");
 
         if (error) {
             const renderedError = String(error);
@@ -383,19 +315,8 @@ function validateSingleRecipe(pyodide, pyGenerateFromDescription, recipeEntry) {
             );
         }
 
-        if (!result) {
-            throw new Error("generate_from_description returned null");
-        }
-
-        const buildDirectory = result.build_directory;
-        const dockerfileName = result.dockerfile_name;
-        const dockerfileExists = pyodide.FS.analyzePath(`${buildDirectory}/${dockerfileName}`).exists;
-
-        if (!dockerfileExists) {
-            const readmeExists = pyodide.FS.analyzePath(`${buildDirectory}/README.md`).exists;
-            if (!readmeExists) {
-                throw new Error("validation did not produce expected build output");
-            }
+        if (typeof result !== "string" || !result.trim()) {
+            throw new Error("validation did not produce a Dockerfile");
         }
 
         return {
@@ -403,8 +324,6 @@ function validateSingleRecipe(pyodide, pyGenerateFromDescription, recipeEntry) {
         };
     } finally {
         wrapped?.destroy?.();
-        recipeDescriptionPy.destroy();
-        result?.destroy?.();
     }
 }
 
@@ -425,7 +344,7 @@ async function main() {
         console.log(`Found ${recipeDirs.length} recipes with build.yaml`);
         console.log(`Skipped ${allRecipeDirs.length - recipeDirs.length} recipe directories without build.yaml`);
 
-        const { pyodide, pyBuilder, pyGenerateFromDescription } = await createPyodideBuilder(repoPath);
+        const { pyodide, pyCompileRecipe } = await createPyodideBuilder(repoPath);
         const failures = [];
 
         for (const [index, recipeEntry] of recipeDirs.entries()) {
@@ -434,7 +353,7 @@ async function main() {
             process.stdout.write(`${label} ... `);
 
             try {
-                const validation = validateSingleRecipe(pyodide, pyGenerateFromDescription, recipeEntry);
+                const validation = validateSingleRecipe(pyodide, pyCompileRecipe, recipeEntry);
                 const seconds = ((performance.now() - recipeStartedAt) / 1000).toFixed(1);
                 console.log(`ok (${seconds}s)`);
                 for (const note of validation.notes) {
@@ -451,8 +370,7 @@ async function main() {
             }
         }
 
-        pyGenerateFromDescription.destroy?.();
-        pyBuilder.destroy?.();
+        pyCompileRecipe.destroy?.();
 
         const totalSeconds = ((performance.now() - startedAt) / 1000).toFixed(1);
         if (failures.length > 0) {

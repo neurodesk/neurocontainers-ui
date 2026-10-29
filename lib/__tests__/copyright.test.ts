@@ -34,6 +34,7 @@ describe("copyright metadata", () => {
         { name: "Custom license", url: "" },
         { name: "Custom license", url: "ftp://example.com/LICENSE" },
         { license: "MIT", extra: "field" },
+        { url: "https://example.com/LICENSE" },
         {},
     ])("rejects %j", (entry) => {
         expect(CopyrightInfoSchema.safeParse(entry).success).toBe(false);

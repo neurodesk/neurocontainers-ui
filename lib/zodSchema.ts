@@ -64,6 +64,13 @@ export const CopyrightInfoSchema = z
         url: LicenseUrlSchema.optional(),
     })
     .superRefine((info, ctx) => {
+        if (info.license === undefined && info.name === undefined) {
+            ctx.addIssue({
+                code: "custom",
+                message: "A copyright entry needs a license identifier or a custom license name",
+            });
+            return;
+        }
         if (info.url?.trim()) return;
         if (info.license !== undefined) {
             if (licenseRequiresUrl(info.license)) {
@@ -73,16 +80,11 @@ export const CopyrightInfoSchema = z
                     message: `License "${info.license}" requires a URL to the license terms`,
                 });
             }
-        } else if (info.name !== undefined) {
+        } else {
             ctx.addIssue({
                 code: "custom",
                 path: ["url"],
                 message: "A custom license requires a URL to the license terms",
-            });
-        } else {
-            ctx.addIssue({
-                code: "custom",
-                message: "A copyright entry needs a license identifier or a custom license name",
             });
         }
     })

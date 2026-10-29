@@ -62,8 +62,9 @@ export default function LicenseSection({
     };
 
     const setZenodoCategory = (info: CopyrightInfo, category: string): CopyrightInfo => {
-        const custom = { name: info.name ?? "", url: info.url ?? "" };
-        return isZenodoLicenseCategory(category) ? { license: category, ...custom } : custom;
+        const url = info.url ?? "";
+        if (!isZenodoLicenseCategory(category)) return { name: info.name ?? "", url };
+        return info.name === undefined ? { license: category, url } : { license: category, name: info.name, url };
     };
 
     const addLicense = (index?: number) => {

@@ -35,6 +35,15 @@ describe("LicenseSection", () => {
         expect(onChange).toHaveBeenLastCalledWith([{ name: matlab.name, url: matlab.url }]);
     });
 
+    it("does not add a name when switching the category of a nameless entry", () => {
+        const url = "https://example.com/LICENSE";
+        const onChange = renderSection([{ license: "other-open", url }]);
+        fireEvent.change(screen.getByDisplayValue("other-open (open terms)"), {
+            target: { value: "other-closed" },
+        });
+        expect(onChange).toHaveBeenLastCalledWith([{ license: "other-closed", url }]);
+    });
+
     it("requires a URL for a custom license", () => {
         renderSection([{ name: "Custom license", url: "" }]);
         expect(

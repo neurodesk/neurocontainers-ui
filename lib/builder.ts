@@ -655,6 +655,8 @@ export async function loadBuilder(pyodide: PyodideInterface): Promise<Builder> {
         // Ensure Micropip and basics are available
         await pyodide.loadPackage("micropip");
         await pyodide.loadPackage("jinja2");
+        // builder/validation.py validates licenses with packaging.licenses.
+        await pyodide.loadPackage("packaging");
 
         // Generate the loader script (local or remote)
         const loaderScript = await createLoaderScript();

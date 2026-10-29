@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { CATEGORIES, IncludeMacros } from '@/components/common';
+import { CATEGORIES, CopyrightInfo, IncludeMacros } from '@/components/common';
+import { spdxExpressionError } from '@/lib/licenseExpression';
 
 // ============================================================================
 // Base Types
@@ -13,20 +14,84 @@ export const ConditionSchema = z.string();
 // Copyright Info
 // ============================================================================
 
-export const CustomCopyrightInfoSchema = z.object({
-    name: z.string(),
-    url: z.string().url().optional(),
+// Mirrors builder/validation.py in neurodesk/neurocontainers: an entry with
+// `license` is an SPDX entry and may also carry a `name`; an entry without one
+// is a custom license identified by `name` and the URL of its terms.
+
+/** Zenodo license categories accepted in place of an SPDX expression. */
+export const ZENODO_LICENSE_CATEGORIES = ["other-open", "other-closed"] as const;
+export type ZenodoLicenseCategory = (typeof ZENODO_LICENSE_CATEGORIES)[number];
+
+export function isZenodoLicenseCategory(license: string): license is ZenodoLicenseCategory {
+    return (ZENODO_LICENSE_CATEGORIES as readonly string[]).includes(license);
+}
+
+const NON_SPDX_LICENSES = new Set<string>([...ZENODO_LICENSE_CATEGORIES, "NOASSERTION", "NONE"]);
+
+/** Whether an entry with this `license` must link to the license terms. */
+export function licenseRequiresUrl(license: string): boolean {
+    return NON_SPDX_LICENSES.has(license) || license.toLowerCase().includes("licenseref-");
+}
+
+const isTemplated = (value: string) => value.includes("{{") || value.includes("{%");
+
+const LicenseSchema = z.string().superRefine((value, ctx) => {
+    if (!value.trim()) {
+        ctx.addIssue({ code: "custom", message: "License identifier is required" });
+        return;
+    }
+    if (NON_SPDX_LICENSES.has(value) || isTemplated(value)) return;
+    if (spdxExpressionError(value)) {
+        ctx.addIssue({
+            code: "custom",
+            message:
+                `"${value}" is not a valid SPDX license expression. For a custom license, ` +
+                "use a custom name with a URL, and set the Zenodo category to other-open " +
+                "or other-closed for Zenodo publication.",
+        });
+    }
 });
 
-export const SPDXCopyrightInfoSchema = z.object({
-    license: z.string(),
-    url: z.string().url().optional(),
-});
+const LicenseUrlSchema = z.string().refine(
+    (value) => value === "" || value.startsWith("{{") || /^https?:\/\//.test(value),
+    { message: "License URL must start with http:// or https://" },
+);
 
-export const CopyrightInfoSchema = z.union([
-    CustomCopyrightInfoSchema,
-    SPDXCopyrightInfoSchema,
-]);
+export const CopyrightInfoSchema = z
+    .strictObject({
+        license: LicenseSchema.optional(),
+        name: z.string().refine((value) => value.trim() !== "", { message: "License name cannot be empty" }).optional(),
+        url: LicenseUrlSchema.optional(),
+    })
+    .superRefine((info, ctx) => {
+        if (info.url?.trim()) return;
+        if (info.license !== undefined) {
+            if (licenseRequiresUrl(info.license)) {
+                ctx.addIssue({
+                    code: "custom",
+                    path: ["url"],
+                    message: `License "${info.license}" requires a URL to the license terms`,
+                });
+            }
+        } else if (info.name !== undefined) {
+            ctx.addIssue({
+                code: "custom",
+                path: ["url"],
+                message: "A custom license requires a URL to the license terms",
+            });
+        } else {
+            ctx.addIssue({
+                code: "custom",
+                message: "A copyright entry needs a license identifier or a custom license name",
+            });
+        }
+    })
+    // The refinement above guarantees a custom entry has both name and url.
+    .transform((info): CopyrightInfo =>
+        info.license === undefined
+            ? { name: info.name ?? "", url: info.url ?? "" }
+            : { ...info, license: info.license },
+    );
 
 // ============================================================================
 // Structured Readme

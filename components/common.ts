@@ -3,13 +3,14 @@ export const NEUROCONTAINERS_REPO = "https://github.com/neurodesk/neurocontainer
 export type Architecture = "x86_64" | "aarch64";
 
 export interface CustomCopyrightInfo {
-    name: string; // Can be any custom name
-    url?: string; // Optional URL for the license
+    name: string; // Title of a license without an SPDX identifier
+    url: string; // Required link to the license terms
 }
 
 export interface SPDXCopyrightInfo {
-    license: string; // Must be a valid SPDX license identifier
-    url?: string; // Optional URL for the license
+    license: string; // SPDX expression, LicenseRef-*, NOASSERTION, NONE, or a Zenodo category (other-open/other-closed)
+    name?: string; // Title of the license terms, used with a Zenodo category
+    url?: string; // Required for LicenseRef-*, NOASSERTION, NONE and Zenodo categories
 }
 
 export type CopyrightInfo = CustomCopyrightInfo | SPDXCopyrightInfo;

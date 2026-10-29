@@ -8,7 +8,8 @@ import {
     ScaleIcon
 } from "@heroicons/react/24/outline";
 import { CopyrightInfo } from "@/components/common";
-import { FormField, Input } from "./FormField";
+import { CopyrightInfoSchema, ZENODO_LICENSE_CATEGORIES, isZenodoLicenseCategory } from "@/lib/zodSchema";
+import { FormField, Input, Select } from "./FormField";
 import LicenseDropdown from "./LicenseDropdown";
 import spdxLicenses from "./licenses.json";
 import { iconStyles, cardStyles, textStyles, cn, buttonStyles } from "@/lib/styles";
@@ -46,16 +47,24 @@ export default function LicenseSection({
         onChange(updated);
     };
 
+    // A custom license is identified by its name; a Zenodo category
+    // (other-open/other-closed) may accompany it in the license field.
+    const isNamedLicense = (info: CopyrightInfo): boolean =>
+        !('license' in info) || isZenodoLicenseCategory(info.license);
+
     const getLicenseIdentifier = (info: CopyrightInfo): string => {
-        return 'license' in info ? info.license : info.name;
+        if ('license' in info && !isNamedLicense(info)) return info.license;
+        return info.name ?? ('license' in info ? info.license : "");
     };
 
     const setLicenseIdentifier = (info: CopyrightInfo, identifier: string): CopyrightInfo => {
-        if ('license' in info) {
-            return { ...info, license: identifier };
-        } else {
-            return { ...info, name: identifier };
-        }
+        return isNamedLicense(info) ? { ...info, name: identifier } : { ...info, license: identifier };
+    };
+
+    const setZenodoCategory = (info: CopyrightInfo, category: string): CopyrightInfo => {
+        const url = info.url ?? "";
+        if (!isZenodoLicenseCategory(category)) return { name: info.name ?? "", url };
+        return info.name === undefined ? { license: category, url } : { license: category, name: info.name, url };
     };
 
     const addLicense = (index?: number) => {
@@ -74,43 +83,8 @@ export default function LicenseSection({
     };
 
     const validateLicense = (info: CopyrightInfo): string[] => {
-        const errors: string[] = [];
-
-        const identifier = getLicenseIdentifier(info);
-
-        if (!identifier?.trim()) {
-            errors.push("License identifier is required");
-        }
-
-        if (info.url && info.url.trim() && !/^https?:\/\/.+/.test(info.url)) {
-            errors.push("License URL must be a valid HTTP/HTTPS URL");
-        }
-
-        // For SPDX licenses (license property), validate that it's a valid SPDX identifier
-        if ('license' in info && info.license?.trim()) {
-            const isValidSpdx = spdxLicenses.licenses
-                .filter(l => !l.isDeprecatedLicenseId)
-                .some(l => l.licenseId === info.license);
-
-            if (!isValidSpdx) {
-                errors.push(`"${info.license}" is not a valid SPDX license identifier. Use a custom license instead or select a valid SPDX license.`);
-            }
-        }
-
-        // For custom licenses (name property), URL is strongly recommended
-        if ('name' in info && !info.url?.trim()) {
-            errors.push("Custom licenses should include a URL to the license text for legal clarity");
-        }
-
-        // Check for potentially problematic custom license names
-        if ('name' in info && identifier?.trim()) {
-            const name = identifier.trim();
-            if (name.length < 2) {
-                errors.push("License name should be at least 2 characters");
-            }
-        }
-
-        return errors;
+        const result = CopyrightInfoSchema.safeParse(info);
+        return result.success ? [] : result.error.issues.map((issue) => issue.message);
     };
 
     const removeLicense = (index: number) => {
@@ -134,7 +108,8 @@ export default function LicenseSection({
         // Convert to custom license format
         const currentInfo = licenses[index];
         const currentIdentifier = getLicenseIdentifier(currentInfo);
-        updateLicense(index, { name: currentIdentifier || "", url: currentInfo.url || "" });
+        const category = 'license' in currentInfo && isNamedLicense(currentInfo) ? currentInfo.license : "";
+        updateLicense(index, setZenodoCategory({ name: currentIdentifier, url: currentInfo.url ?? "" }, category));
         setCustomLicenseIndex(index);
     };
 
@@ -451,7 +426,7 @@ export default function LicenseSection({
                                                     }
                                                     description={
                                                         isCustomLicense(index)
-                                                            ? "Custom license name or identifier"
+                                                            ? "Title of the custom license terms"
                                                             : "SPDX license identifiers are preferred for standardization"
                                                     }
                                                 >
@@ -509,7 +484,7 @@ export default function LicenseSection({
 
                                                 <FormField
                                                     label="License URL"
-                                                    description={isCustomLicense(index) ? "Link to your custom license text" : "Link to the full license text"}
+                                                    description={isCustomLicense(index) ? "Required: link to the custom license terms" : "Link to the full license text"}
                                                 >
                                                     <Input
                                                         value={info.url}
@@ -522,6 +497,27 @@ export default function LicenseSection({
                                                         placeholder={isCustomLicense(index) ? "https://example.com/license.txt" : "https://opensource.org/licenses/MIT"}
                                                     />
                                                 </FormField>
+
+                                                {isNamedLicense(info) && (
+                                                    <FormField
+                                                        label="Zenodo license category"
+                                                        description="Required to publish this recipe through Neurocommand's Zenodo integration"
+                                                    >
+                                                        <Select
+                                                            value={'license' in info ? info.license : ""}
+                                                            onChange={(e) =>
+                                                                updateLicense(index, setZenodoCategory(info, e.target.value))
+                                                            }
+                                                        >
+                                                            <option value="">Not set</option>
+                                                            {ZENODO_LICENSE_CATEGORIES.map((category) => (
+                                                                <option key={category} value={category}>
+                                                                    {category === "other-open" ? "other-open (open terms)" : "other-closed (restricted terms)"}
+                                                                </option>
+                                                            ))}
+                                                        </Select>
+                                                    </FormField>
+                                                )}
                                             </div>
 
                                             {/* Show validation errors */}

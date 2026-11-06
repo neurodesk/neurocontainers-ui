@@ -1,11 +1,19 @@
 import { CopyrightInfoSchema } from "@/lib/zodSchema";
-import { spdxExpressionError } from "@/lib/licenseExpression";
+import { licenseIdError } from "@/lib/licenseId";
+import { setZenodoLicenses } from "@/lib/zenodoLicenses";
+import { zenodoLicenseFixture } from "@/jest.mocks/zenodoLicenses";
 
-// Cases mirror builder/tests/test_validation.py in neurodesk/neurocontainers.
+beforeEach(() => setZenodoLicenses(zenodoLicenseFixture));
+afterAll(() => setZenodoLicenses(null));
+
+// Cases follow builder/tests/test_validation.py in neurodesk/neurocontainers,
+// limited to the Zenodo license list so every image can get a DOI.
 describe("copyright metadata", () => {
     it.each([
         { license: "MIT" },
-        { license: "MIT OR Apache-2.0" },
+        { license: "gpl-3.0-only" },
+        { license: "GPL-3.0" },
+        { license: "LGPL-2.1+" },
         { license: "{{ context.license_id }}" },
         { license: "LicenseRef-Example", url: "https://example.com/LICENSE" },
         { license: "NOASSERTION", url: "https://example.com" },
@@ -18,6 +26,8 @@ describe("copyright metadata", () => {
         { license: "custom" },
         { license: "Not-A-Real-License" },
         { license: "MIT OR" },
+        { license: "MIT OR Apache-2.0" },
+        { license: "BSD-2-Clause-FreeBSD" },
         { license: 42 },
         { license: "other-open", url: "https://example.com/LICENSE" },
         { license: "other-closed", name: "Custom license", url: "https://example.com/LICENSE" },
@@ -54,29 +64,35 @@ describe("copyright metadata", () => {
     });
 });
 
-describe("SPDX license expressions", () => {
+describe("license IDs", () => {
     it.each([
         "mit",
-        "GPL-2.0+",
-        "MIT AND (Apache-2.0 OR BSD-2-Clause)",
-        "Apache-2.0 WITH LLVM-exception",
+        "GPL-3.0",
+        "LGPL-2.1+",
         "LicenseRef-Custom.1",
-    ])("accepts %s", (expression) => {
-        expect(spdxExpressionError(expression)).toBeNull();
+    ])("accepts %s", (id) => {
+        expect(licenseIdError(id, zenodoLicenseFixture)).toBeNull();
     });
 
     it.each([
-        "",
-        "(MIT",
-        "MIT)",
-        "()",
-        "MIT WITH",
-        "(MIT) WITH LLVM-exception",
-        "MIT WITH Not-An-Exception",
-        "LicenseRef-Custom+",
-        "LicenseRef-under_score",
-        "Use-it-after-midnight",
-    ])("rejects %j", (expression) => {
-        expect(spdxExpressionError(expression)).not.toBeNull();
+        ["", /required/],
+        ["MIT AND Apache-2.0", /list each license as its own entry/],
+        ["(MIT)", /list each license as its own entry/],
+        ["Apache-2.0 WITH LLVM-exception", /list each license as its own entry/],
+        ["BSD-2-Clause-FreeBSD", /not a Zenodo license ID/],
+        ["other-open", /not a Zenodo license ID/],
+        ["GPL-3.0+", /not a Zenodo license ID/],
+        ["LicenseRef-Custom+", /Invalid LicenseRef/],
+        ["LicenseRef-under_score", /Invalid LicenseRef/],
+        ["MIT,", /Invalid license identifier/],
+    ])("rejects %j", (id, message) => {
+        expect(licenseIdError(id, zenodoLicenseFixture)).toMatch(message);
+    });
+
+    it("checks only the shape while the list is unavailable", () => {
+        expect(licenseIdError("BSD-2-Clause-FreeBSD", null)).toBeNull();
+        expect(licenseIdError("MIT OR Apache-2.0", null)).not.toBeNull();
+        setZenodoLicenses(null);
+        expect(CopyrightInfoSchema.safeParse({ license: "BSD-2-Clause-FreeBSD" }).success).toBe(true);
     });
 });

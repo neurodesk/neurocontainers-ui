@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { CATEGORIES, CopyrightInfo, IncludeMacros } from '@/components/common';
-import { spdxExpressionError } from '@/lib/licenseExpression';
+import { licenseIdError } from '@/lib/licenseId';
+import { getZenodoLicenses } from '@/lib/zenodoLicenses';
 
 // ============================================================================
 // Base Types
@@ -15,8 +16,10 @@ export const ConditionSchema = z.string();
 // ============================================================================
 
 // Mirrors builder/validation.py in neurodesk/neurocontainers: an entry with
-// `license` is an SPDX entry and may also carry a `name`; an entry without one
-// is a custom license identified by `name` and the URL of its terms.
+// `license` is a license-ID entry and may also carry a `name`; an entry without
+// one is a custom license identified by `name` and the URL of its terms.
+// `license` is limited to the Zenodo license list (lib/zenodoLicenses.ts) so
+// the image can get a DOI; other terms are entered as custom licenses.
 
 const NON_SPDX_LICENSES = new Set<string>(["NOASSERTION", "NONE"]);
 
@@ -33,14 +36,8 @@ const LicenseSchema = z.string().superRefine((value, ctx) => {
         return;
     }
     if (NON_SPDX_LICENSES.has(value) || isTemplated(value)) return;
-    if (spdxExpressionError(value)) {
-        ctx.addIssue({
-            code: "custom",
-            message:
-                `"${value}" is not a valid SPDX license expression. For a custom license, ` +
-                "use a custom name with a URL.",
-        });
-    }
+    const error = licenseIdError(value, getZenodoLicenses());
+    if (error) ctx.addIssue({ code: "custom", message: error });
 });
 
 const LicenseUrlSchema = z.string().refine(

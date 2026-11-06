@@ -3,7 +3,12 @@ import { useState } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { CopyrightInfo } from "@/components/common";
 import { ThemeProvider } from "@/lib/ThemeContext";
+import { setZenodoLicenses } from "@/lib/zenodoLicenses";
+import { zenodoLicenseFixture } from "@/jest.mocks/zenodoLicenses";
 import LicenseSection from "../LicenseSection";
+
+beforeEach(() => setZenodoLicenses(zenodoLicenseFixture));
+afterAll(() => setZenodoLicenses(null));
 
 const matlab = {
     name: "MATLAB",
@@ -72,7 +77,26 @@ describe("LicenseSection", () => {
         expect(done).toBeEnabled();
     });
 
-    it("clears SPDX details when switching to a custom license", () => {
+    it("offers only Zenodo licenses", () => {
+        renderSection([{ license: "", url: "" }]);
+        fireEvent.click(screen.getByRole("button", { name: /select or search for a license/i }));
+        expect(screen.getByRole("button", { name: /^GPL-3.0-only/ })).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: /BSD-2-Clause-FreeBSD/ })).not.toBeInTheDocument();
+    });
+
+    it("treats a license outside the Zenodo list as custom", () => {
+        renderSection([{ license: "BSD-2-Clause-FreeBSD", url: "" }]);
+        expect(screen.getAllByText("Custom").length).toBeGreaterThan(0);
+        expect(screen.getByText(/not a Zenodo license ID/)).toBeInTheDocument();
+    });
+
+    it("shows a deprecated alias as the license it maps to", () => {
+        renderSection([{ license: "GPL-3.0", url: "" }]);
+        expect(screen.getByRole("button", { name: /GPL-3.0 - GNU General Public License v3.0 only/ })).toBeInTheDocument();
+        expect(screen.queryByText("Custom")).not.toBeInTheDocument();
+    });
+
+    it("clears license details when switching to a custom license", () => {
         const onChange = renderSection([{ license: "MIT", url: "https://opensource.org/licenses/MIT" }]);
         fireEvent.click(screen.getByRole("button", { name: /MIT - MIT License/i }));
         fireEvent.click(screen.getByRole("button", { name: /custom license specify your own license name and url/i }));

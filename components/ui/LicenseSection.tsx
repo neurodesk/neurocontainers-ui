@@ -11,9 +11,9 @@ import { CopyrightInfo } from "@/components/common";
 import { CopyrightInfoSchema } from "@/lib/zodSchema";
 import { FormField, Input } from "./FormField";
 import LicenseDropdown from "./LicenseDropdown";
-import spdxLicenses from "./licenses.json";
 import { iconStyles, cardStyles, textStyles, cn, buttonStyles } from "@/lib/styles";
 import { useTheme } from "@/lib/ThemeContext";
+import { findZenodoLicense, useZenodoLicenses } from "@/lib/zenodoLicenses";
 import { DirectiveControllers } from "./DirectiveContainer";
 
 interface LicenseSectionProps {
@@ -40,6 +40,7 @@ export default function LicenseSection({
     const [customLicenseIndex, setCustomLicenseIndex] = useState<number | null>(null);
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
     const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+    const licenseList = useZenodoLicenses();
 
     const updateLicense = (index: number, info: CopyrightInfo) => {
         const updated = [...licenses];
@@ -107,15 +108,11 @@ export default function LicenseSection({
         // If it has a 'name' property, it's a CustomCopyrightInfo
         if ('name' in info) return true;
 
-        // If it has a 'license' property, check if it's in SPDX list
+        // A license ID outside the Zenodo license list must become a custom license.
         if ('license' in info) {
             const license = info.license;
-            if (!license || !license.trim()) return false;
-
-            const spdxLicenseIds = spdxLicenses.licenses
-                .filter(l => !l.isDeprecatedLicenseId)
-                .map(l => l.licenseId);
-            return !spdxLicenseIds.includes(license);
+            if (!license || !license.trim() || !licenseList) return false;
+            return !findZenodoLicense(licenseList, license);
         }
 
         return false;
@@ -414,7 +411,7 @@ export default function LicenseSection({
                                                     description={
                                                         isCustomLicense(index)
                                                             ? "Title of the custom license terms"
-                                                            : "SPDX license identifiers are preferred for standardization"
+                                                            : "Zenodo license IDs let the container get a DOI; anything else is a custom license"
                                                     }
                                                 >
                                                     {customLicenseIndex === index ? (

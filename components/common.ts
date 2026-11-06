@@ -8,9 +8,9 @@ export interface CustomCopyrightInfo {
 }
 
 export interface SPDXCopyrightInfo {
-    license: string; // SPDX expression, LicenseRef-*, NOASSERTION, NONE, or a Zenodo category (other-open/other-closed)
-    name?: string; // Title of the license terms, used with a Zenodo category
-    url?: string; // Required for LicenseRef-*, NOASSERTION, NONE and Zenodo categories
+    license: string; // SPDX expression, LicenseRef-*, NOASSERTION, or NONE
+    name?: string; // Optional title of the license terms
+    url?: string; // Required for LicenseRef-*, NOASSERTION, and NONE
 }
 
 export type CopyrightInfo = CustomCopyrightInfo | SPDXCopyrightInfo;

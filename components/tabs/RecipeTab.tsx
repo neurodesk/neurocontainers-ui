@@ -11,6 +11,7 @@ import ValidateRecipeComponent from "@/components/validate";
 import { useContainerStorage } from "@/hooks/useContainerStorage";
 import type { ContainerRecipe } from "@/components/common";
 import { SaveStatus } from "@/lib/containerStorage";
+import { CopyrightInfoSchema } from "@/lib/zodSchema";
 
 export function RecipeTab({ tabId }: { tabId?: string }) {
   const { tabs, activeId, update } = useTabs();
@@ -18,6 +19,7 @@ export function RecipeTab({ tabId }: { tabId?: string }) {
   const tab = useMemo(() => tabs.find(t => t.id === effectiveId), [tabs, effectiveId]);
   const { isDark } = useTheme();
   const [recipe, setRecipe] = useState<ContainerRecipe | null>(() => (tab?.payload as { recipe?: ContainerRecipe } | undefined)?.recipe ?? null);
+  const hasInvalidLicenses = recipe?.copyright?.some((entry) => !CopyrightInfoSchema.safeParse(entry).success) ?? false;
 
   const { saveStatus, currentContainerId, saveToStorage, setCurrentContainerId, exportYAML } = useContainerStorage();
   const validateRef = useRef<HTMLDivElement | null>(null);
@@ -95,14 +97,14 @@ export function RecipeTab({ tabId }: { tabId?: string }) {
         validateRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     };
-    const onDownload = () => { if (recipe) exportYAML(recipe); };
+    const onDownload = () => { if (recipe && !hasInvalidLicenses) exportYAML(recipe); };
     window.addEventListener('nc:focus-section', onFocus as EventListener);
     window.addEventListener('nc:recipe-download', onDownload as EventListener);
     return () => {
       window.removeEventListener('nc:focus-section', onFocus as EventListener);
       window.removeEventListener('nc:recipe-download', onDownload as EventListener);
     };
-  }, [recipe, exportYAML]);
+  }, [recipe, hasInvalidLicenses, exportYAML]);
 
   if (!tab) return null;
 
@@ -112,12 +114,17 @@ export function RecipeTab({ tabId }: { tabId?: string }) {
         <h1 className={cn("text-xl font-semibold", isDark?"text-[#e8f5d0]":"text-gray-900")}>{recipe?.name || "Untitled recipe"}</h1>
         <button
           className={cn("px-3 py-1 rounded text-sm", isDark?"bg-[#1f2e18] text-white":"bg-gray-100 text-gray-800")}
-          onClick={() => { if (recipe) exportYAML(recipe); }}
-          disabled={!recipe}
+          onClick={() => { if (recipe && !hasInvalidLicenses) exportYAML(recipe); }}
+          disabled={!recipe || hasInvalidLicenses}
         >
           Download YAML
         </button>
       </div>
+      {hasInvalidLicenses && (
+        <p role="alert" className={cn("text-sm", isDark ? "text-red-400" : "text-red-600")}>
+          Complete each license’s required fields before downloading YAML.
+        </p>
+      )}
 
       {!recipe ? (
         <div className={cn("rounded-lg border p-4", isDark?"border-[#2d4222]/50":"border-[#e6f1d6]")}>No recipe loaded.</div>

@@ -93,10 +93,10 @@ export default function LicenseSection({
     };
 
     const handleCustomLicense = (index: number) => {
-        // Convert to custom license format
         const currentInfo = licenses[index];
-        const currentIdentifier = getLicenseIdentifier(currentInfo);
-        updateLicense(index, { name: currentIdentifier, url: currentInfo.url ?? "" });
+        updateLicense(index, 'license' in currentInfo
+            ? { name: "", url: "" }
+            : currentInfo);
         setCustomLicenseIndex(index);
     };
 
@@ -421,6 +421,8 @@ export default function LicenseSection({
                                                         <div className="space-y-2">
                                                             <Input
                                                                 value={getLicenseIdentifier(info)}
+                                                                aria-label="Custom license name"
+                                                                required
                                                                 onChange={(e) =>
                                                                     updateLicense(index, setLicenseIdentifier(info, e.target.value))
                                                                 }
@@ -436,7 +438,7 @@ export default function LicenseSection({
                                                                             : "bg-[#6aa329] text-white hover:bg-[#4f7b38] disabled:bg-gray-300"
                                                                     )}
                                                                     onClick={() => setCustomLicenseIndex(null)}
-                                                                    disabled={!getLicenseIdentifier(info)?.trim()}
+                                                                    disabled={!CopyrightInfoSchema.safeParse(info).success}
                                                                 >
                                                                     Done
                                                                 </button>
@@ -475,6 +477,8 @@ export default function LicenseSection({
                                                 >
                                                     <Input
                                                         value={info.url}
+                                                        aria-label="License URL"
+                                                        required={!('license' in info)}
                                                         onChange={(e) =>
                                                             updateLicense(index, {
                                                                 ...info,

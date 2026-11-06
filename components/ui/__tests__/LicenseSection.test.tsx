@@ -1,4 +1,5 @@
 import "@testing-library/jest-dom";
+import { useState } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { CopyrightInfo } from "@/components/common";
 import { ThemeProvider } from "@/lib/ThemeContext";
@@ -43,5 +44,38 @@ describe("LicenseSection", () => {
         expect(
             screen.getByText("A custom license requires a URL to the license terms"),
         ).toBeInTheDocument();
+    });
+
+    it("requires a name and URL before completing a custom license", () => {
+        function EditableSection() {
+            const [licenses, setLicenses] = useState<CopyrightInfo[]>([{ license: "", url: "" }]);
+            return <LicenseSection licenses={licenses} onChange={setLicenses} />;
+        }
+
+        render(
+            <ThemeProvider defaultTheme="light">
+                <EditableSection />
+            </ThemeProvider>,
+        );
+        fireEvent.click(screen.getByRole("button", { name: /select or search for a license/i }));
+        fireEvent.click(screen.getByRole("button", { name: /custom license specify your own license name and url/i }));
+
+        const done = screen.getByRole("button", { name: "Done" });
+        expect(done).toBeDisabled();
+        fireEvent.change(screen.getByRole("textbox", { name: "Custom license name" }), {
+            target: { value: "Custom research license" },
+        });
+        expect(done).toBeDisabled();
+        fireEvent.change(screen.getByRole("textbox", { name: "License URL" }), {
+            target: { value: "https://example.com/LICENSE" },
+        });
+        expect(done).toBeEnabled();
+    });
+
+    it("clears SPDX details when switching to a custom license", () => {
+        const onChange = renderSection([{ license: "MIT", url: "https://opensource.org/licenses/MIT" }]);
+        fireEvent.click(screen.getByRole("button", { name: /MIT - MIT License/i }));
+        fireEvent.click(screen.getByRole("button", { name: /custom license specify your own license name and url/i }));
+        expect(onChange).toHaveBeenLastCalledWith([{ name: "", url: "" }]);
     });
 });

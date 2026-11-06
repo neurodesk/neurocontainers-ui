@@ -58,9 +58,9 @@ export const CopyrightInfoSchema = z
         if (info.license === undefined && info.name === undefined) {
             ctx.addIssue({
                 code: "custom",
-                message: "A copyright entry needs a license identifier or a custom license name",
+                path: ["name"],
+                message: "A custom license requires a name",
             });
-            return;
         }
         if (info.url?.trim()) return;
         if (info.license !== undefined) {

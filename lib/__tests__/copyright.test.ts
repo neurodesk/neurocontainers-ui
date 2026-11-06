@@ -39,6 +39,19 @@ describe("copyright metadata", () => {
         expect(result.success).toBe(false);
         expect(result.error?.issues.map((issue) => issue.path)).toEqual([["url"]]);
     });
+
+    it("reports a missing custom license name on the name field", () => {
+        const result = CopyrightInfoSchema.safeParse({ url: "https://example.com/LICENSE" });
+        expect(result.success).toBe(false);
+        expect(result.error?.issues.map((issue) => issue.path)).toEqual([["name"]]);
+    });
+
+    it("requires both fields for a custom license", () => {
+        const result = CopyrightInfoSchema.safeParse({});
+        expect(result.success).toBe(false);
+        expect(result.error?.issues.map((issue) => issue.path)).toEqual([["name"], ["url"]]);
+        expect(CopyrightInfoSchema.safeParse({ name: "  ", url: "https://example.com/LICENSE" }).success).toBe(false);
+    });
 });
 
 describe("SPDX license expressions", () => {

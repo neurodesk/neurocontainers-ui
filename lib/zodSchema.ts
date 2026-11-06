@@ -18,15 +18,7 @@ export const ConditionSchema = z.string();
 // `license` is an SPDX entry and may also carry a `name`; an entry without one
 // is a custom license identified by `name` and the URL of its terms.
 
-/** Zenodo license categories accepted in place of an SPDX expression. */
-export const ZENODO_LICENSE_CATEGORIES = ["other-open", "other-closed"] as const;
-export type ZenodoLicenseCategory = (typeof ZENODO_LICENSE_CATEGORIES)[number];
-
-export function isZenodoLicenseCategory(license: string): license is ZenodoLicenseCategory {
-    return (ZENODO_LICENSE_CATEGORIES as readonly string[]).includes(license);
-}
-
-const NON_SPDX_LICENSES = new Set<string>([...ZENODO_LICENSE_CATEGORIES, "NOASSERTION", "NONE"]);
+const NON_SPDX_LICENSES = new Set<string>(["NOASSERTION", "NONE"]);
 
 /** Whether an entry with this `license` must link to the license terms. */
 export function licenseRequiresUrl(license: string): boolean {
@@ -46,8 +38,7 @@ const LicenseSchema = z.string().superRefine((value, ctx) => {
             code: "custom",
             message:
                 `"${value}" is not a valid SPDX license expression. For a custom license, ` +
-                "use a custom name with a URL, and set the Zenodo category to other-open " +
-                "or other-closed for Zenodo publication.",
+                "use a custom name with a URL.",
         });
     }
 });

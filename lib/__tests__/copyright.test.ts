@@ -10,12 +10,6 @@ describe("copyright metadata", () => {
         { license: "LicenseRef-Example", url: "https://example.com/LICENSE" },
         { license: "NOASSERTION", url: "https://example.com" },
         { name: "Custom license", url: "https://example.com/LICENSE" },
-        {
-            license: "other-closed",
-            name: "Custom research license",
-            url: "https://example.com/LICENSE",
-        },
-        { license: "other-open", url: "https://example.com/LICENSE" },
     ])("accepts and preserves %j", (entry) => {
         expect(CopyrightInfoSchema.parse(entry)).toEqual(entry);
     });
@@ -25,8 +19,8 @@ describe("copyright metadata", () => {
         { license: "Not-A-Real-License" },
         { license: "MIT OR" },
         { license: 42 },
-        { license: "other-open" },
-        { license: "other-closed", url: "" },
+        { license: "other-open", url: "https://example.com/LICENSE" },
+        { license: "other-closed", name: "Custom license", url: "https://example.com/LICENSE" },
         { license: "LicenseRef-Example" },
         { license: "NOASSERTION" },
         { license: "NONE" },

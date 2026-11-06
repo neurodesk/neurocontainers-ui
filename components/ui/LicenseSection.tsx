@@ -8,8 +8,8 @@ import {
     ScaleIcon
 } from "@heroicons/react/24/outline";
 import { CopyrightInfo } from "@/components/common";
-import { CopyrightInfoSchema, ZENODO_LICENSE_CATEGORIES, isZenodoLicenseCategory } from "@/lib/zodSchema";
-import { FormField, Input, Select } from "./FormField";
+import { CopyrightInfoSchema } from "@/lib/zodSchema";
+import { FormField, Input } from "./FormField";
 import LicenseDropdown from "./LicenseDropdown";
 import spdxLicenses from "./licenses.json";
 import { iconStyles, cardStyles, textStyles, cn, buttonStyles } from "@/lib/styles";
@@ -47,24 +47,12 @@ export default function LicenseSection({
         onChange(updated);
     };
 
-    // A custom license is identified by its name; a Zenodo category
-    // (other-open/other-closed) may accompany it in the license field.
-    const isNamedLicense = (info: CopyrightInfo): boolean =>
-        !('license' in info) || isZenodoLicenseCategory(info.license);
-
     const getLicenseIdentifier = (info: CopyrightInfo): string => {
-        if ('license' in info && !isNamedLicense(info)) return info.license;
-        return info.name ?? ('license' in info ? info.license : "");
+        return 'license' in info ? info.license : info.name;
     };
 
     const setLicenseIdentifier = (info: CopyrightInfo, identifier: string): CopyrightInfo => {
-        return isNamedLicense(info) ? { ...info, name: identifier } : { ...info, license: identifier };
-    };
-
-    const setZenodoCategory = (info: CopyrightInfo, category: string): CopyrightInfo => {
-        const url = info.url ?? "";
-        if (!isZenodoLicenseCategory(category)) return { name: info.name ?? "", url };
-        return info.name === undefined ? { license: category, url } : { license: category, name: info.name, url };
+        return { name: identifier, url: info.url ?? "" };
     };
 
     const addLicense = (index?: number) => {
@@ -108,8 +96,7 @@ export default function LicenseSection({
         // Convert to custom license format
         const currentInfo = licenses[index];
         const currentIdentifier = getLicenseIdentifier(currentInfo);
-        const category = 'license' in currentInfo && isNamedLicense(currentInfo) ? currentInfo.license : "";
-        updateLicense(index, setZenodoCategory({ name: currentIdentifier, url: currentInfo.url ?? "" }, category));
+        updateLicense(index, { name: currentIdentifier, url: currentInfo.url ?? "" });
         setCustomLicenseIndex(index);
     };
 
@@ -498,26 +485,6 @@ export default function LicenseSection({
                                                     />
                                                 </FormField>
 
-                                                {isNamedLicense(info) && (
-                                                    <FormField
-                                                        label="Zenodo license category"
-                                                        description="Required to publish this recipe through Neurocommand's Zenodo integration"
-                                                    >
-                                                        <Select
-                                                            value={'license' in info ? info.license : ""}
-                                                            onChange={(e) =>
-                                                                updateLicense(index, setZenodoCategory(info, e.target.value))
-                                                            }
-                                                        >
-                                                            <option value="">Not set</option>
-                                                            {ZENODO_LICENSE_CATEGORIES.map((category) => (
-                                                                <option key={category} value={category}>
-                                                                    {category === "other-open" ? "other-open (open terms)" : "other-closed (restricted terms)"}
-                                                                </option>
-                                                            ))}
-                                                        </Select>
-                                                    </FormField>
-                                                )}
                                             </div>
 
                                             {/* Show validation errors */}

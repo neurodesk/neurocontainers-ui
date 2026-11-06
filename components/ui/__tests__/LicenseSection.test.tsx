@@ -5,7 +5,6 @@ import { ThemeProvider } from "@/lib/ThemeContext";
 import LicenseSection from "../LicenseSection";
 
 const matlab = {
-    license: "other-closed",
     name: "MATLAB",
     url: "https://www.mathworks.com/products/matlab.html",
 };
@@ -20,28 +19,23 @@ function renderSection(licenses: CopyrightInfo[], onChange = jest.fn()) {
 }
 
 describe("LicenseSection", () => {
-    it("shows a custom license by name with its Zenodo category", () => {
+    it("shows a custom license by name without a Zenodo category", () => {
         renderSection([matlab]);
         expect(screen.getByText("MATLAB")).toBeInTheDocument();
-        expect(screen.getByDisplayValue("other-closed (restricted terms)")).toBeInTheDocument();
+        expect(screen.queryByText("Zenodo license category")).not.toBeInTheDocument();
         expect(screen.queryByRole("listitem")).not.toBeInTheDocument();
     });
 
-    it("keeps the name and URL when the Zenodo category changes", () => {
-        const onChange = renderSection([matlab]);
-        fireEvent.change(screen.getByDisplayValue("other-closed (restricted terms)"), {
-            target: { value: "" },
+    it("edits a custom license without changing another license", () => {
+        const mit = { license: "MIT" };
+        const onChange = renderSection([matlab, mit]);
+        fireEvent.change(screen.getByDisplayValue(matlab.url), {
+            target: { value: "https://example.com/MATLAB-license" },
         });
-        expect(onChange).toHaveBeenLastCalledWith([{ name: matlab.name, url: matlab.url }]);
-    });
-
-    it("does not add a name when switching the category of a nameless entry", () => {
-        const url = "https://example.com/LICENSE";
-        const onChange = renderSection([{ license: "other-open", url }]);
-        fireEvent.change(screen.getByDisplayValue("other-open (open terms)"), {
-            target: { value: "other-closed" },
-        });
-        expect(onChange).toHaveBeenLastCalledWith([{ license: "other-closed", url }]);
+        expect(onChange).toHaveBeenLastCalledWith([
+            { ...matlab, url: "https://example.com/MATLAB-license" },
+            mit,
+        ]);
     });
 
     it("requires a URL for a custom license", () => {

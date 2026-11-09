@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { CATEGORIES, CopyrightInfo, IncludeMacros } from '@/components/common';
-import { licenseIdError } from '@/lib/licenseId';
+import { licenseIdError, licenseUrlError, licenseUrlMismatch } from '@/lib/licenseId';
 import { getZenodoLicenses } from '@/lib/zenodoLicenses';
 
 // ============================================================================
@@ -28,22 +28,24 @@ export function licenseRequiresUrl(license: string): boolean {
     return NON_SPDX_LICENSES.has(license) || license.toLowerCase().includes("licenseref-");
 }
 
-const isTemplated = (value: string) => value.includes("{{") || value.includes("{%");
+const isLicenseRef = (license: string) => license.trim().toLowerCase().startsWith("licenseref-");
 
+// No template exemption: DOI publication (Neurodesk/apps.json) reads the raw
+// recipe from git, so a templated license never matches the Zenodo catalogue.
 const LicenseSchema = z.string().superRefine((value, ctx) => {
     if (!value.trim()) {
         ctx.addIssue({ code: "custom", message: "License identifier is required" });
         return;
     }
-    if (NON_SPDX_LICENSES.has(value) || isTemplated(value)) return;
+    if (NON_SPDX_LICENSES.has(value)) return;
     const error = licenseIdError(value, getZenodoLicenses());
     if (error) ctx.addIssue({ code: "custom", message: error });
 });
 
-const LicenseUrlSchema = z.string().refine(
-    (value) => value === "" || value.startsWith("{{") || /^https?:\/\//.test(value),
-    { message: "License URL must start with http:// or https://" },
-);
+const LicenseUrlSchema = z.string().superRefine((value, ctx) => {
+    const error = licenseUrlError(value);
+    if (error) ctx.addIssue({ code: "custom", message: error });
+});
 
 export const CopyrightInfoSchema = z
     .strictObject({
@@ -59,7 +61,22 @@ export const CopyrightInfoSchema = z
                 message: "A custom license requires a name",
             });
         }
-        if (info.url?.trim()) return;
+        // DOI publication titles LicenseRef- terms by their name (apps.json
+        // resolve_recipe_license), so they need one as well as a URL.
+        if (info.license !== undefined && isLicenseRef(info.license) && !info.name?.trim()) {
+            ctx.addIssue({
+                code: "custom",
+                path: ["name"],
+                message: `Custom license "${info.license.trim()}" needs a name; add it as a Custom License with a name and URL`,
+            });
+        }
+        if (info.url?.trim()) {
+            if (info.license !== undefined) {
+                const mismatch = licenseUrlMismatch(info.license, info.url, getZenodoLicenses());
+                if (mismatch) ctx.addIssue({ code: "custom", path: ["url"], message: mismatch });
+            }
+            return;
+        }
         if (info.license !== undefined) {
             if (licenseRequiresUrl(info.license)) {
                 ctx.addIssue({

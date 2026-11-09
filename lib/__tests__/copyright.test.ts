@@ -14,8 +14,10 @@ describe("copyright metadata", () => {
         { license: "gpl-3.0-only" },
         { license: "GPL-3.0" },
         { license: "LGPL-2.1+" },
-        { license: "{{ context.license_id }}" },
-        { license: "LicenseRef-Example", url: "https://example.com/LICENSE" },
+        { license: "LicenseRef-Example", name: "Example License", url: "https://example.com/LICENSE" },
+        { license: "MIT", url: "http://opensource.org/license/mit" },
+        { license: "GPL-3.0", url: "https://www.gnu.org/licenses/gpl-3.0-standalone.html" },
+        { name: "Custom license", url: "https://example.com/{{ context.version }}/LICENSE" },
         { license: "NOASSERTION", url: "https://example.com" },
         { name: "Custom license", url: "https://example.com/LICENSE" },
     ])("accepts and preserves %j", (entry) => {
@@ -32,6 +34,14 @@ describe("copyright metadata", () => {
         { license: "other-open", url: "https://example.com/LICENSE" },
         { license: "other-closed", name: "Custom license", url: "https://example.com/LICENSE" },
         { license: "LicenseRef-Example" },
+        { license: "LicenseRef-Example", url: "https://example.com/LICENSE" },
+        { license: "LicenseRef-Example", name: "  ", url: "https://example.com/LICENSE" },
+        { license: "{{ context.license_id }}" },
+        { license: "MIT", url: "https://www.apache.org/licenses/LICENSE-2.0/" },
+        { name: "Custom license", url: "https://" },
+        { name: "Custom license", url: "https://user:secret@example.com/LICENSE" },
+        { name: "Custom license", url: "{{ context.license_url }}" },
+        { name: "Custom license", url: "https://{{ host }}/LICENSE" },
         { license: "NOASSERTION" },
         { license: "NONE" },
         { name: "Custom license" },
@@ -54,6 +64,18 @@ describe("copyright metadata", () => {
         const result = CopyrightInfoSchema.safeParse({ url: "https://example.com/LICENSE" });
         expect(result.success).toBe(false);
         expect(result.error?.issues.map((issue) => issue.path)).toEqual([["name"]]);
+    });
+
+    it("reports a nameless LicenseRef on the name field", () => {
+        const result = CopyrightInfoSchema.safeParse({ license: "LicenseRef-Example", url: "https://example.com/LICENSE" });
+        expect(result.error?.issues.map((issue) => issue.path)).toEqual([["name"]]);
+    });
+
+    it("reports a URL of a different Zenodo license on the url field", () => {
+        const result = CopyrightInfoSchema.safeParse({ license: "MIT", url: "https://www.apache.org/licenses/LICENSE-2.0" });
+        expect(result.error?.issues.map((issue) => [issue.path, issue.message])).toEqual([
+            [["url"], "This URL is the terms of Apache-2.0, not MIT"],
+        ]);
     });
 
     it("requires both fields for a custom license", () => {

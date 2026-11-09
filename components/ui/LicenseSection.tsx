@@ -95,9 +95,13 @@ export default function LicenseSection({
 
     const handleCustomLicense = (index: number) => {
         const currentInfo = licenses[index];
-        updateLicense(index, 'license' in currentInfo
-            ? { name: "", url: "" }
-            : currentInfo);
+        if (!('license' in currentInfo)) {
+            updateLicense(index, currentInfo);
+        } else {
+            // A LicenseRef- entry already links to its custom terms; keep that URL.
+            const isRef = currentInfo.license.trim().toLowerCase().startsWith("licenseref-");
+            updateLicense(index, { name: "", url: isRef ? currentInfo.url ?? "" : "" });
+        }
         setCustomLicenseIndex(index);
     };
 

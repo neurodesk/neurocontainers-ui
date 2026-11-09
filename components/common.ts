@@ -194,6 +194,8 @@ export interface ContainerRecipe {
     deploy?: DeployInfo;
     tests?: TestInfo[];
     categories?: (keyof typeof CATEGORIES)[];
+    // Top-level recipe variables; copyright templates can use the text ones.
+    variables?: Record<string, unknown>;
 }
 
 function safeTrimmedText(value: unknown): string {

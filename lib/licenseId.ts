@@ -86,3 +86,72 @@ export function licenseUrlMismatch(id: string, url: string, list: ZenodoLicenseL
     if (!matches.length || matches.includes(selected)) return null;
     return `This URL is the terms of ${matches.map((entry) => entry.id).join(", ")}, not ${id.trim()}`;
 }
+
+/**
+ * The only Jinja DOI publication renders in copyright entries, mirroring
+ * `render_copyright` in Neurodesk/apps.json scripts/license_terms.py:
+ * `{{ context.<key> }}` or `{{ <key> }}`, where key is `version`, `name` or a
+ * top-level string variable. Anything else fails publication.
+ */
+const COPYRIGHT_TEMPLATE = /\{\{\s*(?:context\.)?([A-Za-z_]\w*)\s*\}\}/g;
+const MAX_RENDER_PASSES = 10;
+const UNSUPPORTED_TEMPLATE = "Only {{ context.<variable> }} substitutions are supported in licenses";
+
+export type CopyrightTemplateValues = Record<string, string>;
+
+export const isTemplated = (value: string) => value.includes("{{") || value.includes("{%");
+
+/** Values a copyright template can use: string `variables`, then `version` and `name`. */
+export function copyrightTemplateValues(recipe: {
+    name?: unknown;
+    version?: unknown;
+    variables?: unknown;
+}): CopyrightTemplateValues {
+    const values: CopyrightTemplateValues = {};
+    if (recipe.variables && typeof recipe.variables === "object" && !Array.isArray(recipe.variables)) {
+        for (const [key, value] of Object.entries(recipe.variables)) {
+            if (typeof value === "string") values[key] = value;
+        }
+    }
+    for (const key of ["version", "name"] as const) {
+        if (typeof recipe[key] === "string") values[key] = recipe[key];
+    }
+    return values;
+}
+
+/**
+ * Render a copyright field. Without `values` (no recipe in reach) only the
+ * template's form is checked and `value` is null: the content cannot be
+ * validated until the recipe renders it.
+ */
+export function renderCopyrightTemplate(
+    text: string,
+    values?: CopyrightTemplateValues,
+): { value: string | null; error?: string } {
+    if (!isTemplated(text)) return { value: text };
+    if (!values) {
+        return isTemplated(text.replace(COPYRIGHT_TEMPLATE, ""))
+            ? { value: null, error: UNSUPPORTED_TEMPLATE }
+            : { value: null };
+    }
+    let current = text;
+    for (let pass = 0; pass < MAX_RENDER_PASSES; pass++) {
+        let missing: string | null = null;
+        const rendered = current.replace(COPYRIGHT_TEMPLATE, (match, key: string) => {
+            if (!Object.prototype.hasOwnProperty.call(values, key)) {
+                missing ??= match;
+                return match;
+            }
+            return values[key];
+        });
+        if (missing) {
+            return {
+                value: null,
+                error: `Cannot render ${missing}: use version, name or a top-level text variable`,
+            };
+        }
+        if (rendered === current) break;
+        current = rendered;
+    }
+    return isTemplated(current) ? { value: null, error: UNSUPPORTED_TEMPLATE } : { value: current };
+}

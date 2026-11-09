@@ -1,5 +1,5 @@
-import { CopyrightInfoSchema } from "@/lib/zodSchema";
-import { licenseIdError } from "@/lib/licenseId";
+import { ContainerRecipeSchema, CopyrightInfoSchema, copyrightInfoSchema } from "@/lib/zodSchema";
+import { copyrightTemplateValues, licenseIdError, renderCopyrightTemplate } from "@/lib/licenseId";
 import { setZenodoLicenses } from "@/lib/zenodoLicenses";
 import { zenodoLicenseFixture } from "@/jest.mocks/zenodoLicenses";
 
@@ -18,6 +18,8 @@ describe("copyright metadata", () => {
         { license: "MIT", url: "http://opensource.org/license/mit" },
         { license: "GPL-3.0", url: "https://www.gnu.org/licenses/gpl-3.0-standalone.html" },
         { name: "Custom license", url: "https://example.com/{{ context.version }}/LICENSE" },
+        { license: "{{ context.license_id }}" },
+        { name: "{{ name }} license", url: "{{ context.license_url }}" },
         { license: "NOASSERTION", url: "https://example.com" },
         { name: "Custom license", url: "https://example.com/LICENSE" },
     ])("accepts and preserves %j", (entry) => {
@@ -36,12 +38,11 @@ describe("copyright metadata", () => {
         { license: "LicenseRef-Example" },
         { license: "LicenseRef-Example", url: "https://example.com/LICENSE" },
         { license: "LicenseRef-Example", name: "  ", url: "https://example.com/LICENSE" },
-        { license: "{{ context.license_id }}" },
         { license: "MIT", url: "https://www.apache.org/licenses/LICENSE-2.0/" },
+        { license: "{% if x %}MIT{% endif %}" },
+        { license: "{{ context.license | upper }}" },
         { name: "Custom license", url: "https://" },
         { name: "Custom license", url: "https://user:secret@example.com/LICENSE" },
-        { name: "Custom license", url: "{{ context.license_url }}" },
-        { name: "Custom license", url: "https://{{ host }}/LICENSE" },
         { license: "NOASSERTION" },
         { license: "NONE" },
         { name: "Custom license" },
@@ -116,5 +117,60 @@ describe("license IDs", () => {
         expect(licenseIdError("MIT OR Apache-2.0", null)).not.toBeNull();
         setZenodoLicenses(null);
         expect(CopyrightInfoSchema.safeParse({ license: "BSD-2-Clause-FreeBSD" }).success).toBe(true);
+    });
+});
+
+describe("copyright templates", () => {
+    const values = copyrightTemplateValues({
+        name: "prequal",
+        version: "1.2.0",
+        variables: {
+            license_id: "MIT",
+            license_url: "https://github.com/MASILab/PreQual/blob/v{{ context.version }}/LICENSE.md",
+            not_text: ["x"],
+        },
+    });
+
+    it("renders like apps.json render_copyright, including nested variables", () => {
+        expect(renderCopyrightTemplate("{{ context.license_url }}", values)).toEqual({
+            value: "https://github.com/MASILab/PreQual/blob/v1.2.0/LICENSE.md",
+        });
+        expect(renderCopyrightTemplate("{{name}}-{{ context.version }}", values)).toEqual({ value: "prequal-1.2.0" });
+    });
+
+    it.each([
+        ["{{ context.missing }}", /Cannot render \{\{ context.missing \}\}/],
+        ["{{ context.not_text }}", /Cannot render/],
+        ["{{ context.version | upper }}", /Only \{\{ context.<variable> \}\}/],
+        ["{% if a %}MIT{% endif %}", /Only \{\{ context.<variable> \}\}/],
+    ])("refuses %j", (text, message) => {
+        expect(renderCopyrightTemplate(text, values).error).toMatch(message);
+    });
+
+    it("validates the rendered text with the recipe's values", () => {
+        const schema = copyrightInfoSchema(values);
+        expect(schema.safeParse({ license: "{{ context.license_id }}" }).success).toBe(true);
+        expect(schema.safeParse({ name: "Custom", url: "{{ context.license_url }}" }).success).toBe(true);
+        expect(copyrightInfoSchema({ license_id: "Not-A-Real-License" }).safeParse({ license: "{{ license_id }}" }).success).toBe(false);
+        expect(copyrightInfoSchema({ license_url: "ftp://x.org" }).safeParse({ name: "C", url: "{{ license_url }}" }).success).toBe(false);
+        // Rendering keeps the recipe's original, templated text.
+        expect(schema.parse({ license: "{{ context.license_id }}" })).toEqual({ license: "{{ context.license_id }}" });
+    });
+
+    it("validates copyright inside a recipe with its name, version and variables", () => {
+        const recipe = {
+            name: "prequal",
+            version: "1.2.0",
+            architectures: ["x86_64"],
+            build: { kind: "neurodocker", "base-image": "ubuntu:24.04", "pkg-manager": "apt", directives: [] },
+            variables: { license_url: "https://github.com/MASILab/PreQual/blob/v{{ context.version }}/LICENSE.md" },
+            copyright: [{ name: "PreQual license", url: "{{ context.license_url }}" }],
+        };
+        const ok = ContainerRecipeSchema.safeParse(recipe);
+        expect(ok.success).toBe(true);
+        expect(ok.data?.variables).toEqual(recipe.variables);
+
+        const bad = ContainerRecipeSchema.safeParse({ ...recipe, copyright: [{ license: "{{ context.unknown }}" }] });
+        expect(bad.error?.issues.map((issue) => issue.path)).toEqual([["copyright", 0, "license"]]);
     });
 });

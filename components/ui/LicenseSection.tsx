@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
     PlusIcon,
     TrashIcon,
@@ -8,7 +8,8 @@ import {
     ScaleIcon
 } from "@heroicons/react/24/outline";
 import { CopyrightInfo } from "@/components/common";
-import { CopyrightInfoSchema } from "@/lib/zodSchema";
+import { copyrightInfoSchema } from "@/lib/zodSchema";
+import { renderCopyrightTemplate, type CopyrightTemplateValues } from "@/lib/licenseId";
 import { FormField, Input } from "./FormField";
 import LicenseDropdown from "./LicenseDropdown";
 import { iconStyles, cardStyles, textStyles, cn, buttonStyles } from "@/lib/styles";
@@ -24,6 +25,8 @@ interface LicenseSectionProps {
     renderAddButton?: (addLicense: () => void) => React.ReactNode;
     onMoveLicense?: (index: number, direction: "up" | "down") => void;
     onReorderLicenses?: (licenses: CopyrightInfo[]) => void;
+    /** The recipe's template values, so `{{ context.version }}` etc. are validated rendered. */
+    templateValues?: CopyrightTemplateValues;
 }
 
 export default function LicenseSection({
@@ -33,7 +36,8 @@ export default function LicenseSection({
     showAddButton = true,
     renderAddButton,
     onMoveLicense,
-    onReorderLicenses
+    onReorderLicenses,
+    templateValues,
 }: LicenseSectionProps) {
     const { isDark } = useTheme();
     const [deleteConfirmIndex, setDeleteConfirmIndex] = useState<number | null>(null);
@@ -71,8 +75,10 @@ export default function LicenseSection({
         }
     };
 
+    const schema = useMemo(() => copyrightInfoSchema(templateValues), [templateValues]);
+
     const validateLicense = (info: CopyrightInfo): string[] => {
-        const result = CopyrightInfoSchema.safeParse(info);
+        const result = schema.safeParse(info);
         return result.success ? [] : result.error.issues.map((issue) => issue.message);
     };
 
@@ -114,7 +120,7 @@ export default function LicenseSection({
 
         // A license ID outside the Zenodo license list must become a custom license.
         if ('license' in info) {
-            const license = info.license;
+            const license = renderCopyrightTemplate(info.license, templateValues).value;
             if (!license || !license.trim() || !licenseList) return false;
             return !findZenodoLicense(licenseList, license);
         }
@@ -439,7 +445,7 @@ export default function LicenseSection({
                                                                             : "bg-[#6aa329] text-white hover:bg-[#4f7b38] disabled:bg-gray-300"
                                                                     )}
                                                                     onClick={() => setCustomLicenseIndex(null)}
-                                                                    disabled={!CopyrightInfoSchema.safeParse(info).success}
+                                                                    disabled={!schema.safeParse(info).success}
                                                                 >
                                                                     Done
                                                                 </button>

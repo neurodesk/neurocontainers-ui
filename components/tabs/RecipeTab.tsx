@@ -11,7 +11,8 @@ import ValidateRecipeComponent from "@/components/validate";
 import { useContainerStorage } from "@/hooks/useContainerStorage";
 import type { ContainerRecipe } from "@/components/common";
 import { SaveStatus } from "@/lib/containerStorage";
-import { CopyrightInfoSchema } from "@/lib/zodSchema";
+import { copyrightInfoSchema } from "@/lib/zodSchema";
+import { copyrightTemplateValues } from "@/lib/licenseId";
 
 export function RecipeTab({ tabId }: { tabId?: string }) {
   const { tabs, activeId, update } = useTabs();
@@ -19,7 +20,11 @@ export function RecipeTab({ tabId }: { tabId?: string }) {
   const tab = useMemo(() => tabs.find(t => t.id === effectiveId), [tabs, effectiveId]);
   const { isDark } = useTheme();
   const [recipe, setRecipe] = useState<ContainerRecipe | null>(() => (tab?.payload as { recipe?: ContainerRecipe } | undefined)?.recipe ?? null);
-  const hasInvalidLicenses = recipe?.copyright?.some((entry) => !CopyrightInfoSchema.safeParse(entry).success) ?? false;
+  const hasInvalidLicenses = useMemo(() => {
+    if (!recipe?.copyright) return false;
+    const schema = copyrightInfoSchema(copyrightTemplateValues(recipe));
+    return recipe.copyright.some((entry) => !schema.safeParse(entry).success);
+  }, [recipe]);
 
   const { saveStatus, currentContainerId, saveToStorage, setCurrentContainerId, exportYAML } = useContainerStorage();
   const validateRef = useRef<HTMLDivElement | null>(null);

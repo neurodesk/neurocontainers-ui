@@ -29,7 +29,6 @@ const BUILDER_PACKAGE_FILES = [
     "builder/templates/miniconda.yaml",
     "builder/templates/mrtrix3.yaml",
     "builder/templates/spm12.yaml",
-    "builder/licenses.json",
 ];
 
 const REPO_FILES = [
@@ -91,7 +90,6 @@ interface PyBuilderInterface {
         checkOnly: boolean
     ) => PyBuildResult | null;
     init_new_recipe: (repoPath: string, name: string, version: string) => void;
-    load_spdx_licenses: () => Set<string>;
     download_with_cache: (url: string, checkOnly?: boolean) => string;
     hash_obj: (obj: unknown) => string;
     NeuroDockerBuilder?: (baseImage: string, pkgManager?: string, addDefault?: boolean) => unknown;
@@ -305,22 +303,6 @@ os.makedirs("/recipe", exist_ok=True)
         } catch (error) {
             console.error("Error loading description file:", error);
             throw error;
-        }
-    }
-
-    /**
-     * Validate SPDX license
-     */
-    async validateLicense(license: string): Promise<boolean> {
-        try {
-            const rawLicenses = this.pyBuilder.load_spdx_licenses();
-            const validLicenses = rawLicenses && typeof (rawLicenses as unknown as { toJs?: unknown }).toJs === "function"
-                ? (rawLicenses as unknown as { toJs: () => Set<string> }).toJs()
-                : rawLicenses;
-            return validLicenses.has(license);
-        } catch (error) {
-            console.error("Error validating license:", error);
-            return false;
         }
     }
 
@@ -614,12 +596,6 @@ readme: TODO
     )
 
 
-def load_spdx_licenses():
-    with open("builder/licenses.json", "r", encoding="utf-8") as f:
-        data = json.load(f)
-    return {item["licenseId"] for item in data.get("licenses", []) if "licenseId" in item}
-
-
 def download_with_cache(url, check_only=False):
     digest = hashlib.sha256(str(url).encode("utf-8")).hexdigest()
     cache_dir = Path("/tmp/neurocontainers-cache")
@@ -644,7 +620,6 @@ import types
 ui_bridge = types.SimpleNamespace(
     generate_from_description=generate_from_description,
     init_new_recipe=init_new_recipe,
-    load_spdx_licenses=load_spdx_licenses,
     download_with_cache=download_with_cache,
     hash_obj=hash_obj,
 )

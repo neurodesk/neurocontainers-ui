@@ -184,6 +184,11 @@ export const FileInfoSchema = z.object({
     filename: z.string().optional(),
     contents: z.string().optional(),
     url: z.string().url().optional(),
+    sha256: z.string().optional(),
+    executable: z.boolean().optional(),
+    insecure: z.boolean().optional(),
+    retry: z.number().optional(),
+    refresh: z.boolean().optional(),
 });
 
 // ============================================================================
@@ -347,6 +352,11 @@ export const ContainerRecipeSchema = z.object({
     readme_url: z.string().url().optional(),
     structured_readme: StructuredReadmeSchema.optional(),
     build: BuildRecipeSchema,
+    auto_update: z.record(z.string(), z.unknown()).optional(),
+    domains: z.array(z.string().regex(/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/))
+        .min(1)
+        .refine((domains) => new Set(domains).size === domains.length, "Domains must be unique")
+        .optional(),
     files: z.array(FileInfoSchema).optional(),
     deploy: DeployInfoSchema.optional(),
     tests: z.array(TestInfoSchema).optional(),

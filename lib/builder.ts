@@ -2,6 +2,7 @@ import { ContainerRecipe } from "@/components/common";
 import type { PyodideInterface } from "pyodide";
 import { filesystemService } from "@/lib/filesystem";
 import { buildValidationSupportFiles } from "@/lib/recipeSupportFiles";
+import { missingUpdatePolicyFiles, restoreUpdatePolicyFiles, validateRecipeDomains } from "@/lib/recipeFormat";
 
 const REPO_URL = "https://raw.githubusercontent.com/NeuroDesk/neurocontainers";
 
@@ -166,15 +167,36 @@ os.makedirs("/recipe", exist_ok=True)
         const warnings: string[] = [];
         let replacedUrlFiles = 0;
 
+        const versionDriver = recipe.auto_update?.container_version;
+        const versionSource = typeof versionDriver === "string"
+            ? recipe.auto_update?.sources?.find((source) => source.id === versionDriver)
+            : undefined;
+        const versionSourceFile = versionSource?.target?.file &&
+            !Object.values(versionSource.target.variables ?? {}).includes("version") &&
+            !versionSource.target.variable
+            ? versionSource.target.file
+            : undefined;
+
         const replaceUrlFileWithPlaceholder = (file: {
+            name: string;
             url?: string;
             contents?: string;
             refresh?: boolean;
             retry?: number;
             insecure?: boolean;
             curl_options?: string;
+            sha256?: string;
         } | undefined) => {
             if (!file?.url) {
+                return;
+            }
+
+            // A file-driven version policy reads the URL before compilation.
+            // compile_recipe does not download it, so the URL can stay intact.
+            if (file.name === versionSourceFile) {
+                warnings.push(
+                    `Browser validation checked the version in ${file.name}'s URL without downloading the remote file.`,
+                );
                 return;
             }
 
@@ -189,6 +211,7 @@ os.makedirs("/recipe", exist_ok=True)
             delete file.retry;
             delete file.insecure;
             delete file.curl_options;
+            delete file.sha256;
             replacedUrlFiles += 1;
         };
 
@@ -230,8 +253,16 @@ os.makedirs("/recipe", exist_ok=True)
         options: BuildOptions = {}
     ): Promise<BuildResult | null> {
         try {
+            const formattedRecipe = restoreUpdatePolicyFiles(recipeDescription);
+            validateRecipeDomains(formattedRecipe);
+            const missingFiles = missingUpdatePolicyFiles(formattedRecipe);
+            if (missingFiles.length > 0) {
+                throw new Error(
+                    `auto_update references missing top-level file${missingFiles.length === 1 ? "" : "s"}: ${missingFiles.join(", ")}`,
+                );
+            }
             const { recipe: validationRecipe, warnings: sanitizationWarnings } =
-                this.sanitizeRecipeForValidation(recipeDescription);
+                this.sanitizeRecipeForValidation(formattedRecipe);
 
             // HACK: fix for readme_url being optional
             if (Object.hasOwn(validationRecipe, "readme_url") && validationRecipe.readme_url?.length || 0 === 0) {

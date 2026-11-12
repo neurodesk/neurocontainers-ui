@@ -27,8 +27,7 @@ export function isNoLicense(value: string): boolean {
  * A license must be one ID from the Zenodo license list (any case), one of its
  * deprecated aliases, or a `LicenseRef-` identifier, so the image can get a DOI.
  * Expressions (AND/OR/WITH) are refused: DOI publication records one license
- * per copyright entry. Without a list (still loading, or unreachable) only the
- * shape is checked; the builder and DOI publication still validate the ID.
+ * per copyright entry. Other IDs cannot be validated until the list loads.
  */
 export function licenseIdError(value: string, list: ZenodoLicenseList | null): string | null {
     const id = value.trim();
@@ -41,7 +40,8 @@ export function licenseIdError(value: string, list: ZenodoLicenseList | null): s
         return LICENSE_REF.test(lowered) ? null : `Invalid LicenseRef identifier: '${id}'`;
     }
     if (!LICENSE_ID.test(lowered)) return `Invalid license identifier: '${id}'`;
-    if (!list || findZenodoLicense(list, id)) return null;
+    if (!list) return "Zenodo license list is unavailable; wait for it to load before using this license ID";
+    if (findZenodoLicense(list, id)) return null;
     return `"${id}" is not a Zenodo license ID. Add it as a custom license with a name and URL.`;
 }
 

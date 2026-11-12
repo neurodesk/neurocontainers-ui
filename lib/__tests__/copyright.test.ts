@@ -108,6 +108,11 @@ describe("license IDs", () => {
         ["Apache-2.0 WITH LLVM-exception", /list each license as its own entry/],
         ["BSD-2-Clause-FreeBSD", /not a Zenodo license ID/],
         ["other-open", /not a Zenodo license ID/],
+        ["other-closed", /not a Zenodo license ID/],
+        ["other-at", /not a Zenodo license ID/],
+        ["other-nc", /not a Zenodo license ID/],
+        ["other-pd", /not a Zenodo license ID/],
+        ["ukcrown", /not a Zenodo license ID/],
         ["GPL-3.0+", /not a Zenodo license ID/],
         ["LicenseRef-Custom+", /Invalid LicenseRef/],
         ["LicenseRef-under_score", /Invalid LicenseRef/],
@@ -116,11 +121,18 @@ describe("license IDs", () => {
         expect(licenseIdError(id, zenodoLicenseFixture)).toMatch(message);
     });
 
-    it("checks only the shape while the list is unavailable", () => {
-        expect(licenseIdError("BSD-2-Clause-FreeBSD", null)).toBeNull();
+    it("blocks catalogue IDs while the list is unavailable", () => {
+        expect(licenseIdError("MIT", null)).toMatch(/license list is unavailable/);
+        for (const id of ["other-at", "other-nc", "other-pd", "ukcrown", "BSD-2-Clause-FreeBSD"]) {
+            expect(licenseIdError(id, null)).toMatch(/license list is unavailable/);
+        }
+        expect(licenseIdError("other-open", null)).toMatch(/license list is unavailable/);
+        expect(licenseIdError("other-closed", null)).toMatch(/license list is unavailable/);
         expect(licenseIdError("MIT OR Apache-2.0", null)).not.toBeNull();
         setZenodoLicenses(null);
-        expect(CopyrightInfoSchema.safeParse({ license: "BSD-2-Clause-FreeBSD" }).success).toBe(true);
+        expect(CopyrightInfoSchema.safeParse({ license: "MIT" }).success).toBe(false);
+        expect(CopyrightInfoSchema.safeParse({ license: "other-at" }).success).toBe(false);
+        expect(CopyrightInfoSchema.safeParse({ name: "Custom license", url: "https://example.com/LICENSE" }).success).toBe(true);
     });
 });
 

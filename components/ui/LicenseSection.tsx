@@ -75,7 +75,7 @@ export default function LicenseSection({
         }
     };
 
-    const schema = useMemo(() => copyrightInfoSchema(templateValues), [templateValues]);
+    const schema = useMemo(() => copyrightInfoSchema(templateValues, licenseList), [templateValues, licenseList]);
 
     const validateLicense = (info: CopyrightInfo): string[] => {
         const result = schema.safeParse(info);

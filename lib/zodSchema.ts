@@ -9,7 +9,7 @@ import {
     renderCopyrightTemplate,
     type CopyrightTemplateValues,
 } from '@/lib/licenseId';
-import { getZenodoLicenses } from '@/lib/zenodoLicenses';
+import { getZenodoLicenses, type ZenodoLicenseList } from '@/lib/zenodoLicenses';
 
 // ============================================================================
 // Base Types
@@ -45,8 +45,13 @@ type CopyrightFields = { license?: string; name?: string; url?: string };
 type CopyrightIssue = { path: (keyof CopyrightFields)[]; message: string };
 
 /** Everything wrong with a copyright entry, rendering templates with `values` when given. */
-export function copyrightIssues(info: CopyrightFields, values?: CopyrightTemplateValues): CopyrightIssue[] {
+export function copyrightIssues(
+    info: CopyrightFields,
+    values?: CopyrightTemplateValues,
+    licenseList?: ZenodoLicenseList | null,
+): CopyrightIssue[] {
     const issues: CopyrightIssue[] = [];
+    const activeLicenseList = licenseList === undefined ? getZenodoLicenses() : licenseList;
     // Rendered text per field; null when it is a template that cannot be rendered here.
     const rendered: { [K in keyof CopyrightFields]?: string | null } = {};
     for (const key of ["license", "name", "url"] as const) {
@@ -62,7 +67,7 @@ export function copyrightIssues(info: CopyrightFields, values?: CopyrightTemplat
         if (!license.trim()) {
             issues.push({ path: ["license"], message: "License identifier is required" });
         } else if (!isNoLicense(license)) {
-            const error = licenseIdError(license, getZenodoLicenses());
+            const error = licenseIdError(license, activeLicenseList);
             if (error) issues.push({ path: ["license"], message: error });
         }
     }
@@ -87,7 +92,7 @@ export function copyrightIssues(info: CopyrightFields, values?: CopyrightTemplat
     }
     if (info.url?.trim()) {
         if (typeof license === "string" && typeof url === "string") {
-            const mismatch = licenseUrlMismatch(license, url, getZenodoLicenses());
+            const mismatch = licenseUrlMismatch(license, url, activeLicenseList);
             if (mismatch) issues.push({ path: ["url"], message: mismatch });
         }
     } else if (info.license === undefined) {
@@ -111,10 +116,10 @@ const toCopyrightInfo = (info: CopyrightFields): CopyrightInfo =>
         : { ...info, license: info.license };
 
 /** Schema for one copyright entry; pass the recipe's template values to validate rendered text. */
-export function copyrightInfoSchema(values?: CopyrightTemplateValues) {
+export function copyrightInfoSchema(values?: CopyrightTemplateValues, licenseList?: ZenodoLicenseList | null) {
     return CopyrightFieldsSchema
         .superRefine((info, ctx) => {
-            for (const issue of copyrightIssues(info, values)) {
+            for (const issue of copyrightIssues(info, values, licenseList)) {
                 ctx.addIssue({ code: "custom", ...issue });
             }
         })

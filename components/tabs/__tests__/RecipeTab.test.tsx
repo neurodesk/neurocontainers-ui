@@ -1,7 +1,9 @@
 import "@testing-library/jest-dom";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import type { ContainerRecipe } from "@/components/common";
 import { ThemeProvider } from "@/lib/ThemeContext";
+import { setZenodoLicenses } from "@/lib/zenodoLicenses";
+import { zenodoLicenseFixture } from "@/jest.mocks/zenodoLicenses";
 import { RecipeTab } from "../RecipeTab";
 
 const mockExportYAML = jest.fn();
@@ -43,7 +45,11 @@ function renderRecipe(copyrightEntries: ContainerRecipe["copyright"]) {
 }
 
 describe("RecipeTab license download validation", () => {
-    beforeEach(() => mockExportYAML.mockClear());
+    beforeEach(() => {
+        mockExportYAML.mockClear();
+        setZenodoLicenses(zenodoLicenseFixture);
+    });
+    afterAll(() => setZenodoLicenses(null));
 
     it("blocks download when a custom license lacks a name or URL", () => {
         renderRecipe([{ name: "", url: "" }]);
@@ -58,5 +64,33 @@ describe("RecipeTab license download validation", () => {
         renderRecipe([{ name: "Research license", url: "https://example.com/LICENSE" }]);
         fireEvent.click(screen.getByRole("button", { name: "Download YAML" }));
         expect(mockExportYAML).toHaveBeenCalledWith(mockRecipe);
+    });
+
+    it("enables a listed license only after the catalogue loads", () => {
+        setZenodoLicenses(null);
+        (global.fetch as jest.Mock).mockReturnValue(new Promise(() => {}));
+        renderRecipe([{ license: "MIT" }]);
+        const button = screen.getByRole("button", { name: "Download YAML" });
+        expect(button).toBeDisabled();
+        fireEvent(window, new CustomEvent("nc:recipe-download"));
+        expect(mockExportYAML).not.toHaveBeenCalled();
+
+        act(() => setZenodoLicenses(zenodoLicenseFixture));
+        expect(button).toBeEnabled();
+        fireEvent.click(button);
+        expect(mockExportYAML).toHaveBeenCalledWith(mockRecipe);
+    });
+
+    it.each(["other-open", "other-closed", "other-at", "other-nc", "other-pd", "ukcrown"])("keeps unsupported %s blocked after the catalogue loads", (license) => {
+        setZenodoLicenses(null);
+        (global.fetch as jest.Mock).mockReturnValue(new Promise(() => {}));
+        renderRecipe([{ license }]);
+        const button = screen.getByRole("button", { name: "Download YAML" });
+        expect(button).toBeDisabled();
+
+        act(() => setZenodoLicenses(zenodoLicenseFixture));
+        expect(button).toBeDisabled();
+        fireEvent(window, new CustomEvent("nc:recipe-download"));
+        expect(mockExportYAML).not.toHaveBeenCalled();
     });
 });

@@ -13,6 +13,7 @@ import type { ContainerRecipe } from "@/components/common";
 import { SaveStatus } from "@/lib/containerStorage";
 import { copyrightInfoSchema } from "@/lib/zodSchema";
 import { copyrightTemplateValues } from "@/lib/licenseId";
+import { useZenodoLicenses } from "@/lib/zenodoLicenses";
 
 export function RecipeTab({ tabId }: { tabId?: string }) {
   const { tabs, activeId, update } = useTabs();
@@ -20,11 +21,12 @@ export function RecipeTab({ tabId }: { tabId?: string }) {
   const tab = useMemo(() => tabs.find(t => t.id === effectiveId), [tabs, effectiveId]);
   const { isDark } = useTheme();
   const [recipe, setRecipe] = useState<ContainerRecipe | null>(() => (tab?.payload as { recipe?: ContainerRecipe } | undefined)?.recipe ?? null);
+  const licenseList = useZenodoLicenses();
   const hasInvalidLicenses = useMemo(() => {
     if (!recipe?.copyright) return false;
-    const schema = copyrightInfoSchema(copyrightTemplateValues(recipe));
+    const schema = copyrightInfoSchema(copyrightTemplateValues(recipe), licenseList);
     return recipe.copyright.some((entry) => !schema.safeParse(entry).success);
-  }, [recipe]);
+  }, [recipe, licenseList]);
 
   const { saveStatus, currentContainerId, saveToStorage, setCurrentContainerId, exportYAML } = useContainerStorage();
   const validateRef = useRef<HTMLDivElement | null>(null);
@@ -127,7 +129,7 @@ export function RecipeTab({ tabId }: { tabId?: string }) {
       </div>
       {hasInvalidLicenses && (
         <p role="alert" className={cn("text-sm", isDark ? "text-red-400" : "text-red-600")}>
-          Complete each license’s required fields before downloading YAML.
+          Complete each license’s required fields or wait for the Zenodo license list before downloading YAML.
         </p>
       )}
 

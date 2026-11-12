@@ -9,14 +9,28 @@ const MAIN_REF = "heads/main";
 
 const BUILDER_PACKAGE_FILES = [
     "builder/__init__.py",
+    "builder/audit_updates.py",
     "builder/cache.py",
+    "builder/config.py",
     "builder/dockerfile.py",
+    "builder/fragments.py",
+    "builder/image_fingerprint.py",
     "builder/ir.py",
+    "builder/openrecon_updates.py",
     "builder/recipe.py",
     "builder/staging.py",
     "builder/template.py",
     "builder/template_backend.py",
+    "builder/update_bundles.py",
+    "builder/update_http_cache.py",
+    "builder/update_observations.py",
+    "builder/update_plan.py",
+    "builder/update_records.py",
+    "builder/update_sources.py",
     "builder/validation.py",
+    "builder/variants.py",
+    "builder/versioning.py",
+    "builder/yaml_edit.py",
     "builder/templates/afni.yaml",
     "builder/templates/ants.yaml",
     "builder/templates/bids_validator.yaml",
@@ -627,11 +641,8 @@ ui_bridge = types.SimpleNamespace(
 
 export async function loadBuilder(pyodide: PyodideInterface): Promise<Builder> {
     try {
-        // Ensure Micropip and basics are available
-        await pyodide.loadPackage("micropip");
-        await pyodide.loadPackage("jinja2");
-        // builder/validation.py validates licenses with packaging.licenses.
-        await pyodide.loadPackage("packaging");
+        // Load the packages imported by the builder and its update policy validators.
+        await pyodide.loadPackage(["micropip", "jinja2", "packaging", "requests", "lzma"]);
 
         // Generate the loader script (local or remote)
         const loaderScript = await createLoaderScript();

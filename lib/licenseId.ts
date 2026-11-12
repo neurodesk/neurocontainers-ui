@@ -4,6 +4,23 @@ const LICENSE_REF = /^licenseref-[a-z0-9.-]+$/;
 // Shape of a single license ID such as "GPL-3.0-only" or "GPL-2.0+".
 const LICENSE_ID = /^[a-z0-9][a-z0-9.+-]*$/;
 
+// Mirroring NO_LICENSE_IDS and NO_LICENSE_PHRASES from
+// Neurodesk/apps.json scripts/license_terms.py: values stating that no license
+// is known. DOI publication mints the record without `rights` for these.
+const NO_LICENSE_IDS = new Set(["noassertion", "none", "unknown"]);
+const NO_LICENSE_PHRASES = [
+    "no licence published",
+    "no license published",
+    "does not declare a license",
+    "no license declared",
+];
+
+/** Whether a license ID or custom name states that no license is known. */
+export function isNoLicense(value: string): boolean {
+    const lowered = value.trim().toLowerCase();
+    return NO_LICENSE_IDS.has(lowered) || NO_LICENSE_PHRASES.some((phrase) => lowered.includes(phrase));
+}
+
 /**
  * Returns why `value` cannot be a recipe `license`, or null if it can.
  *

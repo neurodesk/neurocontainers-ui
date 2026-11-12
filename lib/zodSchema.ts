@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { CATEGORIES, CopyrightInfo, IncludeMacros } from '@/components/common';
 import {
     copyrightTemplateValues,
+    isNoLicense,
     licenseIdError,
     licenseUrlError,
     licenseUrlMismatch,
@@ -33,11 +34,9 @@ export const ConditionSchema = z.string();
 // and top-level text variables. With those values the rendered text is
 // validated; without them (a lone entry) only the template's form is checked.
 
-const NON_SPDX_LICENSES = new Set<string>(["NOASSERTION", "NONE"]);
-
 /** Whether an entry with this `license` must link to the license terms. */
 export function licenseRequiresUrl(license: string): boolean {
-    return NON_SPDX_LICENSES.has(license) || license.toLowerCase().includes("licenseref-");
+    return isNoLicense(license) || license.toLowerCase().includes("licenseref-");
 }
 
 const isLicenseRef = (license: string) => license.trim().toLowerCase().startsWith("licenseref-");
@@ -62,7 +61,7 @@ export function copyrightIssues(info: CopyrightFields, values?: CopyrightTemplat
     if (typeof license === "string") {
         if (!license.trim()) {
             issues.push({ path: ["license"], message: "License identifier is required" });
-        } else if (!NON_SPDX_LICENSES.has(license)) {
+        } else if (!isNoLicense(license)) {
             const error = licenseIdError(license, getZenodoLicenses());
             if (error) issues.push({ path: ["license"], message: error });
         }

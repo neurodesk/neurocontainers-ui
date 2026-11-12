@@ -1,5 +1,5 @@
 import { ContainerRecipeSchema, CopyrightInfoSchema, copyrightInfoSchema } from "@/lib/zodSchema";
-import { copyrightTemplateValues, licenseIdError, renderCopyrightTemplate } from "@/lib/licenseId";
+import { copyrightTemplateValues, isNoLicense, licenseIdError, renderCopyrightTemplate } from "@/lib/licenseId";
 import { setZenodoLicenses } from "@/lib/zenodoLicenses";
 import { zenodoLicenseFixture } from "@/jest.mocks/zenodoLicenses";
 
@@ -21,6 +21,9 @@ describe("copyright metadata", () => {
         { license: "{{ context.license_id }}" },
         { name: "{{ name }} license", url: "{{ context.license_url }}" },
         { license: "NOASSERTION", url: "https://example.com" },
+        { license: "noassertion", url: "https://example.com" },
+        { license: "NONE", url: "https://example.com" },
+        { license: "unknown", url: "https://example.com" },
         { name: "Custom license", url: "https://example.com/LICENSE" },
     ])("accepts and preserves %j", (entry) => {
         expect(CopyrightInfoSchema.parse(entry)).toEqual(entry);
@@ -45,6 +48,7 @@ describe("copyright metadata", () => {
         { name: "Custom license", url: "https://user:secret@example.com/LICENSE" },
         { license: "NOASSERTION" },
         { license: "NONE" },
+        { license: "unknown" },
         { name: "Custom license" },
         { name: "Custom license", url: "" },
         { name: "Custom license", url: "ftp://example.com/LICENSE" },
@@ -117,6 +121,29 @@ describe("license IDs", () => {
         expect(licenseIdError("MIT OR Apache-2.0", null)).not.toBeNull();
         setZenodoLicenses(null);
         expect(CopyrightInfoSchema.safeParse({ license: "BSD-2-Clause-FreeBSD" }).success).toBe(true);
+    });
+});
+
+describe("no-license detection", () => {
+    it.each([
+        "NOASSERTION", "noassertion", "Noassertion",
+        "NONE", "none", "None",
+        "unknown", "Unknown", "UNKNOWN",
+    ])("recognises %j as no-license", (value) => {
+        expect(isNoLicense(value)).toBe(true);
+    });
+
+    it.each([
+        "no licence published",
+        "no license published",
+        "This tool does not declare a license",
+        "no license declared for this tool",
+    ])("recognises phrase %j as no-license", (value) => {
+        expect(isNoLicense(value)).toBe(true);
+    });
+
+    it.each(["MIT", "GPL-3.0", "other-open", ""])("does not match %j", (value) => {
+        expect(isNoLicense(value)).toBe(false);
     });
 });
 

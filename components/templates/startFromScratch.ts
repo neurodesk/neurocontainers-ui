@@ -73,6 +73,7 @@ export const START_FROM_SCRATCH_TEMPLATE: ContainerTemplate = {
         return {
             name: containerName,
             version,
+            domains: ["neuroimaging"],
             copyright: [],
             architectures: ["x86_64"] as Architecture[],
             structured_readme,

@@ -8,9 +8,9 @@ export interface CustomCopyrightInfo {
 }
 
 export interface SPDXCopyrightInfo {
-    license: string; // SPDX expression, LicenseRef-*, NOASSERTION, NONE, or a Zenodo category (other-open/other-closed)
-    name?: string; // Title of the license terms, used with a Zenodo category
-    url?: string; // Required for LicenseRef-*, NOASSERTION, NONE and Zenodo categories
+    license: string; // SPDX expression, LicenseRef-*, NOASSERTION, or NONE
+    name?: string; // Optional title of the license terms
+    url?: string; // Required for LicenseRef-*, NOASSERTION, and NONE
 }
 
 export type CopyrightInfo = CustomCopyrightInfo | SPDXCopyrightInfo;
@@ -90,6 +90,26 @@ export interface FileInfo {
     filename?: string;
     contents?: string;
     url?: string;
+    sha256?: string;
+    executable?: boolean;
+    insecure?: boolean;
+    retry?: number;
+    refresh?: boolean;
+}
+
+export interface AutoUpdatePolicy {
+    method: string;
+    container_version?: string | boolean | { variable: string; prefix?: string };
+    sources?: Array<{
+        id?: string;
+        target?: {
+            file?: string;
+            variable?: string;
+            variables?: Record<string, string>;
+        };
+        [key: string]: unknown;
+    }>;
+    [key: string]: unknown;
 }
 
 export interface FileDirective extends BaseDirective {
@@ -183,6 +203,8 @@ export const CATEGORIES = {
 export interface ContainerRecipe {
     name: string;
     version: string;
+    auto_update?: AutoUpdatePolicy;
+    domains?: string[];
     icon?: string; // Base64 encoded image, 64x64 pixels
     copyright?: CopyrightInfo[];
     architectures: Architecture[];
@@ -194,6 +216,8 @@ export interface ContainerRecipe {
     deploy?: DeployInfo;
     tests?: TestInfo[];
     categories?: (keyof typeof CATEGORIES)[];
+    // Top-level recipe variables; copyright templates can use the text ones.
+    variables?: Record<string, unknown>;
 }
 
 function safeTrimmedText(value: unknown): string {

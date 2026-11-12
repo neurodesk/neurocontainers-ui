@@ -1,23 +1,13 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import {
     ChevronDownIcon,
     MagnifyingGlassIcon,
     PencilIcon,
     XMarkIcon,
 } from "@heroicons/react/24/outline";
-import spdxLicenses from "./licenses.json";
 import { cn } from "@/lib/styles";
 import { useTheme } from "@/lib/ThemeContext";
-
-// Transform SPDX license data to our format
-const SPDX_LICENSES = spdxLicenses.licenses
-    .filter(license => !license.isDeprecatedLicenseId)
-    .map(license => ({
-        id: license.licenseId,
-        name: license.name,
-        url: license.seeAlso?.[0] || license.reference,
-        isOsiApproved: license.isOsiApproved
-    }));
+import { findZenodoLicense, useZenodoLicenses } from "@/lib/zenodoLicenses";
 
 interface License {
     id: string;
@@ -45,8 +35,20 @@ export default function LicenseDropdown({
     const dropdownRef = useRef<HTMLDivElement>(null);
     const searchInputRef = useRef<HTMLInputElement>(null);
     const [isMobile, setIsMobile] = useState(false);
+    const licenseList = useZenodoLicenses();
+    // Only Zenodo license IDs are offered, so every listed license can get a DOI.
+    const zenodoLicenses = useMemo<License[]>(
+        () =>
+            (licenseList?.licenses ?? []).map((license) => ({
+                id: license.id,
+                name: license.title,
+                url: license.url ?? "",
+                isOsiApproved: license.osi_approved,
+            })),
+        [licenseList],
+    );
 
-    const filteredLicenses = SPDX_LICENSES.filter((license) => {
+    const filteredLicenses = zenodoLicenses.filter((license) => {
         const term = searchTerm.toLowerCase().trim();
         if (!term) return true;
 
@@ -179,8 +181,10 @@ export default function LicenseDropdown({
         setSearchTerm("");
     };
 
-    const selectedLicense = SPDX_LICENSES.find((l) => l.id === value);
-    const isCustomLicense = !selectedLicense && value && value.trim();
+    // A deprecated alias (e.g. GPL-3.0) shows the title of the license it maps to.
+    const listed = licenseList && value ? findZenodoLicense(licenseList, value) : undefined;
+    const selectedLicense = listed && { id: value, name: listed.title };
+    const isCustomLicense = !selectedLicense && licenseList && value && value.trim();
 
     return (
         <div className="relative" ref={dropdownRef}>
@@ -201,6 +205,8 @@ export default function LicenseDropdown({
                 )}>
                     {selectedLicense ? (
                         `${selectedLicense.id} - ${selectedLicense.name}`
+                    ) : value && !licenseList ? (
+                        value
                     ) : isCustomLicense ? (
                         <span className="flex items-center gap-2">
                             <PencilIcon className={cn(
@@ -331,8 +337,16 @@ export default function LicenseDropdown({
                                 </div>
                             </button>
 
-                            {/* SPDX Licenses */}
-                            {filteredLicenses.length > 0 ? (
+                            {/* Zenodo licenses */}
+                            {!licenseList ? (
+                                <div className={cn(
+                                    "text-sm",
+                                    isMobile ? "px-4 py-3" : "px-3 py-2",
+                                    isDark ? "text-[#9ca3af]" : "text-gray-500"
+                                )}>
+                                    Loading the Zenodo license list… If it does not load, use a custom license.
+                                </div>
+                            ) : filteredLicenses.length > 0 ? (
                                 filteredLicenses.map((license) => (
                                     <button
                                         key={license.id}

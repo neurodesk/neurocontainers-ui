@@ -2,6 +2,7 @@ import { ContainerRecipe } from "@/components/common";
 import type { PyodideInterface } from "pyodide";
 import { filesystemService } from "@/lib/filesystem";
 import { buildValidationSupportFiles } from "@/lib/recipeSupportFiles";
+import { missingUpdatePolicyFiles, restoreUpdatePolicyFiles, validateRecipeDomains } from "@/lib/recipeFormat";
 
 const REPO_URL = "https://raw.githubusercontent.com/NeuroDesk/neurocontainers";
 
@@ -9,14 +10,28 @@ const MAIN_REF = "heads/main";
 
 const BUILDER_PACKAGE_FILES = [
     "builder/__init__.py",
+    "builder/audit_updates.py",
     "builder/cache.py",
+    "builder/config.py",
     "builder/dockerfile.py",
+    "builder/fragments.py",
+    "builder/image_fingerprint.py",
     "builder/ir.py",
+    "builder/openrecon_updates.py",
     "builder/recipe.py",
     "builder/staging.py",
     "builder/template.py",
     "builder/template_backend.py",
+    "builder/update_bundles.py",
+    "builder/update_http_cache.py",
+    "builder/update_observations.py",
+    "builder/update_plan.py",
+    "builder/update_records.py",
+    "builder/update_sources.py",
     "builder/validation.py",
+    "builder/variants.py",
+    "builder/versioning.py",
+    "builder/yaml_edit.py",
     "builder/templates/afni.yaml",
     "builder/templates/ants.yaml",
     "builder/templates/bids_validator.yaml",
@@ -29,7 +44,6 @@ const BUILDER_PACKAGE_FILES = [
     "builder/templates/miniconda.yaml",
     "builder/templates/mrtrix3.yaml",
     "builder/templates/spm12.yaml",
-    "builder/licenses.json",
 ];
 
 const REPO_FILES = [
@@ -91,7 +105,6 @@ interface PyBuilderInterface {
         checkOnly: boolean
     ) => PyBuildResult | null;
     init_new_recipe: (repoPath: string, name: string, version: string) => void;
-    load_spdx_licenses: () => Set<string>;
     download_with_cache: (url: string, checkOnly?: boolean) => string;
     hash_obj: (obj: unknown) => string;
     NeuroDockerBuilder?: (baseImage: string, pkgManager?: string, addDefault?: boolean) => unknown;
@@ -154,15 +167,36 @@ os.makedirs("/recipe", exist_ok=True)
         const warnings: string[] = [];
         let replacedUrlFiles = 0;
 
+        const versionDriver = recipe.auto_update?.container_version;
+        const versionSource = typeof versionDriver === "string"
+            ? recipe.auto_update?.sources?.find((source) => source.id === versionDriver)
+            : undefined;
+        const versionSourceFile = versionSource?.target?.file &&
+            !Object.values(versionSource.target.variables ?? {}).includes("version") &&
+            !versionSource.target.variable
+            ? versionSource.target.file
+            : undefined;
+
         const replaceUrlFileWithPlaceholder = (file: {
+            name: string;
             url?: string;
             contents?: string;
             refresh?: boolean;
             retry?: number;
             insecure?: boolean;
             curl_options?: string;
+            sha256?: string;
         } | undefined) => {
             if (!file?.url) {
+                return;
+            }
+
+            // A file-driven version policy reads the URL before compilation.
+            // compile_recipe does not download it, so the URL can stay intact.
+            if (file.name === versionSourceFile) {
+                warnings.push(
+                    `Browser validation checked the version in ${file.name}'s URL without downloading the remote file.`,
+                );
                 return;
             }
 
@@ -177,6 +211,7 @@ os.makedirs("/recipe", exist_ok=True)
             delete file.retry;
             delete file.insecure;
             delete file.curl_options;
+            delete file.sha256;
             replacedUrlFiles += 1;
         };
 
@@ -218,8 +253,16 @@ os.makedirs("/recipe", exist_ok=True)
         options: BuildOptions = {}
     ): Promise<BuildResult | null> {
         try {
+            const formattedRecipe = restoreUpdatePolicyFiles(recipeDescription);
+            validateRecipeDomains(formattedRecipe);
+            const missingFiles = missingUpdatePolicyFiles(formattedRecipe);
+            if (missingFiles.length > 0) {
+                throw new Error(
+                    `auto_update references missing top-level file${missingFiles.length === 1 ? "" : "s"}: ${missingFiles.join(", ")}`,
+                );
+            }
             const { recipe: validationRecipe, warnings: sanitizationWarnings } =
-                this.sanitizeRecipeForValidation(recipeDescription);
+                this.sanitizeRecipeForValidation(formattedRecipe);
 
             // HACK: fix for readme_url being optional
             if (Object.hasOwn(validationRecipe, "readme_url") && validationRecipe.readme_url?.length || 0 === 0) {
@@ -305,22 +348,6 @@ os.makedirs("/recipe", exist_ok=True)
         } catch (error) {
             console.error("Error loading description file:", error);
             throw error;
-        }
-    }
-
-    /**
-     * Validate SPDX license
-     */
-    async validateLicense(license: string): Promise<boolean> {
-        try {
-            const rawLicenses = this.pyBuilder.load_spdx_licenses();
-            const validLicenses = rawLicenses && typeof (rawLicenses as unknown as { toJs?: unknown }).toJs === "function"
-                ? (rawLicenses as unknown as { toJs: () => Set<string> }).toJs()
-                : rawLicenses;
-            return validLicenses.has(license);
-        } catch (error) {
-            console.error("Error validating license:", error);
-            return false;
         }
     }
 
@@ -614,12 +641,6 @@ readme: TODO
     )
 
 
-def load_spdx_licenses():
-    with open("builder/licenses.json", "r", encoding="utf-8") as f:
-        data = json.load(f)
-    return {item["licenseId"] for item in data.get("licenses", []) if "licenseId" in item}
-
-
 def download_with_cache(url, check_only=False):
     digest = hashlib.sha256(str(url).encode("utf-8")).hexdigest()
     cache_dir = Path("/tmp/neurocontainers-cache")
@@ -644,7 +665,6 @@ import types
 ui_bridge = types.SimpleNamespace(
     generate_from_description=generate_from_description,
     init_new_recipe=init_new_recipe,
-    load_spdx_licenses=load_spdx_licenses,
     download_with_cache=download_with_cache,
     hash_obj=hash_obj,
 )
@@ -652,11 +672,8 @@ ui_bridge = types.SimpleNamespace(
 
 export async function loadBuilder(pyodide: PyodideInterface): Promise<Builder> {
     try {
-        // Ensure Micropip and basics are available
-        await pyodide.loadPackage("micropip");
-        await pyodide.loadPackage("jinja2");
-        // builder/validation.py validates licenses with packaging.licenses.
-        await pyodide.loadPackage("packaging");
+        // Load the packages imported by the builder and its update policy validators.
+        await pyodide.loadPackage(["micropip", "jinja2", "packaging", "requests", "lzma"]);
 
         // Generate the loader script (local or remote)
         const loaderScript = await createLoaderScript();

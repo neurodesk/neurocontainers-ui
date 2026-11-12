@@ -1,6 +1,7 @@
 import { InformationCircleIcon, ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import { ContainerRecipe, Architecture, CopyrightInfo, StructuredReadme, convertStructuredReadmeToText, CATEGORIES, normalizeStructuredReadme } from "@/components/common";
-import { useState, useEffect } from "react";
+import { copyrightTemplateValues } from "@/lib/licenseId";
+import { useState, useEffect, useMemo } from "react";
 import {
     BasicInfoSection,
     ArchitectureSelector,
@@ -160,6 +161,13 @@ export default function ContainerMetadata({
             readme_url: undefined
         });
     };
+
+    // Only these fields feed copyright templates; keep the schema stable otherwise.
+    const { name: recipeName, version: recipeVersion, variables: recipeVariables } = recipe;
+    const copyrightValues = useMemo(
+        () => copyrightTemplateValues({ name: recipeName, version: recipeVersion, variables: recipeVariables }),
+        [recipeName, recipeVersion, recipeVariables],
+    );
 
     const updateCopyright = (copyright: CopyrightInfo[]) => {
         onChange({ ...recipe, copyright });
@@ -465,6 +473,7 @@ export default function ContainerMetadata({
 
                         <LicenseSection
                             licenses={recipe.copyright || []}
+                            templateValues={copyrightValues}
                             onChange={updateCopyright}
                             onAddLicense={addLicense}
                             showAddButton={false}

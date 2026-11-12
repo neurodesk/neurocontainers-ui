@@ -6,7 +6,7 @@ import { useState, useRef, useEffect, lazy, Suspense } from "react";
 import type { JSX } from "react";
 import { Directive, GroupDirective } from "@/components/common";
 import DirectiveComponent from "./factory";
-import { registerDirective, DirectiveMetadata } from "./registry";
+import { registerDirective, flushPendingRegistrations, DirectiveMetadata } from "./registry";
 import { DirectiveContainer, FormField, Input, ToggleButtonGroup, TagEditor } from "@/components/ui";
 import { getButtons, iconStyles, textStyles, cn } from "@/lib/styles";
 import { useTheme } from "@/lib/ThemeContext";
@@ -258,6 +258,8 @@ export function createGroupEditorComponent(editorInfo: GroupEditor) {
 }
 
 export function registerGroupEditor(name: string, editor: GroupEditor) {
+    // Built-in groups first, so a user's saved group with the same key wins.
+    flushPendingRegistrations();
     groupEditors.set(name, editor);
     const component = createGroupEditorComponent(editor);
     const metadata = {
@@ -268,6 +270,7 @@ export function registerGroupEditor(name: string, editor: GroupEditor) {
 }
 
 export function getGroupEditor(name: string): GroupEditor | undefined {
+    flushPendingRegistrations();
     return groupEditors.get(name);
 }
 

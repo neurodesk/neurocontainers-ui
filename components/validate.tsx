@@ -21,6 +21,7 @@ import { useTheme } from "@/lib/ThemeContext";
 import { ValidationResult } from "@/types/validation";
 import { useGitHubFiles } from '@/lib/useGithub';
 import { regenerateRecipe } from "@/lib/regenerateRecipe";
+import { restoreUpdatePolicyFiles } from "@/lib/recipeFormat";
 import pako from "pako";
 
 export default function ContainerValidator({
@@ -203,11 +204,12 @@ export default function ContainerValidator({
 
     // Generate YAML string for publishing
     const generateYAMLString = useCallback((data: ContainerRecipe): string => {
+        const formatted = restoreUpdatePolicyFiles(data);
         const cleanData = {
-            ...data,
+            ...formatted,
             build: {
-                ...data.build,
-                directives: data.build.directives.filter(directive => {
+                ...formatted.build,
+                directives: formatted.build.directives.filter(directive => {
                     // Check if the directive has content - different directives have different structures
                     if ('name' in directive && directive.name) {
                         return typeof directive.name === 'string' && directive.name.trim() !== "";

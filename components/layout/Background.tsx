@@ -47,7 +47,7 @@ export function Background() {
       <div
         className="absolute inset-0 -z-10 transition-[background] duration-[2000ms] ease-out"
         style={{
-          background: isDark
+          backgroundImage: isDark
             ? `radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, rgba(123,179,58,0.035), transparent 55%), radial-gradient(circle at ${100 - mousePosition.x}% ${100 - mousePosition.y}%, rgba(145,200,74,0.025), transparent 45%), linear-gradient(135deg, #11140f 0%, #0a0c08 100%)`
             : `radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, rgba(106,163,41,0.035), transparent 55%), radial-gradient(circle at ${100 - mousePosition.x}% ${100 - mousePosition.y}%, rgba(79,123,56,0.02), transparent 45%), linear-gradient(135deg, #f7faf6 0%, #eef6e8 100%)`,
           backgroundSize: "cover",

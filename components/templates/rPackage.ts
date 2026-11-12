@@ -351,6 +351,7 @@ For detailed package documentation, see: ${githubUrl}`,
         return {
             name: containerName,
             version,
+            domains: ["neuroimaging"],
             copyright,
             architectures: ["x86_64"] as Architecture[],
             structured_readme,

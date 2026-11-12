@@ -1,6 +1,15 @@
 import { z } from 'zod';
 import { CATEGORIES, CopyrightInfo, IncludeMacros } from '@/components/common';
-import { spdxExpressionError } from '@/lib/licenseExpression';
+import {
+    copyrightTemplateValues,
+    isNoLicense,
+    licenseIdError,
+    licenseUrlError,
+    licenseUrlMismatch,
+    renderCopyrightTemplate,
+    type CopyrightTemplateValues,
+} from '@/lib/licenseId';
+import { getZenodoLicenses, type ZenodoLicenseList } from '@/lib/zenodoLicenses';
 
 // ============================================================================
 // Base Types
@@ -15,85 +24,110 @@ export const ConditionSchema = z.string();
 // ============================================================================
 
 // Mirrors builder/validation.py in neurodesk/neurocontainers: an entry with
-// `license` is an SPDX entry and may also carry a `name`; an entry without one
-// is a custom license identified by `name` and the URL of its terms.
-
-/** Zenodo license categories accepted in place of an SPDX expression. */
-export const ZENODO_LICENSE_CATEGORIES = ["other-open", "other-closed"] as const;
-export type ZenodoLicenseCategory = (typeof ZENODO_LICENSE_CATEGORIES)[number];
-
-export function isZenodoLicenseCategory(license: string): license is ZenodoLicenseCategory {
-    return (ZENODO_LICENSE_CATEGORIES as readonly string[]).includes(license);
-}
-
-const NON_SPDX_LICENSES = new Set<string>([...ZENODO_LICENSE_CATEGORIES, "NOASSERTION", "NONE"]);
+// `license` is a license-ID entry and may also carry a `name`; an entry without
+// one is a custom license identified by `name` and the URL of its terms.
+// `license` is limited to the Zenodo license list (lib/zenodoLicenses.ts) so
+// the image can get a DOI; other terms are entered as custom licenses.
+//
+// Fields may use `{{ context.<variable> }}` templates, which DOI publication
+// (Neurodesk/apps.json render_copyright) fills from the recipe's version, name
+// and top-level text variables. With those values the rendered text is
+// validated; without them (a lone entry) only the template's form is checked.
 
 /** Whether an entry with this `license` must link to the license terms. */
 export function licenseRequiresUrl(license: string): boolean {
-    return NON_SPDX_LICENSES.has(license) || license.toLowerCase().includes("licenseref-");
+    return isNoLicense(license) || license.toLowerCase().includes("licenseref-");
 }
 
-const isTemplated = (value: string) => value.includes("{{") || value.includes("{%");
+const isLicenseRef = (license: string) => license.trim().toLowerCase().startsWith("licenseref-");
 
-const LicenseSchema = z.string().superRefine((value, ctx) => {
-    if (!value.trim()) {
-        ctx.addIssue({ code: "custom", message: "License identifier is required" });
-        return;
+type CopyrightFields = { license?: string; name?: string; url?: string };
+type CopyrightIssue = { path: (keyof CopyrightFields)[]; message: string };
+
+/** Everything wrong with a copyright entry, rendering templates with `values` when given. */
+export function copyrightIssues(
+    info: CopyrightFields,
+    values?: CopyrightTemplateValues,
+    licenseList?: ZenodoLicenseList | null,
+): CopyrightIssue[] {
+    const issues: CopyrightIssue[] = [];
+    const activeLicenseList = licenseList === undefined ? getZenodoLicenses() : licenseList;
+    // Rendered text per field; null when it is a template that cannot be rendered here.
+    const rendered: { [K in keyof CopyrightFields]?: string | null } = {};
+    for (const key of ["license", "name", "url"] as const) {
+        const raw = info[key];
+        if (raw === undefined) continue;
+        const { value, error } = renderCopyrightTemplate(raw, values);
+        if (error) issues.push({ path: [key], message: error });
+        rendered[key] = value;
     }
-    if (NON_SPDX_LICENSES.has(value) || isTemplated(value)) return;
-    if (spdxExpressionError(value)) {
-        ctx.addIssue({
-            code: "custom",
-            message:
-                `"${value}" is not a valid SPDX license expression. For a custom license, ` +
-                "use a custom name with a URL, and set the Zenodo category to other-open " +
-                "or other-closed for Zenodo publication.",
+    const { license, name, url } = rendered;
+
+    if (typeof license === "string") {
+        if (!license.trim()) {
+            issues.push({ path: ["license"], message: "License identifier is required" });
+        } else if (!isNoLicense(license)) {
+            const error = licenseIdError(license, activeLicenseList);
+            if (error) issues.push({ path: ["license"], message: error });
+        }
+    }
+    if (typeof name === "string" && !name.trim()) {
+        issues.push({ path: ["name"], message: "License name cannot be empty" });
+    }
+    if (typeof url === "string") {
+        const error = licenseUrlError(url);
+        if (error) issues.push({ path: ["url"], message: error });
+    }
+
+    if (info.license === undefined && info.name === undefined) {
+        issues.push({ path: ["name"], message: "A custom license requires a name" });
+    }
+    // DOI publication titles LicenseRef- terms by their name (apps.json
+    // resolve_recipe_license), so they need one as well as a URL.
+    if (typeof license === "string" && isLicenseRef(license) && !info.name?.trim()) {
+        issues.push({
+            path: ["name"],
+            message: `Custom license "${license.trim()}" needs a name; add it as a Custom License with a name and URL`,
         });
     }
+    if (info.url?.trim()) {
+        if (typeof license === "string" && typeof url === "string") {
+            const mismatch = licenseUrlMismatch(license, url, activeLicenseList);
+            if (mismatch) issues.push({ path: ["url"], message: mismatch });
+        }
+    } else if (info.license === undefined) {
+        issues.push({ path: ["url"], message: "A custom license requires a URL to the license terms" });
+    } else if (typeof license === "string" && licenseRequiresUrl(license)) {
+        issues.push({ path: ["url"], message: `License "${license}" requires a URL to the license terms` });
+    }
+    return issues;
+}
+
+const CopyrightFieldsSchema = z.strictObject({
+    license: z.string().optional(),
+    name: z.string().optional(),
+    url: z.string().optional(),
 });
 
-const LicenseUrlSchema = z.string().refine(
-    (value) => value === "" || value.startsWith("{{") || /^https?:\/\//.test(value),
-    { message: "License URL must start with http:// or https://" },
-);
+// The checks above guarantee a custom entry has both name and url.
+const toCopyrightInfo = (info: CopyrightFields): CopyrightInfo =>
+    info.license === undefined
+        ? { name: info.name ?? "", url: info.url ?? "" }
+        : { ...info, license: info.license };
 
-export const CopyrightInfoSchema = z
-    .strictObject({
-        license: LicenseSchema.optional(),
-        name: z.string().refine((value) => value.trim() !== "", { message: "License name cannot be empty" }).optional(),
-        url: LicenseUrlSchema.optional(),
-    })
-    .superRefine((info, ctx) => {
-        if (info.license === undefined && info.name === undefined) {
-            ctx.addIssue({
-                code: "custom",
-                message: "A copyright entry needs a license identifier or a custom license name",
-            });
-            return;
-        }
-        if (info.url?.trim()) return;
-        if (info.license !== undefined) {
-            if (licenseRequiresUrl(info.license)) {
-                ctx.addIssue({
-                    code: "custom",
-                    path: ["url"],
-                    message: `License "${info.license}" requires a URL to the license terms`,
-                });
+/** Schema for one copyright entry; pass the recipe's template values to validate rendered text. */
+export function copyrightInfoSchema(values?: CopyrightTemplateValues, licenseList?: ZenodoLicenseList | null) {
+    return CopyrightFieldsSchema
+        .superRefine((info, ctx) => {
+            for (const issue of copyrightIssues(info, values, licenseList)) {
+                ctx.addIssue({ code: "custom", ...issue });
             }
-        } else {
-            ctx.addIssue({
-                code: "custom",
-                path: ["url"],
-                message: "A custom license requires a URL to the license terms",
-            });
-        }
-    })
-    // The refinement above guarantees a custom entry has both name and url.
-    .transform((info): CopyrightInfo =>
-        info.license === undefined
-            ? { name: info.name ?? "", url: info.url ?? "" }
-            : { ...info, license: info.license },
-    );
+        })
+        .transform(toCopyrightInfo);
+}
+
+/** A copyright entry on its own: templates are checked for form only. */
+export const CopyrightInfoSchema = copyrightInfoSchema();
 
 // ============================================================================
 // Structured Readme
@@ -155,6 +189,11 @@ export const FileInfoSchema = z.object({
     filename: z.string().optional(),
     contents: z.string().optional(),
     url: z.string().url().optional(),
+    sha256: z.string().optional(),
+    executable: z.boolean().optional(),
+    insecure: z.boolean().optional(),
+    retry: z.number().optional(),
+    refresh: z.boolean().optional(),
 });
 
 // ============================================================================
@@ -309,16 +348,31 @@ export const ContainerRecipeSchema = z.object({
     name: z.string().min(1, "Container name is required"),
     version: z.string().min(1, "Version is required"),
     icon: z.string().optional(), // Base64 encoded image, 64x64 pixels
-    copyright: z.array(CopyrightInfoSchema).optional(),
+    // Validated in superRefine below, where templates render with the recipe's values.
+    copyright: z.array(CopyrightFieldsSchema.transform(toCopyrightInfo)).optional(),
+    // Top-level variables; copyright templates can use the text ones.
+    variables: z.record(z.string(), z.unknown()).optional(),
     architectures: z.array(ArchitectureSchema).min(1, "At least one architecture is required"),
     readme: z.string().optional(),
     readme_url: z.string().url().optional(),
     structured_readme: StructuredReadmeSchema.optional(),
     build: BuildRecipeSchema,
+    auto_update: z.record(z.string(), z.unknown()).optional(),
+    domains: z.array(z.string().regex(/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/))
+        .min(1)
+        .refine((domains) => new Set(domains).size === domains.length, "Domains must be unique")
+        .optional(),
     files: z.array(FileInfoSchema).optional(),
     deploy: DeployInfoSchema.optional(),
     tests: z.array(TestInfoSchema).optional(),
     categories: CategoriesSchema.optional(),
+}).superRefine((recipe, ctx) => {
+    const values = copyrightTemplateValues(recipe);
+    recipe.copyright?.forEach((entry, index) => {
+        for (const issue of copyrightIssues(entry, values)) {
+            ctx.addIssue({ code: "custom", message: issue.message, path: ["copyright", index, ...issue.path] });
+        }
+    });
 });
 
 // ============================================================================

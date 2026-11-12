@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
     PlusIcon,
     TrashIcon,
@@ -8,12 +8,13 @@ import {
     ScaleIcon
 } from "@heroicons/react/24/outline";
 import { CopyrightInfo } from "@/components/common";
-import { CopyrightInfoSchema, ZENODO_LICENSE_CATEGORIES, isZenodoLicenseCategory } from "@/lib/zodSchema";
-import { FormField, Input, Select } from "./FormField";
+import { copyrightInfoSchema } from "@/lib/zodSchema";
+import { renderCopyrightTemplate, type CopyrightTemplateValues } from "@/lib/licenseId";
+import { FormField, Input } from "./FormField";
 import LicenseDropdown from "./LicenseDropdown";
-import spdxLicenses from "./licenses.json";
 import { iconStyles, cardStyles, textStyles, cn, buttonStyles } from "@/lib/styles";
 import { useTheme } from "@/lib/ThemeContext";
+import { findZenodoLicense, useZenodoLicenses } from "@/lib/zenodoLicenses";
 import { DirectiveControllers } from "./DirectiveContainer";
 
 interface LicenseSectionProps {
@@ -24,6 +25,8 @@ interface LicenseSectionProps {
     renderAddButton?: (addLicense: () => void) => React.ReactNode;
     onMoveLicense?: (index: number, direction: "up" | "down") => void;
     onReorderLicenses?: (licenses: CopyrightInfo[]) => void;
+    /** The recipe's template values, so `{{ context.version }}` etc. are validated rendered. */
+    templateValues?: CopyrightTemplateValues;
 }
 
 export default function LicenseSection({
@@ -33,13 +36,15 @@ export default function LicenseSection({
     showAddButton = true,
     renderAddButton,
     onMoveLicense,
-    onReorderLicenses
+    onReorderLicenses,
+    templateValues,
 }: LicenseSectionProps) {
     const { isDark } = useTheme();
     const [deleteConfirmIndex, setDeleteConfirmIndex] = useState<number | null>(null);
     const [customLicenseIndex, setCustomLicenseIndex] = useState<number | null>(null);
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
     const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+    const licenseList = useZenodoLicenses();
 
     const updateLicense = (index: number, info: CopyrightInfo) => {
         const updated = [...licenses];
@@ -47,24 +52,12 @@ export default function LicenseSection({
         onChange(updated);
     };
 
-    // A custom license is identified by its name; a Zenodo category
-    // (other-open/other-closed) may accompany it in the license field.
-    const isNamedLicense = (info: CopyrightInfo): boolean =>
-        !('license' in info) || isZenodoLicenseCategory(info.license);
-
     const getLicenseIdentifier = (info: CopyrightInfo): string => {
-        if ('license' in info && !isNamedLicense(info)) return info.license;
-        return info.name ?? ('license' in info ? info.license : "");
+        return 'license' in info ? info.license : info.name;
     };
 
     const setLicenseIdentifier = (info: CopyrightInfo, identifier: string): CopyrightInfo => {
-        return isNamedLicense(info) ? { ...info, name: identifier } : { ...info, license: identifier };
-    };
-
-    const setZenodoCategory = (info: CopyrightInfo, category: string): CopyrightInfo => {
-        const url = info.url ?? "";
-        if (!isZenodoLicenseCategory(category)) return { name: info.name ?? "", url };
-        return info.name === undefined ? { license: category, url } : { license: category, name: info.name, url };
+        return { name: identifier, url: info.url ?? "" };
     };
 
     const addLicense = (index?: number) => {
@@ -82,8 +75,10 @@ export default function LicenseSection({
         }
     };
 
+    const schema = useMemo(() => copyrightInfoSchema(templateValues, licenseList), [templateValues, licenseList]);
+
     const validateLicense = (info: CopyrightInfo): string[] => {
-        const result = CopyrightInfoSchema.safeParse(info);
+        const result = schema.safeParse(info);
         return result.success ? [] : result.error.issues.map((issue) => issue.message);
     };
 
@@ -105,11 +100,14 @@ export default function LicenseSection({
     };
 
     const handleCustomLicense = (index: number) => {
-        // Convert to custom license format
         const currentInfo = licenses[index];
-        const currentIdentifier = getLicenseIdentifier(currentInfo);
-        const category = 'license' in currentInfo && isNamedLicense(currentInfo) ? currentInfo.license : "";
-        updateLicense(index, setZenodoCategory({ name: currentIdentifier, url: currentInfo.url ?? "" }, category));
+        if (!('license' in currentInfo)) {
+            updateLicense(index, currentInfo);
+        } else {
+            // A LicenseRef- entry already links to its custom terms; keep that URL.
+            const isRef = currentInfo.license.trim().toLowerCase().startsWith("licenseref-");
+            updateLicense(index, { name: "", url: isRef ? currentInfo.url ?? "" : "" });
+        }
         setCustomLicenseIndex(index);
     };
 
@@ -120,15 +118,11 @@ export default function LicenseSection({
         // If it has a 'name' property, it's a CustomCopyrightInfo
         if ('name' in info) return true;
 
-        // If it has a 'license' property, check if it's in SPDX list
+        // A license ID outside the Zenodo license list must become a custom license.
         if ('license' in info) {
-            const license = info.license;
-            if (!license || !license.trim()) return false;
-
-            const spdxLicenseIds = spdxLicenses.licenses
-                .filter(l => !l.isDeprecatedLicenseId)
-                .map(l => l.licenseId);
-            return !spdxLicenseIds.includes(license);
+            const license = renderCopyrightTemplate(info.license, templateValues).value;
+            if (!license || !license.trim() || !licenseList) return false;
+            return !findZenodoLicense(licenseList, license);
         }
 
         return false;
@@ -427,13 +421,15 @@ export default function LicenseSection({
                                                     description={
                                                         isCustomLicense(index)
                                                             ? "Title of the custom license terms"
-                                                            : "SPDX license identifiers are preferred for standardization"
+                                                            : "Zenodo license IDs let the container get a DOI; anything else is a custom license"
                                                     }
                                                 >
                                                     {customLicenseIndex === index ? (
                                                         <div className="space-y-2">
                                                             <Input
                                                                 value={getLicenseIdentifier(info)}
+                                                                aria-label="Custom license name"
+                                                                required
                                                                 onChange={(e) =>
                                                                     updateLicense(index, setLicenseIdentifier(info, e.target.value))
                                                                 }
@@ -449,7 +445,7 @@ export default function LicenseSection({
                                                                             : "bg-[#6aa329] text-white hover:bg-[#4f7b38] disabled:bg-gray-300"
                                                                     )}
                                                                     onClick={() => setCustomLicenseIndex(null)}
-                                                                    disabled={!getLicenseIdentifier(info)?.trim()}
+                                                                    disabled={!schema.safeParse(info).success}
                                                                 >
                                                                     Done
                                                                 </button>
@@ -488,6 +484,8 @@ export default function LicenseSection({
                                                 >
                                                     <Input
                                                         value={info.url}
+                                                        aria-label="License URL"
+                                                        required={!('license' in info)}
                                                         onChange={(e) =>
                                                             updateLicense(index, {
                                                                 ...info,
@@ -498,26 +496,6 @@ export default function LicenseSection({
                                                     />
                                                 </FormField>
 
-                                                {isNamedLicense(info) && (
-                                                    <FormField
-                                                        label="Zenodo license category"
-                                                        description="Required to publish this recipe through Neurocommand's Zenodo integration"
-                                                    >
-                                                        <Select
-                                                            value={'license' in info ? info.license : ""}
-                                                            onChange={(e) =>
-                                                                updateLicense(index, setZenodoCategory(info, e.target.value))
-                                                            }
-                                                        >
-                                                            <option value="">Not set</option>
-                                                            {ZENODO_LICENSE_CATEGORIES.map((category) => (
-                                                                <option key={category} value={category}>
-                                                                    {category === "other-open" ? "other-open (open terms)" : "other-closed (restricted terms)"}
-                                                                </option>
-                                                            ))}
-                                                        </Select>
-                                                    </FormField>
-                                                )}
                                             </div>
 
                                             {/* Show validation errors */}

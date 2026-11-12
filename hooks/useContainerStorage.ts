@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { dump as dumpYAML } from "js-yaml";
 import { ContainerRecipe } from "@/components/common";
 import { SaveStatus, saveContainer, deleteContainer as deleteStoredContainer } from "@/lib/containerStorage";
+import { restoreUpdatePolicyFiles } from "@/lib/recipeFormat";
 
 export function useContainerStorage() {
     const [saveStatus, setSaveStatus] = useState<SaveStatus>(SaveStatus.Saved);
@@ -40,7 +41,7 @@ export function useContainerStorage() {
 
     const generateYAMLString = useCallback((data: ContainerRecipe): string => {
         try {
-            return dumpYAML(data, {
+            return dumpYAML(restoreUpdatePolicyFiles(data), {
                 indent: 2,
                 lineWidth: -1,
                 noRefs: true,

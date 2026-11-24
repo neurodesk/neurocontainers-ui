@@ -192,6 +192,8 @@ export const CATEGORIES = {
     "cryo EM": { description: "Cryo-electron microscopy", color: "#0ea5e9" },
     "molecular biology": { description: "Structural biology tools", color: "#a3e635" },
     "rodent imaging": { description: "Small animal imaging", color: "#fb7185" },
+    "preclinical imaging": { description: "Small-animal, Bruker, and preclinical imaging tools", color: "#f43f5e" },
+    "molecular imaging": { description: "PET, SPECT, nuclear medicine, and kinetic modeling", color: "#d946ef" },
     "spine": { description: "Spinal cord analysis", color: "#34d399" },
     "hippocampus": { description: "Hippocampal analysis", color: "#fbbf24" },
     "body": { description: "Body imaging tools", color: "#f472b6" },

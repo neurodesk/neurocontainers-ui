@@ -6,6 +6,13 @@ describe("category registry", () => {
         expect(CategoriesSchema.parse([category])).toEqual([category]);
     });
 
+    it("accepts preclinical imaging and molecular imaging categories", () => {
+        expect(CategoriesSchema.parse(["preclinical imaging", "molecular imaging"])).toEqual([
+            "preclinical imaging",
+            "molecular imaging",
+        ]);
+    });
+
     it("rejects an unregistered category", () => {
         expect(CategoriesSchema.safeParse(["unregistered category"]).success).toBe(false);
     });

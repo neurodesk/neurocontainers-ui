@@ -8,6 +8,8 @@ Select one or more categories that best describe your container's functionality:
 
 Use **arterial spin labelling** for ASL perfusion imaging tools. It can accompany quantitative imaging or workflows when those categories also apply.
 
+Use **fetal imaging** for fetal MRI reconstruction, motion correction, segmentation, and prenatal neuroimaging tools.
+
 Use **preclinical imaging** for small-animal, Bruker, microPET/microCT, phantom, and non-rodent preclinical tools (`rodent imaging` remains available for backwards compatibility).
 
 Use **molecular imaging** for PET, SPECT, nuclear medicine, and tracer kinetic modeling tools.

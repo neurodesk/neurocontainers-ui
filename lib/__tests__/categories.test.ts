@@ -20,6 +20,10 @@ describe("category registry", () => {
         ]);
     });
 
+    it("accepts fetal imaging category", () => {
+        expect(CategoriesSchema.parse(["fetal imaging"])).toEqual(["fetal imaging"]);
+    });
+
     it("rejects an unregistered category", () => {
         expect(CategoriesSchema.safeParse(["unregistered category"]).success).toBe(false);
     });

@@ -173,6 +173,7 @@ export type BuildRecipe = NeuroDockerBuildRecipe;
 
 export const CATEGORIES = {
     "arterial spin labelling": { description: "ASL perfusion imaging and analysis", color: "#0891b2" },
+    "fetal imaging": { description: "Fetal MRI reconstruction, segmentation, and analysis", color: "#38bdf8" },
     "functional imaging": { description: "fMRI analysis tools", color: "#3b82f6" },
     "structural imaging": { description: "Anatomical image processing", color: "#06b6d4" },
     "diffusion imaging": { description: "DTI/DWI analysis", color: "#8b5cf6" },

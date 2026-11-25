@@ -11,3 +11,7 @@ Use **arterial spin labelling** for ASL perfusion imaging tools. It can accompan
 Use **preclinical imaging** for small-animal, Bruker, microPET/microCT, phantom, and non-rodent preclinical tools (`rodent imaging` remains available for backwards compatibility).
 
 Use **molecular imaging** for PET, SPECT, nuclear medicine, and tracer kinetic modeling tools.
+
+Use **digital pathology** for whole-slide imaging (WSI), histopathology, dermatopathology, and slide QC/annotation tools.
+
+Use **optical imaging** for dermoscopy, clinical photography colorimetry, OCT, reflectance confocal microscopy, multiphoton/FLIM, and hyperspectral imaging tools.

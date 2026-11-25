@@ -194,6 +194,8 @@ export const CATEGORIES = {
     "rodent imaging": { description: "Small animal imaging", color: "#fb7185" },
     "preclinical imaging": { description: "Small-animal, Bruker, and preclinical imaging tools", color: "#f43f5e" },
     "molecular imaging": { description: "PET, SPECT, nuclear medicine, and kinetic modeling", color: "#d946ef" },
+    "digital pathology": { description: "Whole-slide imaging, histopathology, and dermatopathology tools", color: "#e11d48" },
+    "optical imaging": { description: "Dermoscopy, OCT, reflectance confocal, FLIM, and hyperspectral imaging", color: "#0284c7" },
     "spine": { description: "Spinal cord analysis", color: "#34d399" },
     "hippocampus": { description: "Hippocampal analysis", color: "#fbbf24" },
     "body": { description: "Body imaging tools", color: "#f472b6" },

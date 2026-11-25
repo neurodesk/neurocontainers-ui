@@ -13,6 +13,13 @@ describe("category registry", () => {
         ]);
     });
 
+    it("accepts digital pathology and optical imaging categories", () => {
+        expect(CategoriesSchema.parse(["digital pathology", "optical imaging"])).toEqual([
+            "digital pathology",
+            "optical imaging",
+        ]);
+    });
+
     it("rejects an unregistered category", () => {
         expect(CategoriesSchema.safeParse(["unregistered category"]).success).toBe(false);
     });
